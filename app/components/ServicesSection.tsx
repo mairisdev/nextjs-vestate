@@ -1,3 +1,5 @@
+import { ChevronRight } from 'lucide-react'
+
 export default function ServicesZigZag() {
   const services = [
     'Pārstāv jūsu intereses visa pārdošanas procesa gaitā.',
@@ -11,9 +13,10 @@ export default function ServicesZigZag() {
     'Rūpējas, lai īpašniekam ir pēc iespējas mazāks slogs darījumā.',
   ]
 
-  // Sadala sarakstu divās kolonnās, katrā katrs otrais elements
-  const leftItems = services.filter((_, idx) => idx % 2 === 0)
-  const rightItems = services.filter((_, idx) => idx % 2 === 1)
+  const paired = []
+  for (let i = 0; i < services.length; i += 2) {
+    paired.push([services[i], services[i + 1]])
+  }
 
   return (
     <section className="bg-white py-20 px-4 md:px-12">
@@ -25,22 +28,29 @@ export default function ServicesZigZag() {
           Pakalpojumi, ko sniedz mūsu komanda
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 md:gap-y-12 md:gap-x-20">
-          {leftItems.map((text, idx) => (
-            <div key={idx} className="flex items-start gap-4">
-              <div className="w-9 h-9 flex items-center justify-center border-2 border-[#77D4B4] rounded-full text-[#77D4B4] font-bold text-base shrink-0">
-                {idx * 2 + 1}
-              </div>
-              <p className="text-base leading-relaxed text-[#00332D]">{text}</p>
-            </div>
-          ))}
+        <div className="space-y-10 md:space-y-12">
+          {paired.map(([left, right], i) => (
+            <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20">
 
-          {rightItems.map((text, idx) => (
-            <div key={idx} className="flex items-start gap-4">
-              <div className="w-9 h-9 flex items-center justify-center border-2 border-[#77D4B4] rounded-full text-[#77D4B4] font-bold text-base shrink-0">
-                {idx * 2 + 2}
-              </div>
-              <p className="text-base leading-relaxed text-[#00332D]">{text}</p>
+{left && (
+  <div className="flex items-center gap-4">
+    <div className="w-9 h-9 flex items-center justify-center">
+      <ChevronRight size={30} stroke="#77D4B4" strokeWidth={3} />
+    </div>
+    <p className="text-base leading-relaxed text-[#00332D]">{left}</p>
+  </div>
+)}
+
+
+{right && (
+  <div className="flex items-center gap-4">
+    <div className="w-9 h-9 flex items-center justify-center">
+      <ChevronRight size={30} stroke="#77D4B4" strokeWidth={3} />
+    </div>
+    <p className="text-base leading-relaxed text-[#00332D]">{right}</p>
+  </div>
+)}
+
             </div>
           ))}
         </div>

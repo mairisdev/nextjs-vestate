@@ -3,6 +3,11 @@ import HeroSlider from './components/HeroSlider'
 import ConsultationSection from './components/ConsultationSection'
 import AgentReasons from './components/AgentReasons'
 import ServicesSection from './components/ServicesSection'
+import AgentsSection from './components/AgentsSection'
+import Testimonials from './components/Testimonials'
+import LegalConsultSection from './components/LegalConsultSection'
+import RecentSales from './components/RecentSales'
+import PrivateOffers from './components/PrivateOffers'
 
 export default function Home() {
   return (
@@ -13,6 +18,11 @@ export default function Home() {
         <ConsultationSection />
         <AgentReasons />
         <ServicesSection />
+        <AgentsSection />
+        <Testimonials />
+        <LegalConsultSection />
+        <RecentSales />
+        <PrivateOffers />
       </main>
     </>
   )
