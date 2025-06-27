@@ -1,12 +1,18 @@
 import Navbar from './components/Navbar'
+import HeroSlider from './components/HeroSlider'
+import ConsultationSection from './components/ConsultationSection'
+import AgentReasons from './components/AgentReasons'
+import ServicesSection from './components/ServicesSection'
 
 export default function Home() {
   return (
     <>
       <Navbar />
-      {/* Citas sadaļas šeit... */}
-      <main className="min-h-screen p-8">
-        <h1 className="text-xl">Sākums</h1>
+      <HeroSlider />
+      <main className="min-h-screen">
+        <ConsultationSection />
+        <AgentReasons />
+        <ServicesSection />
       </main>
     </>
   )

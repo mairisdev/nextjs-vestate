@@ -6,7 +6,7 @@ import { Phone } from 'lucide-react'
 export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
-      <div className="max-w-[1440px] mx-auto flex items-center justify-between px-6 py-4">
+      <div className="max-w-[1600px] mx-auto flex items-center justify-between px-6 py-4">
         {/* Kreisā daļa: Logo */}
         <div className="flex items-center space-x-2">
           <Image src="/logo.svg" alt="Vestate logo" width={200} height={50} />
