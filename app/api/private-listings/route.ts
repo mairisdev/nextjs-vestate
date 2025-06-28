@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
+import { prisma } from "@/lib/prisma"
 
 const listings = [
   {
@@ -10,23 +10,33 @@ const listings = [
     extra: "Info2",
     image: "/private-offers/Jurmala1.webp",
   },
+  // Ja nepieciešams, vari pievienot vairāk piedāvājumu šeit
 ]
 
 export async function GET(req: NextRequest) {
-  const cookieStore = await cookies()
-  const token = cookieStore.get("vestate_access_token")
-  const expiry = cookieStore.get("vestate_access_expiry")
+  const { searchParams } = new URL(req.url)
+  const email = searchParams.get("email")
 
-  if (!token || !expiry) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!email) {
+    return NextResponse.json({ error: "Nav norādīts e-pasts" }, { status: 400 })
   }
 
-  const expiresAt = Number(expiry.value)
-  if (Date.now() > expiresAt) {
-    cookieStore.delete("vestate_access_token")
-    cookieStore.delete("vestate_access_expiry")
-    return NextResponse.json({ error: "Expired" }, { status: 401 })
+  const access = await prisma.accessRequest.findFirst({
+    where: {
+      email,
+      verified: true,
+      validUntil: {
+        gt: new Date(),
+      },
+    },
+  })
+
+  if (!access) {
+    return NextResponse.json({ error: "Unauthorized or expired" }, { status: 401 })
   }
 
-  return NextResponse.json({ listings, validUntil: new Date(expiresAt).toISOString() })
+  return NextResponse.json({
+    listings,
+    validUntil: access.validUntil?.toISOString() ?? null,
+  })
 }

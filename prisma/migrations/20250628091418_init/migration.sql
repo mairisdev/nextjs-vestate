@@ -4,12 +4,12 @@ CREATE TABLE "AccessRequest" (
     "email" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "code" TEXT NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "verified" BOOLEAN NOT NULL DEFAULT false,
+    "validUntil" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "AccessRequest_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AccessRequest_email_key" ON "AccessRequest"("email");
+CREATE INDEX "AccessRequest_email_idx" ON "AccessRequest"("email");

@@ -1,41 +1,37 @@
-import { cookies } from "next/headers"
-import { NextResponse } from "next/server"
-import { PrismaClient } from "@prisma/client"
-import { v4 as uuid } from "uuid"
+import { NextRequest, NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
 
-const prisma = new PrismaClient()
+export async function POST(req: NextRequest) {
+  const body = await req.json()
+  const { email, code } = body
 
-export async function POST(req: Request) {
-  const { email, code } = await req.json()
-
-  const access = await prisma.accessRequest.findFirst({
-    where: { email, code },
-  })
-
-  if (!access || new Date() > access.expiresAt) {
-    return NextResponse.json({ error: "Nepareizs vai beidzies kods" }, { status: 400 })
+  if (!email || !code) {
+    return NextResponse.json({ error: "Nepilnīgi dati" }, { status: 400 })
   }
 
-  await prisma.accessRequest.delete({
-    where: { id: access.id },
+  const access = await prisma.accessRequest.findFirst({
+    where: {
+      email,
+      code,
+      verified: false,
+    },
   })
 
-  const token = uuid()
-  const expiresAt = Date.now() + 1000 * 60 * 60 * 24 // 24h
+  if (!access) {
+    return NextResponse.json({ error: "Nepareizs kods vai jau izmantots" }, { status: 401 })
+  }
 
-  ;(await cookies()).set("vestate_access_token", token, {
-    httpOnly: true,
-    secure: true,
-    path: "/",
-    maxAge: 60 * 60 * 24,
+  await prisma.accessRequest.update({
+    where: {
+      id: access.id,
+    },
+    data: {
+      verified: true,
+    },
   })
 
-  ;(await cookies()).set("vestate_access_expiry", expiresAt.toString(), {
-    httpOnly: true,
-    secure: true,
-    path: "/",
-    maxAge: 60 * 60 * 24,
+  return NextResponse.json({
+    success: true,
+    valid_for: access.validUntil?.getTime() ?? null,
   })
-
-  return NextResponse.json({ ok: true, valid_for: expiresAt })
 }
