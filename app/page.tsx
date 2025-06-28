@@ -8,6 +8,8 @@ import Testimonials from './components/Testimonials'
 import LegalConsultSection from './components/LegalConsultSection'
 import RecentSales from './components/RecentSales'
 import PrivateOffers from './components/PrivateOffers'
+import WhyChooseUs from './components/WhyChooseUs'
+import StatsSection from './components/StatsSection'
 
 export default function Home() {
   return (
@@ -23,6 +25,8 @@ export default function Home() {
         <LegalConsultSection />
         <RecentSales />
         <PrivateOffers />
+        <WhyChooseUs />
+        <StatsSection />
       </main>
     </>
   )

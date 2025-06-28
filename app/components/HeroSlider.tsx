@@ -13,7 +13,6 @@ const benefits = [
 export default function HeroSlider() {
   return (
     <section className="relative w-full h-[85vh] min-h-[500px]">
-      {/* Fona attēls */}
       <Image
         src="/VestateSlider.webp"
         alt="Rīgas panorāma"
@@ -22,7 +21,6 @@ export default function HeroSlider() {
         className="object-cover"
       />
 
-      {/* Saturs kreisajā pusē */}
       <div className="absolute inset-0 flex items-center justify-start px-6 md:px-12">
         <div className="bg-[#00332D]/90 text-white p-6 md:p-10 max-w-xl w-full rounded-md">
           <p className="text-sm font-semibold uppercase mb-2">

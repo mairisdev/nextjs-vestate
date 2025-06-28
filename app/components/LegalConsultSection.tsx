@@ -6,7 +6,7 @@ import Link from "next/link"
 export default function LegalConsultSection() {
   return (
     <section className="relative w-full min-h-[600px] bg-fixed bg-center bg-cover bg-no-repeat flex items-center justify-end px-6 md:px-12">
-      {/* Background image */}
+
       <Image
         src="/Section6.webp"
         alt="Jurista konsultācija"
@@ -15,7 +15,6 @@ export default function LegalConsultSection() {
         priority
       />
 
-      {/* Overlay + Content */}
       <div className="absolute inset-0 flex items-center justify-end px-4 md:px-12">
         <div className="bg-[#ffffffcc] text-[#00332D] p-6 md:p-12 w-full md:w-[600px] backdrop-blur-sm rounded-md flex flex-col items-center justify-center text-center">
         <h2 className="text-xl md:text-1xl font-semibold mb-6">

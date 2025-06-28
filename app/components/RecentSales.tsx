@@ -116,7 +116,7 @@ export default function RecentSales() {
                   </span>
                 )}
                 {property.status === "active" && (
-                  <span className="absolute top-2 left-2 bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+                  <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
                     PĀRDOŠANĀ
                   </span>
                 )}

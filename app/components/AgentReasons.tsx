@@ -20,16 +20,13 @@ export default function AgentReasons() {
 <section className="bg-[#F3F4F6] py-16 px-4 md:px-12">
   <div className="max-w-[1600px] mx-auto">
     
-    {/* Virsraksts virs layout */}
     <h2 className="text-2xl md:text-3xl font-semibold text-[#00332D] mb-12 text-center lg:text-left">
       Daži iemesli kāpēc <br className="hidden md:inline" />
       vajadzētu izvēlēties mākleri:
     </h2>
 
-    {/* Tikai saraksts un bilde rindā */}
     <div className="flex flex-col lg:flex-row items-center gap-12">
       
-      {/* Saraksts */}
       <div className="flex-1">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8 text-sm text-[#00332D]">
           {[leftList, rightList].map((list, listIdx) => (
@@ -50,7 +47,6 @@ export default function AgentReasons() {
         </div>
       </div>
 
-      {/* Attēls centrēts attiecībā pret sarakstu */}
       <div className="flex-1 flex items-center justify-center">
         <Image
           src="/AgentReasons.webp"
