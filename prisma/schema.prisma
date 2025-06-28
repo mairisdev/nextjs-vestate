@@ -18,3 +18,22 @@ model AccessRequest {
 
   @@index([email])
 }
+
+model FooterSettings {
+  id             String   @id @default(cuid())
+  companyName    String
+  description    String
+  phone          String
+  email          String
+  address        String
+
+  facebookUrl    String
+  instagramUrl   String
+  linkedinUrl    String
+
+  copyrightText  String
+  developerName  String
+  developerUrl   String
+
+  updatedAt      DateTime @updatedAt
+}

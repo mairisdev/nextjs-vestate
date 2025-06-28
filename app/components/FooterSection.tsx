@@ -1,5 +1,4 @@
-"use client"
-
+import Link from "next/link"
 import {
   Facebook,
   Instagram,
@@ -8,17 +7,19 @@ import {
   Mail,
   MapPin,
 } from "lucide-react"
-import Link from "next/link"
+import { getFooterSettings } from "@/lib/queries/footer"
 
-export default function Footer() {
+export default async function Footer() {
+  const data = await getFooterSettings()
+
+  if (!data) return null
+
   return (
     <footer className="bg-[#00332D] text-white pt-16 pb-8 px-4 md:px-12">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
         <div>
-          <h2 className="text-2xl font-bold mb-4">SIA Vestate</h2>
-          <p className="text-sm text-gray-300">
-            Profesionāli nekustamā īpašuma pakalpojumi Rīgā un visā Latvijā.
-          </p>
+          <h2 className="text-2xl font-bold mb-4">{data.companyName}</h2>
+          <p className="text-sm text-gray-300">{data.description}</p>
         </div>
 
         <div>
@@ -45,24 +46,24 @@ export default function Footer() {
           <h3 className="font-semibold mb-4 text-white">Kontaktinformācija</h3>
           <ul className="space-y-3 text-sm text-gray-300">
             <li className="flex items-center gap-2">
-              <Phone className="w-4 h-4" /> +371 28446677
+              <Phone className="w-4 h-4" /> {data.phone}
             </li>
             <li className="flex items-center gap-2">
-              <Mail className="w-4 h-4" /> info@vestate.lv
+              <Mail className="w-4 h-4" /> {data.email}
             </li>
             <li className="flex items-start gap-2">
-              <MapPin className="w-4 h-4 mt-1" /> Dominas biroji, Ieriķu iela 3, Rīga, LV-1084
+              <MapPin className="w-4 h-4 mt-1" /> {data.address}
             </li>
           </ul>
 
           <div className="flex gap-4 mt-6">
-            <a href="#" className="hover:text-[#77D4B4]">
+            <a href={data.facebookUrl || "#"} className="hover:text-[#77D4B4]">
               <Facebook className="w-5 h-5" />
             </a>
-            <a href="#" className="hover:text-[#77D4B4]">
+            <a href={data.instagramUrl || "#"} className="hover:text-[#77D4B4]">
               <Instagram className="w-5 h-5" />
             </a>
-            <a href="#" className="hover:text-[#77D4B4]">
+            <a href={data.linkedinUrl || "#"} className="hover:text-[#77D4B4]">
               <Linkedin className="w-5 h-5" />
             </a>
           </div>
@@ -70,7 +71,14 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-white/10 mt-12 pt-6 text-sm text-gray-400 text-center">
-        © {new Date().getFullYear()} Vestate. Visas tiesības aizsargātas. Izstrāde: <a href="https://facebook.com/MairisDigital" target="_blank" className="text-[#77D4B4] hover:underline">MairisDigital</a>
+        © {new Date().getFullYear()} Vestate. Visas tiesības aizsargātas. Izstrāde:{" "}
+        <a
+          href="https://facebook.com/MairisDigital"
+          target="_blank"
+          className="text-[#77D4B4] hover:underline"
+        >
+          MairisDigital
+        </a>
       </div>
     </footer>
   )
