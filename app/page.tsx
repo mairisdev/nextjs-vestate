@@ -10,6 +10,10 @@ import RecentSales from './components/RecentSales'
 import PrivateOffers from './components/PrivateOffers'
 import WhyChooseUs from './components/WhyChooseUs'
 import StatsSection from './components/StatsSection'
+import PartnersSection from './components/PartnersSection'
+import ContactSection from './components/ContactSection'
+import BlogSection from './components/BlogSection'
+import FooterSection from './components/FooterSection'
 
 export default function Home() {
   return (
@@ -27,6 +31,10 @@ export default function Home() {
         <PrivateOffers />
         <WhyChooseUs />
         <StatsSection />
+        <PartnersSection />
+        <BlogSection />
+        <ContactSection />
+        <FooterSection />
       </main>
     </>
   )

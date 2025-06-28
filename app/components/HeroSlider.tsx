@@ -12,7 +12,7 @@ const benefits = [
 
 export default function HeroSlider() {
   return (
-    <section className="relative w-full h-[85vh] min-h-[500px]">
+    <section className="relative w-full h-[90vh]">
       <Image
         src="/VestateSlider.webp"
         alt="Rīgas panorāma"

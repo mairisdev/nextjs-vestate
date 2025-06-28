@@ -24,7 +24,7 @@ export default function StatsSection() {
   return (
     <section className="py-20 bg-white px-4 md:px-12">
       <div className="max-w-5xl mx-auto text-center">
-        <p className="text-sm uppercase text-[#77d4b4] font-semibold tracking-wide mb-2">
+        <p className="text-md uppercase text-[#77D4B4] font-semibold tracking-wide mb-2">
           Pieredzes bagāti nekustamo īpašumu speciālisti
         </p>
         <h2 className="text-3xl md:text-4xl font-bold text-[#00332D] mb-12">
