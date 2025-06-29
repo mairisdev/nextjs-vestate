@@ -7,17 +7,17 @@ export default async function HeroSlider() {
 
   if (!slides || slides.length === 0) return null
 
-  const benefits = slides[0].description.split("\n") 
+  const benefits = slides[0].description.split("\n")
 
   return (
     <section className="relative w-full h-[90vh]">
-      <Image
-        src="/VestateSlider.webp"
-        alt="Rīgas panorāma"
-        fill
-        priority
-        className="object-cover"
-      />
+<Image
+  src={slides[0].imageUrl ? slides[0].imageUrl : "/default-image.webp"} // Atcerieties, ka imageUrl sākas ar "/slider/"
+  alt="Rīgas panorāma"
+  fill
+  priority
+  className="object-cover"
+/>
 
       <div className="absolute inset-0 flex items-center justify-start px-6 md:px-12">
         <div className="bg-[#00332D]/90 text-white p-6 md:p-10 max-w-xl w-full rounded-md">

@@ -6,6 +6,7 @@ import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
 import { Trash, Plus } from "lucide-react"
+import { uploadImage } from "@/lib/uploadImage"
 
 type Slide = {
   id?: string
@@ -24,14 +25,12 @@ export default function SliderSettings() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  // Atsvaidzināt slaidu datus
   const handleSlideChange = (index: number, field: keyof Slide, value: any) => {
     const updated = [...slides]
     updated[index] = { ...updated[index], [field]: value }
     setSlides(updated)
   }
 
-  // Pievienot jaunu slaidu
   const addSlide = () => {
     setSlides([
       ...slides,
@@ -46,15 +45,13 @@ export default function SliderSettings() {
     ])
   }
 
-  // Dzēst slaidu
   const removeSlide = (index: number) => {
     setSlides(slides.filter((_, i) => i !== index))
   }
 
-  // Saglabāt slaidus
   const handleSave = async () => {
     setLoading(true)
-    setSuccessMessage(null) // Iztīra iepriekšējos paziņojumus
+    setSuccessMessage(null)
     setErrorMessage(null)
 
     for (const slide of slides) {
@@ -66,24 +63,36 @@ export default function SliderSettings() {
         buttonLink: slide.buttonLink,
       }
 
-      // Ja ir attēls, mēs pievienojam attēla URL
       if (slide.image) {
-        const imageUrl = await uploadImage(slide.image)
-        formData.imageUrl = imageUrl
+        const form = new FormData()
+        form.append('image', slide.image)
+        form.append('title', slide.title)
+
+        const response = await fetch('/api/upload-image', {
+          method: 'POST',
+          body: form,
+        })
+
+        if (!response.ok) {
+          setErrorMessage("❌ Kļūda augšupielādējot attēlu")
+          setLoading(false)
+          return
+        }
+
+        const data = await response.json()
+        formData.imageUrl = data.imageUrl
       }
 
-      // Nosūtīt datus serverim, izmantojot fetch, vai izmantojiet ID, ja ir pieejams.
       if (slide.id) {
-        // Ja ir ID, veicam atjaunināšanu
         formData.id = slide.id
       }
 
       const response = await fetch("/api/slides", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json", // Sūtīt datus kā JSON
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData), // Sūtīt datus kā JSON
+        body: JSON.stringify(formData),
       })
 
       if (!response.ok) {
@@ -97,13 +106,6 @@ export default function SliderSettings() {
     setLoading(false)
   }
 
-  // Attēla augšupielāde (piemēram, S3 vai cits pakalpojums)
-  const uploadImage = async (image: File) => {
-    // Piemērs attēla URL iegūšanai
-    return "image-url"
-  }
-
-  // Iegūt visus slaidus no servera
   useEffect(() => {
     const fetchSlides = async () => {
       const res = await fetch("/api/slides")
@@ -115,7 +117,6 @@ export default function SliderSettings() {
     fetchSlides()
   }, [])
 
-  // Izvēles paziņojuma noņemšana pēc 3 sekundēm
   useEffect(() => {
     if (successMessage || errorMessage) {
       const timer = setTimeout(() => {
@@ -123,7 +124,7 @@ export default function SliderSettings() {
         setErrorMessage(null)
       }, 3000)
 
-      return () => clearTimeout(timer) // Iztīrīt taimeri, kad komponente tiek noņemta vai paziņojums mainās
+      return () => clearTimeout(timer)
     }
   }, [successMessage, errorMessage])
 
@@ -132,8 +133,6 @@ export default function SliderSettings() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-10">
       <h2 className="text-2xl font-bold text-[#00332D]">Slaidera iestatījumi</h2>
-
-      {/* Paziņojumi */}
       {successMessage && (
         <div className="bg-green-500 text-white p-4 rounded-md">
           {successMessage}
@@ -147,63 +146,39 @@ export default function SliderSettings() {
 
       {slides.map((slide, index) => (
         <div key={index} className="border p-6 rounded-xl space-y-4 relative bg-white shadow-sm">
-          <button
-            className="absolute top-4 right-4 text-red-600"
-            onClick={() => removeSlide(index)}
-            title="Dzēst"
-          >
+          <button className="absolute top-4 right-4 text-red-600" onClick={() => removeSlide(index)} title="Dzēst">
             <Trash className="w-5 h-5" />
           </button>
 
           <div className="space-y-2">
             <Label>Virsraksts</Label>
-            <Input
-              value={slide.title}
-              onChange={(e) => handleSlideChange(index, "title", e.target.value)}
-            />
+            <Input value={slide.title} onChange={(e) => handleSlideChange(index, "title", e.target.value)} />
           </div>
 
           <div className="space-y-2">
             <Label>Apakšvirsraksts</Label>
-            <Input
-              value={slide.subtitle}
-              onChange={(e) => handleSlideChange(index, "subtitle", e.target.value)}
-            />
+            <Input value={slide.subtitle} onChange={(e) => handleSlideChange(index, "subtitle", e.target.value)} />
           </div>
 
           <div className="space-y-2">
             <Label>Apraksts</Label>
-            <Textarea
-              rows={3}
-              value={slide.description}
-              onChange={(e) => handleSlideChange(index, "description", e.target.value)}
-            />
+            <Textarea rows={3} value={slide.description} onChange={(e) => handleSlideChange(index, "description", e.target.value)} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Pogas teksts</Label>
-              <Input
-                value={slide.buttonText}
-                onChange={(e) => handleSlideChange(index, "buttonText", e.target.value)}
-              />
+              <Input value={slide.buttonText} onChange={(e) => handleSlideChange(index, "buttonText", e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Pogas saite</Label>
-              <Input
-                value={slide.buttonLink}
-                onChange={(e) => handleSlideChange(index, "buttonLink", e.target.value)}
-              />
+              <Input value={slide.buttonLink} onChange={(e) => handleSlideChange(index, "buttonLink", e.target.value)} />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Attēls</Label>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleSlideChange(index, "image", e.target.files?.[0] || null)}
-            />
+            <Input type="file" accept="image/*" onChange={(e) => handleSlideChange(index, "image", e.target.files?.[0] || null)} />
           </div>
         </div>
       ))}
