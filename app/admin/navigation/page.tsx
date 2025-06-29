@@ -1,7 +1,6 @@
 "use client"
 
-import { useState } from "react"
-
+import { useEffect, useState } from "react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
@@ -9,105 +8,127 @@ import { Textarea } from "../../components/ui/textarea"
 import { Plus, Trash } from "lucide-react"
 
 export default function NavigationSettings() {
-  const [logo, setLogo] = useState<File | null>(null)
-  const [logoAlt, setLogoAlt] = useState("Vestate logo")
-  const [menuItems, setMenuItems] = useState([
-    { label: "Kāpēc mēs?", link: "#why-us", isVisible: true },
-    { label: "Mūsu komanda", link: "#team", isVisible: true },
-    { label: "Mūsu darbi", link: "#projects", isVisible: true },
-    { label: "Atsauksmes", link: "#testimonials", isVisible: true },
-    { label: "Kontakti", link: "#contact", isVisible: true },
-    { label: "Blogs", link: "#blog", isVisible: true },
-  ])
-  const [securityText, setSecurityText] = useState("DARĪJUMA DROŠĪBAS GARANTIJA")
-  const [phone, setPhone] = useState("+371 28446677")
+  const [id, setId] = useState("")
+  const [logoAlt, setLogoAlt] = useState("")
+  const [phone, setPhone] = useState("")
+  const [securityText, setSecurityText] = useState("")
+  const [menuItems, setMenuItems] = useState<any[]>([])
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const handleMenuChange = (index: number, field: string, value: string | boolean) => {
-    const newItems = [...menuItems]
-    newItems[index] = { ...newItems[index], [field]: value }
-    setMenuItems(newItems)
+  useEffect(() => {
+    fetch("/api/navigation-settings")
+      .then((res) => res.json())
+      .then((data) => {
+        setId(data.id)
+        setLogoAlt(data.logoAlt)
+        setPhone(data.phone)
+        setSecurityText(data.securityText)
+        setMenuItems(data.menuItems || [])
+      })
+  }, [])
+
+  const handleChange = (i: number, key: string, val: string | boolean) => {
+    const copy = [...menuItems]
+    copy[i][key] = val
+    setMenuItems(copy)
   }
 
-  const addMenuItem = () => {
-    setMenuItems([...menuItems, { label: "Jauns", link: "#", isVisible: true }])
+  const addItem = () => setMenuItems([...menuItems, { label: "", link: "#", isVisible: true }])
+  const removeItem = (i: number) => setMenuItems(menuItems.filter((_, idx) => idx !== i))
+
+  const handleSave = async () => {
+    setSuccessMessage(null)
+    setErrorMessage(null)
+
+    const res = await fetch("/api/navigation-settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, logoAlt, phone, securityText, menuItems }),
+    })
+
+    if (res.ok) {
+      setSuccessMessage("Veiksmīgi izmainīts!")
+    } else {
+      setErrorMessage("❌ Kļūda")
+    }
   }
 
-  const removeMenuItem = (index: number) => {
-    setMenuItems(menuItems.filter((_, i) => i !== index))
-  }
+  // Izvēles paziņojuma noņemšana pēc 3 sekundēm
+  useEffect(() => {
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null)
+        setErrorMessage(null)
+      }, 3000)
+
+      return () => clearTimeout(timer) // Iztīrīt taimeri, kad komponente tiek noņemta vai paziņojums mainās
+    }
+  }, [successMessage, errorMessage])
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto py-10">
       <h2 className="text-2xl font-bold">Navigācijas iestatījumi</h2>
 
-      {/* Logo */}
-      <div className="space-y-2">
-        <Label>Logo attēls</Label>
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setLogo(e.target.files?.[0] || null)}
-        />
-        <Label className="block mt-2">Alt teksts</Label>
-        <Input
-          value={logoAlt}
-          onChange={(e) => setLogoAlt(e.target.value)}
-        />
-      </div>
+      {/* Paziņojums */}
+      {successMessage && (
+        <div className="bg-green-500 text-white p-4 rounded-md">
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div className="bg-red-500 text-white p-4 rounded-md">
+          {errorMessage}
+        </div>
+      )}
 
-      {/* Menu */}
-      <div className="space-y-2">
-        <Label>Izvēlnes vienības</Label>
-        {menuItems.map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <Input
-              placeholder="Nosaukums"
-              value={item.label}
-              onChange={(e) => handleMenuChange(index, "label", e.target.value)}
-            />
-            <Input
-              placeholder="Saite"
-              value={item.link}
-              onChange={(e) => handleMenuChange(index, "link", e.target.value)}
-            />
-            <input
-              type="checkbox"
-              checked={item.isVisible}
-              onChange={(e) => handleMenuChange(index, "isVisible", e.target.checked)}
-              title="Rādīt"
-            />
-            <Button variant="ghost" size="icon" onClick={() => removeMenuItem(index)}>
-              <Trash className="w-4 h-4 text-red-500" />
-            </Button>
-          </div>
-        ))}
-        <Button variant="outline" size="sm" onClick={addMenuItem} className="mt-2">
-          <Plus className="w-4 h-4 mr-1" /> Pievienot vienību
-        </Button>
-      </div>
-
-      {/* Drošības teksts */}
-      <div className="space-y-2">
-        <Label>Drošības garantijas teksts</Label>
-        <Textarea
-          rows={2}
-          value={securityText}
-          onChange={(e) => setSecurityText(e.target.value)}
-        />
-      </div>
-
-      {/* Telefons */}
-      <div className="space-y-2">
-        <Label>Tālruņa numurs</Label>
-        <Input
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+      <div>
+        <Label>Logo Alt teksts</Label>
+        <Input value={logoAlt} onChange={(e) => setLogoAlt(e.target.value)} />
       </div>
 
       <div>
-        <Button className="mt-4">Saglabāt izmaiņas</Button>
+        <Label>Drošības teksts</Label>
+        <Textarea value={securityText} onChange={(e) => setSecurityText(e.target.value)} />
       </div>
+
+      <div>
+        <Label>Tālrunis</Label>
+        <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+      </div>
+
+      <div>
+        <Label>Izvēlnes vienības</Label>
+        <div className="space-y-3">
+          {menuItems.map((item, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <Input
+                value={item.label}
+                onChange={(e) => handleChange(i, "label", e.target.value)}
+                placeholder="Nosaukums"
+              />
+              <Input
+                value={item.link}
+                onChange={(e) => handleChange(i, "link", e.target.value)}
+                placeholder="Saite"
+              />
+              <input
+                type="checkbox"
+                checked={item.isVisible}
+                onChange={(e) => handleChange(i, "isVisible", e.target.checked)}
+              />
+              <Button variant="ghost" size="icon" onClick={() => removeItem(i)}>
+                <Trash className="w-4 h-4 text-red-500" />
+              </Button>
+            </div>
+          ))}
+          <Button onClick={addItem} variant="outline" size="sm" className="mt-2">
+            <Plus className="w-4 h-4 mr-1" /> Pievienot vienību
+          </Button>
+        </div>
+      </div>
+
+      <Button onClick={handleSave}>Saglabāt izmaiņas</Button>
     </div>
   )
 }

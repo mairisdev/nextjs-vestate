@@ -37,3 +37,25 @@ model FooterSettings {
 
   updatedAt      DateTime @updatedAt
 }
+
+model NavigationSettings {
+  id           String   @id @default(cuid())
+  logoAlt      String
+  phone        String
+  securityText String
+  menuItems    Json
+  updatedAt    DateTime @updatedAt
+}
+
+model Slide {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String
+  description String
+  buttonText  String
+  buttonLink  String
+  imageUrl    String
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
