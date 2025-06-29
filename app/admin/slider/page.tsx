@@ -6,7 +6,6 @@ import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
 import { Trash, Plus } from "lucide-react"
-import { uploadImage } from "@/lib/uploadImage"
 
 type Slide = {
   id?: string
