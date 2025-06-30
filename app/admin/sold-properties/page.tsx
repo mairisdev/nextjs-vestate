@@ -1,40 +1,54 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Button } from "../../components/ui/button"
 import { Textarea } from "../../components/ui/textarea"
 import { Trash, Plus } from "lucide-react"
 
-interface Property {
+type Property = {
   title: string
   price: string
   status: "pārdots" | "pārdošanā"
-  image: File | null
+  imageFiles: File[]
+  imageUrls: string[]
   size: string
   series: string
   floor: string
+  description: string
   link: string
 }
 
 export default function SoldPropertiesSettings() {
-  const [properties, setProperties] = useState<Property[]>([
-    {
-      title: "3 istabu dzīvoklis Salaspilī",
-      price: "€75 800",
-      status: "pārdots",
-      image: null,
-      size: "77m2",
-      series: "103 sērija",
-      floor: "4 stāvs",
-      link: "#",
-    },
-  ])
+  const [properties, setProperties] = useState<Property[]>([])
+  const [status, setStatus] = useState("")
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch("/api/sold-properties")
+      const data = await res.json()
+      const parsed: Property[] = data.map((item: any) => ({
+        ...item,
+        imageFiles: [],
+        imageUrls: item.imageUrls || [],
+      }))
+      setProperties(parsed)
+    }
+    fetchData()
+  }, [])
 
   const updateProperty = (index: number, field: keyof Property, value: any) => {
     const updated = [...properties]
     updated[index] = { ...updated[index], [field]: value }
+    setProperties(updated)
+  }
+
+  const handleImageUpload = (index: number, files: FileList | null) => {
+    if (!files) return
+    const updated = [...properties]
+    updated[index].imageFiles = Array.from(files)
+    updateProperty(index, "imageUrls", []) // notiek pār-rakstīšana
     setProperties(updated)
   }
 
@@ -45,10 +59,12 @@ export default function SoldPropertiesSettings() {
         title: "",
         price: "",
         status: "pārdots",
-        image: null,
+        imageFiles: [],
+        imageUrls: [],
         size: "",
         series: "",
         floor: "",
+        description: "",
         link: "#",
       },
     ])
@@ -56,6 +72,40 @@ export default function SoldPropertiesSettings() {
 
   const removeProperty = (index: number) => {
     setProperties(properties.filter((_, i) => i !== index))
+  }
+
+  const handleSave = async () => {
+    setStatus("Saglabājas...")
+
+    const formData = new FormData()
+    formData.append("data", JSON.stringify(properties.map(p => ({
+      title: p.title,
+      price: p.price,
+      status: p.status,
+      size: p.size,
+      series: p.series,
+      floor: p.floor,
+      description: p.description,
+      link: p.link,
+      imageUrls: p.imageUrls,
+    }))))
+
+    properties.forEach((p, i) => {
+      p.imageFiles.forEach(file => {
+        formData.append(`images_${i}`, file)
+      })
+    })
+
+    const res = await fetch("/api/sold-properties", {
+      method: "POST",
+      body: formData,
+    })
+
+    if (res.ok) {
+      setStatus("Saglabāts veiksmīgi ✅")
+    } else {
+      setStatus("Kļūda saglabājot ❌")
+    }
   }
 
   return (
@@ -100,16 +150,6 @@ export default function SoldPropertiesSettings() {
               </select>
             </div>
             <div>
-              <Label>Attēls</Label>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  updateProperty(index, "image", e.target.files?.[0] || null)
-                }
-              />
-            </div>
-            <div>
               <Label>Platība</Label>
               <Input
                 value={property.size}
@@ -117,7 +157,7 @@ export default function SoldPropertiesSettings() {
               />
             </div>
             <div>
-              <Label>Sērija</Label>
+              <Label>Sērija / Tips</Label>
               <Input
                 value={property.series}
                 onChange={(e) => updateProperty(index, "series", e.target.value)}
@@ -131,11 +171,41 @@ export default function SoldPropertiesSettings() {
               />
             </div>
             <div>
-              <Label>Saite (skatīt vairāk)</Label>
+              <Label>Apraksts (modal)</Label>
+              <Textarea
+                rows={2}
+                value={property.description}
+                onChange={(e) => updateProperty(index, "description", e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Saite (apskatīt vairāk)</Label>
               <Input
                 value={property.link}
                 onChange={(e) => updateProperty(index, "link", e.target.value)}
               />
+            </div>
+            <div className="sm:col-span-2">
+              <Label>Attēli</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => handleImageUpload(index, e.target.files)}
+              />
+              <div className="flex gap-2 mt-2 overflow-x-auto">
+                {(property.imageFiles.length > 0
+                  ? property.imageFiles.map((f, i) => URL.createObjectURL(f))
+                  : property.imageUrls
+                ).map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    className="w-24 h-16 object-cover rounded border"
+                    alt={`preview-${i}`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -146,7 +216,10 @@ export default function SoldPropertiesSettings() {
       </Button>
 
       <div>
-        <Button className="mt-6">Saglabāt izmaiņas</Button>
+        <Button className="mt-6" onClick={handleSave}>
+          Saglabāt izmaiņas
+        </Button>
+        {status && <p className="mt-2 text-sm">{status}</p>}
       </div>
     </div>
   )
