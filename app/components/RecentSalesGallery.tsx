@@ -72,7 +72,7 @@ export default function ClientGallery({ properties }: { properties: Property[] }
                   {property.title}
                 </h3>
                 <p className="text-xl font-bold text-[#00332D] mb-3">
-                  {property.price} EUR
+                  {property.price} €
                 </p>
                 <ul className="text-sm text-gray-700 space-y-1 mb-4">
                   {[property.size, property.type, property.floor].map((text, i) => (
