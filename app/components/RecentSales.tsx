@@ -13,7 +13,7 @@ export default async function RecentSales() {
     floor: p.floor,
     description: p.description || "",
     link: p.link,
-    status: p.status === "pārdots" ? "sold" : "active",
+    status: p.status === "pārdots" ? "sold" as const : "active" as const,
     images: p.imageUrls,
   }))
 

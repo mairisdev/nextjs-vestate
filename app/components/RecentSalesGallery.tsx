@@ -4,7 +4,7 @@ import { useState } from "react"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
 
-type Property = {
+export type Property = {
   id: string
   title: string
   price: string
