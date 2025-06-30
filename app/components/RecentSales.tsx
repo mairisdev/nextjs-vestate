@@ -1,5 +1,5 @@
 import { getSoldProperties } from "@/lib/queries/soldProperties"
-import ClientGallery from "./ClientGallery"
+import ClientGallery from "./RecentSalesGallery"
 
 export default async function RecentSales() {
   const dbProperties = await getSoldProperties()

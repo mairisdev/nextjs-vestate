@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { ChevronLeft, ChevronRight, Circle, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, X } from "lucide-react"
 
 type Property = {
   id: string
@@ -47,9 +47,9 @@ export default function ClientGallery({ properties }: { properties: Property[] }
         </p>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {properties.map((property, idx) => (
+          {properties.map((property) => (
             <div
-              key={idx}
+              key={property.id}
               className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 flex flex-col"
             >
               <div className="relative">
@@ -60,17 +60,13 @@ export default function ClientGallery({ properties }: { properties: Property[] }
                   height={400}
                   className="w-full h-56 object-cover"
                 />
-                {property.status === "sold" && (
-                  <span className="absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-                    PĀRDOTS
-                  </span>
-                )}
-                {property.status === "active" && (
-                  <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-                    PĀRDOŠANĀ
-                  </span>
-                )}
+                <span className={`absolute top-2 left-2 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md ${
+                  property.status === "sold" ? "bg-red-600" : "bg-green-500"
+                }`}>
+                  {property.status === "sold" ? "PĀRDOTS" : "PĀRDOŠANĀ"}
+                </span>
               </div>
+
               <div className="p-6 flex-1 flex flex-col justify-between text-left">
                 <h3 className="text-lg font-semibold text-[#00332D] mb-1">
                   {property.title}
@@ -79,18 +75,12 @@ export default function ClientGallery({ properties }: { properties: Property[] }
                   {property.price} EUR
                 </p>
                 <ul className="text-sm text-gray-700 space-y-1 mb-4">
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00332D] inline-block"></span>
-                    <span className="text-base">{property.size}</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00332D] inline-block"></span>
-                    <span className="text-base">{property.type}</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00332D] inline-block"></span>
-                    <span className="text-base">{property.floor}</span>
-                  </li>
+                  {[property.size, property.type, property.floor].map((text, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#00332D] inline-block"></span>
+                      <span className="text-base">{text}</span>
+                    </li>
+                  ))}
                 </ul>
 
                 <button
@@ -154,7 +144,7 @@ export default function ClientGallery({ properties }: { properties: Property[] }
                     {selected.title}
                   </h3>
                   <p className="text-lg font-bold text-[#00332D] mb-2">
-                    {selected.price}
+                    {selected.price} EUR
                   </p>
                   <p className="text-sm text-gray-600 mb-4">
                     <span className="font-semibold">{selected.size}</span> · <span className="font-semibold">{selected.type}</span> · <span className="font-semibold">{selected.floor}</span>
