@@ -19,6 +19,7 @@ export default async function AgentsSection() {
             key={idx}
             className="bg-white rounded-2xl shadow-md transition-all duration-300 ease-in-out flex flex-col"
           >
+            {agent.image && (
             <Image
               src={agent.image}
               alt={agent.name}
@@ -26,6 +27,7 @@ export default async function AgentsSection() {
               height={400}
               className="w-full h-[300px] object-cover"
             />
+            )}
             <div className="p-4 text-[#00332D] flex flex-col flex-grow justify-between">
               <div>
                 <h3 className="text-lg font-semibold">{agent.name}</h3>

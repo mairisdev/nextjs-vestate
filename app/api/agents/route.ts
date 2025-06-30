@@ -1,12 +1,18 @@
-import { writeFile } from "fs/promises"
+import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 import { v4 as uuidv4 } from "uuid"
 import { NextResponse, NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
+import fs from "fs"
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData()
   const uploadDir = path.join(process.cwd(), "public", "agents")
+
+  // Pārliecinies, ka mape eksistē
+  if (!fs.existsSync(uploadDir)) {
+    await mkdir(uploadDir, { recursive: true })
+  }
 
   let agents: any[] = []
 
@@ -38,17 +44,32 @@ export async function POST(req: NextRequest) {
       imageUrl = `/agents/${filename}`
     }
 
-    const created = await prisma.agent.create({
-      data: {
-        name: agent.name,
-        title: agent.title,
-        phone: agent.phone,
-        image: imageUrl,
-        reviews: agent.reviews || [],
-      }
-    })
+    try {
+      const upserted = await prisma.agent.upsert({
+        where: {
+          name_phone: {
+            name: agent.name,
+            phone: agent.phone,
+          },
+        },
+        update: {
+          title: agent.title,
+          image: imageUrl,
+          reviews: agent.reviews || [],
+        },
+        create: {
+          name: agent.name,
+          title: agent.title,
+          phone: agent.phone,
+          image: imageUrl,
+          reviews: agent.reviews || [],
+        },
+      })
 
-    createdAgents.push(created)
+      createdAgents.push(upserted)
+    } catch (err) {
+      return NextResponse.json({ success: false, message: "Database error", error: String(err) }, { status: 500 })
+    }
   }
 
   return NextResponse.json({ success: true, agents: createdAgents })

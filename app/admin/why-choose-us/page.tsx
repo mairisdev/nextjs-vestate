@@ -3,74 +3,79 @@
 import { useState } from "react"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
-import { Textarea } from "../../components/ui/textarea"
 import { Button } from "../../components/ui/button"
 import { Plus, Trash } from "lucide-react"
 
-export default function WhyChooseUsSettings() {
+export default function WhyChooseUsAdminPage() {
   const [title, setTitle] = useState("Kāpēc izvēlēties mūs?")
   const [buttonText, setButtonText] = useState("Saņemt piedāvājumu")
-  const [points, setPoints] = useState([
+  const [points, setPoints] = useState<string[]>([
     "Komanda ar daudzu gadu pieredzi",
     "Sadarbība ar citām aģentūrām",
-    "Personīga un profesionāla pieeja",
-    "Godīga attieksme",
-    "Ātrs rezultāts",
-    "Nenormēts darba laiks 24/7",
-    "Bezmaksas juridiskās konsultācijas"
   ])
+  const [image, setImage] = useState<File | null>(null)
 
-  const updatePoint = (index: number, value: string) => {
-    const newPoints = [...points]
-    newPoints[index] = value
-    setPoints(newPoints)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!image) return alert("Lūdzu pievieno attēlu!")
+
+    const formData = new FormData()
+    formData.append("title", title)
+    formData.append("buttonText", buttonText)
+    formData.append("points", JSON.stringify(points))
+    formData.append("image", image)
+
+    const res = await fetch("/api/why-choose-us", {
+      method: "POST",
+      body: formData,
+    })
+
+    if (res.ok) alert("Saglabāts veiksmīgi!")
+    else alert("Kļūda saglabājot datus")
   }
 
-  const addPoint = () => setPoints([...points, ""])
-  const removePoint = (index: number) =>
-    setPoints(points.filter((_, i) => i !== index))
+  const updatePoint = (i: number, val: string) => {
+    const copy = [...points]
+    copy[i] = val
+    setPoints(copy)
+  }
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto py-10">
+    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6 py-10">
       <h2 className="text-2xl font-bold">“Kāpēc izvēlēties mūs” iestatījumi</h2>
 
-      <div className="space-y-2">
-        <Label>Sadaļas virsraksts</Label>
+      <div>
+        <Label>Virsraksts</Label>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} />
       </div>
 
-      <div className="space-y-2">
+      <div>
         <Label>Punkti</Label>
         {points.map((point, i) => (
-          <div key={i} className="flex gap-2 items-center">
-            <Input
-              value={point}
-              onChange={(e) => updatePoint(i, e.target.value)}
-              className="flex-1"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => removePoint(i)}
-            >
+          <div key={i} className="flex gap-2 items-center mt-2">
+            <Input value={point} onChange={(e) => updatePoint(i, e.target.value)} />
+            <Button variant="ghost" size="icon" onClick={() => setPoints(points.filter((_, idx) => idx !== i))}>
               <Trash className="w-4 h-4 text-red-500" />
             </Button>
           </div>
         ))}
-        <Button variant="outline" size="sm" onClick={addPoint}>
-          <Plus className="w-4 h-4 mr-1" />
-          Pievienot punktu
+        <Button type="button" onClick={() => setPoints([...points, ""])} variant="outline" className="mt-2">
+          <Plus className="w-4 h-4 mr-2" /> Pievienot punktu
         </Button>
       </div>
 
-      <div className="space-y-2">
+      <div>
+        <Label>Attēls</Label>
+        <Input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} />
+      </div>
+
+      <div>
         <Label>Pogas teksts</Label>
         <Input value={buttonText} onChange={(e) => setButtonText(e.target.value)} />
       </div>
 
-      <div>
-        <Button className="mt-4">Saglabāt izmaiņas</Button>
-      </div>
-    </div>
+      <Button type="submit">Saglabāt izmaiņas</Button>
+    </form>
   )
 }

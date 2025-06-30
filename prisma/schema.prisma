@@ -96,6 +96,8 @@ model Agent {
   reviews   String[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([name, phone], name: "name_phone")
 }
 
 model Testimonial {
@@ -128,4 +130,14 @@ model SoldProperty {
   description String
   link        String
   createdAt   DateTime @default(now())
+}
+
+model WhyChooseUs {
+  id          String   @id @default(cuid())
+  title       String
+  buttonText  String
+  points      String[]
+  imageUrl    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

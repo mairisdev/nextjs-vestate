@@ -16,14 +16,9 @@ type Agent = {
 
 export default function AgentsAdminPage() {
   const [agents, setAgents] = useState<Agent[]>([
-    {
-      name: "",
-      title: "",
-      phone: "",
-      image: "",
-      reviews: [],
-    }
+    { name: "", title: "", phone: "", image: "", reviews: [] }
   ])
+  const [loading, setLoading] = useState(false)
 
   const updateAgent = (index: number, field: keyof Agent, value: any) => {
     const updated = [...agents]
@@ -32,9 +27,7 @@ export default function AgentsAdminPage() {
   }
 
   const addAgent = () => {
-    setAgents([...agents, {
-      name: "", title: "", phone: "", image: "", reviews: []
-    }])
+    setAgents([...agents, { name: "", title: "", phone: "", image: "", reviews: [] }])
   }
 
   const removeAgent = (index: number) => {
@@ -42,6 +35,8 @@ export default function AgentsAdminPage() {
   }
 
   const handleSave = async () => {
+    setLoading(true)
+
     const formData = new FormData()
     const agentsToSend = agents.map(agent => ({
       ...agent,
@@ -63,6 +58,7 @@ export default function AgentsAdminPage() {
 
     const data = await res.json()
     alert(data.success ? "Saglabāts veiksmīgi!" : `Kļūda: ${data.message}`)
+    setLoading(false)
   }
 
   return (
@@ -70,24 +66,37 @@ export default function AgentsAdminPage() {
       <h2 className="text-2xl font-bold text-[#00332D]">Aģentu iestatījumi</h2>
 
       {agents.map((agent, index) => (
-        <div key={index} className="p-4 border rounded-md space-y-4 relative">
+        <div key={index} className="p-4 border rounded-md space-y-4 relative bg-white shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Vārds</Label>
-              <Input value={agent.name} onChange={e => updateAgent(index, "name", e.target.value)} />
+              <Input
+                value={agent.name}
+                onChange={e => updateAgent(index, "name", e.target.value)}
+              />
             </div>
             <div>
               <Label>Amats</Label>
-              <Input value={agent.title} onChange={e => updateAgent(index, "title", e.target.value)} />
+              <Input
+                value={agent.title}
+                onChange={e => updateAgent(index, "title", e.target.value)}
+              />
             </div>
             <div>
               <Label>Tālrunis</Label>
-              <Input value={agent.phone} onChange={e => updateAgent(index, "phone", e.target.value)} />
+              <Input
+                value={agent.phone}
+                onChange={e => updateAgent(index, "phone", e.target.value)}
+              />
             </div>
             <div>
               <Label>Attēls</Label>
-              <Input type="file" accept="image/*" onChange={e => updateAgent(index, "image", e.target.files?.[0] || "")} />
-              {typeof agent.image === "string" && (
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={e => updateAgent(index, "image", e.target.files?.[0] || "")}
+              />
+              {typeof agent.image === "string" && agent.image && (
                 <p className="text-sm text-gray-500 mt-1">{agent.image}</p>
               )}
             </div>
@@ -107,7 +116,11 @@ export default function AgentsAdminPage() {
                 }}
               />
             ))}
-            <Button variant="outline" size="sm" onClick={() => updateAgent(index, "reviews", [...agent.reviews, ""])}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateAgent(index, "reviews", [...agent.reviews, ""])}
+            >
               <Plus className="w-4 h-4 mr-1" /> Pievienot atsauksmi
             </Button>
           </div>
@@ -129,8 +142,12 @@ export default function AgentsAdminPage() {
       </Button>
 
       <div>
-        <Button className="mt-6" onClick={handleSave}>
-          Saglabāt izmaiņas
+        <Button
+          className="mt-6"
+          onClick={handleSave}
+          disabled={loading}
+        >
+          {loading ? "Saglabā..." : "Saglabāt izmaiņas"}
         </Button>
       </div>
     </div>

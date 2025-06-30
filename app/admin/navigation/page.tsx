@@ -20,11 +20,17 @@ export default function NavigationSettings() {
     fetch("/api/navigation-settings")
       .then((res) => res.json())
       .then((data) => {
-        setId(data.id)
-        setLogoAlt(data.logoAlt)
-        setPhone(data.phone)
-        setSecurityText(data.securityText)
-        setMenuItems(data.menuItems || [])
+        if (data) {
+          setId(data.id || "")
+          setLogoAlt(data.logoAlt || "")
+          setPhone(data.phone || "")
+          setSecurityText(data.securityText || "")
+          setMenuItems(data.menuItems || [])
+        }
+      })
+      .catch((err) => {
+        console.error("Kļūda ielādējot navigācijas datus:", err)
+        setErrorMessage("Neizdevās ielādēt navigācijas iestatījumus.")
       })
   }, [])
 
