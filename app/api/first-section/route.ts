@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { NextRequest, NextResponse } from "next/server"
 
 export async function GET() {
   try {
@@ -10,18 +11,24 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
-  const data = await req.json()
-  let { headline, buttonText, buttonLink, backgroundImage } = data
-
-  // Pārbaudām, vai dati ir pieejami un aizstāj ar tukšām vērtībām, ja nepieciešams
-  headline = headline || ""
-  buttonText = buttonText || ""
-  buttonLink = buttonLink || ""
-
+export async function POST(req: NextRequest) {
   try {
+    const body = await req.json()
+
+    const headline = body.headline ?? ""
+    const buttonText = body.buttonText ?? ""
+    const buttonLink = body.buttonLink ?? ""
+    let backgroundImage = body.backgroundImage ?? ""
+
+    if (!backgroundImage) {
+      const existing = await prisma.firstSection.findUnique({
+        where: { id: "cmchdj0eg0001mc2cmvk7g7mc" }
+      })
+      backgroundImage = existing?.backgroundImage || ""
+    }
+
     const updatedSection = await prisma.firstSection.upsert({
-      where: { id: 'cmchdj0eg0001mc2cmvk7g7mc' },  // Unique ID for the first section
+      where: { id: "cmchdj0eg0001mc2cmvk7g7mc" },
       update: {
         headline,
         buttonText,
@@ -29,16 +36,17 @@ export async function POST(req: Request) {
         backgroundImage,
       },
       create: {
-        id: 'cmchdj0eg0001mc2cmvk7g7mc',
+        id: "cmchdj0eg0001mc2cmvk7g7mc",
         headline,
         buttonText,
         buttonLink,
         backgroundImage,
       },
     })
-    return new Response(JSON.stringify(updatedSection), { status: 200 })
+
+    return NextResponse.json(updatedSection, { status: 200 })
   } catch (error) {
     console.error("Error updating first section:", error)
-    return new Response("Server error", { status: 500 })
+    return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }

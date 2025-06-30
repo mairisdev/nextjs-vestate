@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
@@ -11,33 +11,21 @@ type Testimonial = {
   name: string
   message: string
   rating: number
-  language?: string
+  language: string
 }
 
 export default function TestimonialsSettings() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([
-    {
-      name: "Aleksandra Pticiņa",
-      message:
-        "Мы очень рекомендуем «Vestate Latvija», отлично справились с нашей продажей! Достаточно быстро всё продали! 🥰👍",
-      rating: 5,
-      language: "ru",
-    },
-    {
-      name: "Alena Kraveca",
-      message:
-        "Ļoti viss apmierina. Palīdzēja pārdot un arī palīdzēja atrast dzīvokli pirkšanai tieši tādu kā meklējām...",
-      rating: 5,
-      language: "lv",
-    },
-    {
-      name: "Olga Leksina",
-      message:
-        "I was looking for a place to live in Riga and the real estate agent, Vineta helped me to find a good place...",
-      rating: 5,
-      language: "en",
-    },
-  ])
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  const [status, setStatus] = useState("")
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch("/api/testimonials")
+      const data = await res.json()
+      setTestimonials(data)
+    }
+    fetchData()
+  }, [])
 
   const handleChange = (index: number, field: keyof Testimonial, value: string | number) => {
     const updated = [...testimonials]
@@ -56,6 +44,22 @@ export default function TestimonialsSettings() {
     setTestimonials(testimonials.filter((_, i) => i !== index))
   }
 
+  const handleSave = async () => {
+    setStatus("Saglabājas...")
+
+    const res = await fetch("/api/testimonials", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ testimonials }),
+    })
+
+    if (res.ok) {
+      setStatus("Saglabāts veiksmīgi ✅")
+    } else {
+      setStatus("Kļūda saglabājot ❌")
+    }
+  }
+
   return (
     <div className="space-y-8 max-w-4xl mx-auto py-10">
       <h2 className="text-2xl font-bold">Atsauksmju sadaļas iestatījumi</h2>
@@ -67,7 +71,7 @@ export default function TestimonialsSettings() {
               <Label>Klienta vārds</Label>
               <Input
                 value={item.name}
-                onChange={(e) => handleChange(index, "name", e.target.value)}
+                onChange={(e: { target: { value: string | number } }) => handleChange(index, "name", e.target.value)}
               />
             </div>
 
@@ -78,7 +82,7 @@ export default function TestimonialsSettings() {
                 min={1}
                 max={5}
                 value={item.rating}
-                onChange={(e) => handleChange(index, "rating", parseInt(e.target.value))}
+                onChange={(e: { target: { value: string } }) => handleChange(index, "rating", parseInt(e.target.value))}
               />
             </div>
           </div>
@@ -88,15 +92,15 @@ export default function TestimonialsSettings() {
             <Textarea
               rows={3}
               value={item.message}
-              onChange={(e) => handleChange(index, "message", e.target.value)}
+              onChange={(e: { target: { value: string | number } }) => handleChange(index, "message", e.target.value)}
             />
           </div>
 
           <div>
             <Label>Valoda (lv / en / ru)</Label>
             <Input
-              value={item.language || "lv"}
-              onChange={(e) => handleChange(index, "language", e.target.value)}
+              value={item.language}
+              onChange={(e: { target: { value: string | number } }) => handleChange(index, "language", e.target.value)}
             />
           </div>
 
@@ -118,7 +122,10 @@ export default function TestimonialsSettings() {
       </Button>
 
       <div>
-        <Button className="mt-4">Saglabāt izmaiņas</Button>
+        <Button className="mt-4" onClick={handleSave}>
+          Saglabāt izmaiņas
+        </Button>
+        {status && <p className="mt-2 text-sm">{status}</p>}
       </div>
     </div>
   )

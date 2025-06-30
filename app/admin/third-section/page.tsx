@@ -1,26 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
 import { Plus, Trash } from "lucide-react"
+import AlertMessage from "../../components/ui/alert-message"
 
 export default function ThirdSectionSettings() {
-  const [heading, setHeading] = useState("Pakalpojumi, ko sniedz mūsu komanda")
-  const [subheading, setSubheading] = useState("Pieredzes bagāti nekustamo īpašumu speciālisti")
-  const [services, setServices] = useState([
-    "Pārstāv jūsu intereses visa pārdošanas procesa gaitā.",
-    "Sniedz info par nodokļiem, piemērojamiem likumiem.",
-    "Veic profesionālu mārketingu un sludinājumu izvietošanu.",
-    "Palīdz pircējiem visos kredīta un pirkuma procesa posmos.",
-    "Rūpējas, lai īpašniekam ir pēc iespējas mazāks slogs darījumā.",
-    "Konsultē par tirgus situāciju, īpašuma vērtību un pārdošanas nosacījumiem.",
-    "Palīdz sagatavot darījuma dokumentus un sakārtot pārvaldības jautājumus.",
-    "Komunicē ar interesentiem, saskaņo apskates.",
-    "Koordinē darījuma gaitu ar notāriem, īpašniekiem, pircējiem."
-  ])
+  const [heading, setHeading] = useState("")
+  const [subheading, setSubheading] = useState("")
+  const [services, setServices] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [showError, setShowError] = useState(false)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch("/api/third-section")
+      const data = await res.json()
+      if (data) {
+        setHeading(data.heading || "")
+        setSubheading(data.subheading || "")
+        setServices(data.services || [])
+      }
+      setLoading(false)
+    }
+
+    fetchData()
+  }, [])
 
   const handleServiceChange = (index: number, value: string) => {
     const updated = [...services]
@@ -28,25 +37,60 @@ export default function ThirdSectionSettings() {
     setServices(updated)
   }
 
-  const addService = () => setServices([...services, "Jauns pakalpojums..."])
-  const removeService = (index: number) => {
+  const addService = () => setServices([...services, ""])
+  const removeService = (index: number) =>
     setServices(services.filter((_, i) => i !== index))
+
+  const handleSave = async () => {
+    setLoading(true)
+
+    const payload = {
+      heading,
+      subheading,
+      services,
+    }
+
+    const res = await fetch("/api/third-section", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+
+    if (res.ok) {
+      setShowSuccess(true)
+    } else {
+      setShowError(true)
+    }
+
+    setLoading(false)
   }
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto py-10">
       <h2 className="text-2xl font-bold text-[#00332D]">Trešās sadaļas iestatījumi</h2>
 
-      {/* Zemvirsraksts */}
-      <div className="space-y-2">
-        <Label>Zemvirsraksts (mazais teksts augšā)</Label>
-        <Input
-          value={subheading}
-          onChange={(e) => setSubheading(e.target.value)}
+      {showSuccess && (
+        <AlertMessage
+          type="success"
+          message="Izmaiņas saglabātas veiksmīgi!"
+          onClose={() => setShowSuccess(false)}
         />
+      )}
+      {showError && (
+        <AlertMessage
+          type="error"
+          message="Radās kļūda saglabājot izmaiņas."
+          onClose={() => setShowError(false)}
+        />
+      )}
+
+      {/* Subheading */}
+      <div className="space-y-2">
+        <Label>Zemvirsraksts</Label>
+        <Input value={subheading} onChange={(e) => setSubheading(e.target.value)} />
       </div>
 
-      {/* Virsraksts */}
+      {/* Heading */}
       <div className="space-y-2">
         <Label>Virsraksts</Label>
         <Textarea
@@ -56,7 +100,7 @@ export default function ThirdSectionSettings() {
         />
       </div>
 
-      {/* Pakalpojumi */}
+      {/* Services */}
       <div className="space-y-2">
         <Label>Pakalpojumu saraksts</Label>
         {services.map((item, index) => (
@@ -77,10 +121,9 @@ export default function ThirdSectionSettings() {
         </Button>
       </div>
 
-      {/* Saglabāt */}
-      <div>
-        <Button className="mt-4">Saglabāt izmaiņas</Button>
-      </div>
+      <Button className="mt-6" onClick={handleSave} disabled={loading}>
+        {loading ? "Saglabājas..." : "Saglabāt izmaiņas"}
+      </Button>
     </div>
   )
 }

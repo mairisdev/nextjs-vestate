@@ -29,22 +29,28 @@ export default function FooterSettings() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      const res = await fetch("/api/footer-settings")
-      const data = await res.json()
+      try {
+        const res = await fetch("/api/footer-settings")
+        const data = await res.json()
 
-      setId(data.id)
-      setCompanyName(data.companyName)
-      setCompanyDesc(data.description)
-      setPhone(data.phone)
-      setEmail(data.email)
-      setAddress(data.address)
-      setFacebookUrl(data.facebookUrl)
-      setInstagramUrl(data.instagramUrl)
-      setLinkedinUrl(data.linkedinUrl)
-      setDeveloperName(data.developerName)
-      setDeveloperUrl(data.developerUrl)
-      setCopyrightText(data.copyrightText)
-      setLoading(false)
+        if (data?.id) setId(data.id)
+        if (data?.companyName) setCompanyName(data.companyName)
+        if (data?.description) setCompanyDesc(data.description)
+        if (data?.phone) setPhone(data.phone)
+        if (data?.email) setEmail(data.email)
+        if (data?.address) setAddress(data.address)
+        if (data?.facebookUrl) setFacebookUrl(data.facebookUrl)
+        if (data?.instagramUrl) setInstagramUrl(data.instagramUrl)
+        if (data?.linkedinUrl) setLinkedinUrl(data.linkedinUrl)
+        if (data?.developerName) setDeveloperName(data.developerName)
+        if (data?.developerUrl) setDeveloperUrl(data.developerUrl)
+        if (data?.copyrightText) setCopyrightText(data.copyrightText)
+      } catch (error) {
+        console.error("Kļūda ielādējot kājenes datus:", error)
+        setStatus("Neizdevās ielādēt datus ❌")
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchData()
@@ -52,29 +58,36 @@ export default function FooterSettings() {
 
   const handleSave = async () => {
     setStatus("Saglabājas...")
-    const res = await fetch("/api/footer-settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id,
-        companyName,
-        description: companyDesc,
-        phone,
-        email,
-        address,
-        facebookUrl,
-        instagramUrl,
-        linkedinUrl,
-        developerName,
-        developerUrl,
-        copyrightText,
-      }),
-    })
+    try {
+      const res = await fetch("/api/footer-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          companyName,
+          description: companyDesc,
+          phone,
+          email,
+          address,
+          facebookUrl,
+          instagramUrl,
+          linkedinUrl,
+          developerName,
+          developerUrl,
+          copyrightText,
+        }),
+      })
 
-    if (res.ok) {
-      setStatus("Saglabāts veiksmīgi ✅")
-    } else {
-      setStatus("Kļūda saglabājot ❌")
+      if (res.ok) {
+        const updated = await res.json()
+        setId(updated.id)
+        setStatus("Saglabāts veiksmīgi ✅")
+      } else {
+        setStatus("Kļūda saglabājot ❌")
+      }
+    } catch (error) {
+      console.error("Kļūda saglabājot datus:", error)
+      setStatus("Kļūda savienojumā ❌")
     }
   }
 
@@ -82,7 +95,9 @@ export default function FooterSettings() {
     <div className="max-w-4xl mx-auto py-10 space-y-6">
       <h2 className="text-2xl font-bold">Kājenes iestatījumi</h2>
 
-      {loading ? <p>Notiek ielāde...</p> : (
+      {loading ? (
+        <p className="text-gray-500">Notiek ielāde...</p>
+      ) : (
         <>
           <div>
             <Label>Uzņēmuma nosaukums</Label>

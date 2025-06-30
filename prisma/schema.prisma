@@ -69,3 +69,49 @@ model FirstSection {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+model SecondSection {
+  id        String   @id @default(cuid())
+  heading   String
+  imageUrl  String
+  reasons   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ThirdSection {
+  id         String   @id @default("third-section")
+  heading    String
+  subheading String
+  imageUrl   String?
+  services   String[]
+}
+
+model Agent {
+  id        String   @id @default(cuid())
+  name      String
+  title     String
+  phone     String
+  image     String
+  reviews   String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  message   String
+  rating    Int
+  language  String   @default("lv")
+  createdAt DateTime @default(now())
+}
+
+model SixthSection {
+  id          String   @id @default(cuid())
+  title       String
+  buttonText  String
+  buttonLink  String
+  imageUrl    String
+  updatedAt   DateTime @updatedAt
+}

@@ -8,14 +8,23 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const data = await req.json()
-  const updated = await prisma.navigationSettings.update({
-    where: { id: data.id },
-    data: {
+
+  const updated = await prisma.navigationSettings.upsert({
+    where: { id: data.id || "navigation-single-record" }, // fallback uz konkrētu id
+    update: {
+      logoAlt: data.logoAlt,
+      menuItems: data.menuItems,
+      securityText: data.securityText,
+      phone: data.phone,
+    },
+    create: {
+      id: data.id || "navigation-single-record",
       logoAlt: data.logoAlt,
       menuItems: data.menuItems,
       securityText: data.securityText,
       phone: data.phone,
     },
   })
+
   return NextResponse.json(updated)
 }

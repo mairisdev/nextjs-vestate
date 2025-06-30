@@ -13,12 +13,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Image is required' }, { status: 400 })
     }
 
-    // Sanitizējam virsrakstu, lai pārliecinātos, ka tas ir derīgs faila nosaukums
-    const sanitizedTitle = title?.replace(/\s+/g, '-').toLowerCase() || 'default-title'
-    const imageName = `${sanitizedTitle}.webp`
+  const safeTitle = title
+    ?.normalize("NFD") // sadala diakritiskās zīmes (č -> c + ̌)
+    .replace(/[\u0300-\u036f]/g, "") // izmet diakritikas
+    .replace(/[^a-zA-Z0-9-_]/g, '-') // aizvieto visu citu ar -
+    .replace(/-+/g, '-') // vairāki - pēc kārtas = viens -
+    .toLowerCase() || 'default-title'
+
+  const imageName = `${safeTitle}.webp`
 
     // Pārliecināmies, ka attēls tiek saglabāts pareizajā mapē
-    const folderPath = type === 'first-section' ? 'first-section' : 'slider'
+    const folderPath =
+      type === 'first-section'
+        ? 'first-section'
+        : type === 'second-section'
+        ? 'second-section'
+        : 'slider'
+
     const dirPath = path.join(process.cwd(), 'public', folderPath)
 
     // Pārbaudām, vai mape pastāv, ja ne, tad izveidojam to
@@ -35,7 +46,7 @@ export async function POST(req: NextRequest) {
     const imageUrl = `/${folderPath}/${imageName}`  // Pilns ceļš
 
     // Ievietojam šo ceļu arī datubāzē
-    await saveImageUrlToDatabase(imageUrl, sanitizedTitle)
+    //await saveImageUrlToDatabase(imageUrl, sanitizedTitle, type)
 
     return NextResponse.json({ imageUrl }, { status: 200 })
   } catch (error) {
@@ -44,19 +55,27 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function saveImageUrlToDatabase(imageUrl: string, sanitizedTitle: string) {
+async function saveImageUrlToDatabase(imageUrl: string, sanitizedTitle: string, type: string) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/first-section`, {
+    const endpoint =
+      type === 'second-section'
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/api/second-section`
+        : `${process.env.NEXT_PUBLIC_SITE_URL}/api/first-section`
+
+    const body =
+      type === 'second-section'
+        ? { imageUrl, title: sanitizedTitle }
+        : { backgroundImage: imageUrl, title: sanitizedTitle }
+
+    const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ backgroundImage: imageUrl, title: sanitizedTitle })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     })
 
-    const responseText = await response.text() // Izmantojam `text()` metodi, lai iegūtu neparasto atbildi
+    const responseText = await response.text()
     try {
-      return JSON.parse(responseText) // Ja tas ir derīgs JSON, mēģināsim parsēt
+      return JSON.parse(responseText)
     } catch (error) {
       console.error("Error parsing JSON:", error)
       return responseText
@@ -65,4 +84,3 @@ async function saveImageUrlToDatabase(imageUrl: string, sanitizedTitle: string) 
     console.error('Error saving to database', error)
   }
 }
-
