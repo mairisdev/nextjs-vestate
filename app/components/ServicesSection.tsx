@@ -26,27 +26,30 @@ export default async function ServicesZigZag() {
         </h2>
 
         <div className="space-y-10 md:space-y-12">
-          {paired.map(([left, right], i) => (
-            <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20">
-              {left && (
-                <div className="flex items-center gap-4">
-                  <div className="w-9 h-9 flex items-center justify-center">
-                    <ChevronRight size={30} stroke="#77D4B4" strokeWidth={3} />
-                  </div>
-                  <p className="text-base leading-relaxed text-[#00332D]">{left}</p>
-                </div>
-              )}
+{paired.map(([left, right], i) => (
+  <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center">
+    {/* Kreisā puse */}
+    <div className="flex items-center gap-4 self-start md:self-center">
+      <div className="w-9 h-9 flex items-center justify-center">
+        <ChevronRight size={30} stroke="#77D4B4" strokeWidth={3} />
+      </div>
+      <p className="text-base leading-relaxed text-[#00332D]">{left}</p>
+    </div>
 
-              {right && (
-                <div className="flex items-center gap-4">
-                  <div className="w-9 h-9 flex items-center justify-center">
-                    <ChevronRight size={30} stroke="#77D4B4" strokeWidth={3} />
-                  </div>
-                  <p className="text-base leading-relaxed text-[#00332D]">{right}</p>
-                </div>
-              )}
-            </div>
-          ))}
+    {/* Labā puse tikai, ja ir */}
+    {right ? (
+      <div className="flex items-center gap-4 self-start md:self-center">
+        <div className="w-9 h-9 flex items-center justify-center">
+          <ChevronRight size={30} stroke="#77D4B4" strokeWidth={3} />
+        </div>
+        <p className="text-base leading-relaxed text-[#00332D]">{right}</p>
+      </div>
+    ) : (
+      // Ja nav `right`, aizpilda tukšu vietu, lai saglabā struktūru
+      <div className="hidden md:block" />
+    )}
+  </div>
+))}
         </div>
       </div>
     </section>

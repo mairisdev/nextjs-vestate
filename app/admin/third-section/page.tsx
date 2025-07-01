@@ -66,7 +66,7 @@ export default function ThirdSectionSettings() {
   }
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto py-10">
+    <div className="space-y-8 max-w-6xl mx-auto py-10">
       <h2 className="text-2xl font-bold text-[#00332D]">Trešās sadaļas iestatījumi</h2>
 
       {showSuccess && (
@@ -84,39 +84,56 @@ export default function ThirdSectionSettings() {
         />
       )}
 
-      {/* Subheading */}
-      <div className="space-y-2">
-        <Label>Zemvirsraksts</Label>
-        <Input value={subheading} onChange={(e) => setSubheading(e.target.value)} />
+      {/* Subheading & Heading side-by-side */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label>Zemvirsraksts</Label>
+          <Input
+            value={subheading}
+            onChange={(e) => setSubheading(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Virsraksts</Label>
+          <Textarea
+            rows={2}
+            value={heading}
+            onChange={(e) => setHeading(e.target.value)}
+          />
+        </div>
       </div>
 
-      {/* Heading */}
-      <div className="space-y-2">
-        <Label>Virsraksts</Label>
-        <Textarea
-          rows={2}
-          value={heading}
-          onChange={(e) => setHeading(e.target.value)}
-        />
-      </div>
-
-      {/* Services */}
+      {/* Services in grid */}
       <div className="space-y-2">
         <Label>Pakalpojumu saraksts</Label>
-        {services.map((item, index) => (
-          <div key={index} className="flex gap-2 items-start">
-            <Textarea
-              rows={2}
-              value={item}
-              onChange={(e) => handleServiceChange(index, e.target.value)}
-              className="flex-1"
-            />
-            <Button variant="ghost" size="icon" onClick={() => removeService(index)}>
-              <Trash className="text-red-500 w-4 h-4" />
-            </Button>
-          </div>
-        ))}
-        <Button variant="outline" size="sm" onClick={addService} className="mt-2">
+        <div className="grid md:grid-cols-2 gap-4">
+          {services.map((item, index) => (
+            <div key={index} className="flex gap-2 items-start">
+              <Textarea
+                rows={2}
+                value={item}
+                onChange={(e) => handleServiceChange(index, e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => removeService(index)}
+                title="Dzēst"
+              >
+                <Trash className="text-red-500 w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addService}
+          className="mt-2"
+        >
           <Plus className="w-4 h-4 mr-1" /> Pievienot pakalpojumu
         </Button>
       </div>

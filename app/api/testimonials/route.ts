@@ -1,32 +1,40 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
 export async function GET() {
   try {
     const testimonials = await prisma.testimonial.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "desc" }
     })
     return NextResponse.json(testimonials)
   } catch (error) {
-    console.error("[TESTIMONIALS_GET]", error)
-    return new NextResponse("Server error", { status: 500 })
+    return NextResponse.json({ message: "Server error", error }, { status: 500 })
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const data = await req.json()
+    const { testimonials } = await req.json()
 
-    // Delete all and re-insert for simplicity
+    if (!Array.isArray(testimonials)) {
+      return NextResponse.json({ success: false, message: "Invalid data" }, { status: 400 })
+    }
+
+    // Dzēst visus
     await prisma.testimonial.deleteMany()
 
-    const created = await prisma.testimonial.createMany({
-      data: data.testimonials,
+    // Saglabāt jaunos
+    await prisma.testimonial.createMany({
+      data: testimonials.map((t) => ({
+        name: t.name,
+        message: t.message,
+        rating: Number(t.rating),
+        language: t.language,
+      }))
     })
 
-    return NextResponse.json(created)
+    return NextResponse.json({ success: true, message: "Saved successfully" })
   } catch (error) {
-    console.error("[TESTIMONIALS_POST]", error)
-    return new NextResponse("Server error", { status: 500 })
+    return NextResponse.json({ success: false, message: "Error saving", error }, { status: 500 })
   }
 }

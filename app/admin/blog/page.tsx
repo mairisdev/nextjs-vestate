@@ -6,6 +6,7 @@ import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
 import { Button } from "../../components/ui/button"
 import { Plus, Trash } from "lucide-react"
+import AlertMessage from "../../components/ui/alert-message"
 
 type BlogPost = {
   id?: string
@@ -17,19 +18,21 @@ type BlogPost = {
 
 export default function BlogSettings() {
   const [posts, setPosts] = useState<BlogPost[]>([])
-  const [status, setStatus] = useState("")
+  const [alert, setAlert] = useState<{ type: "success" | "error"; message: string } | null>(null)
 
   useEffect(() => {
     fetch("/api/blog")
-      .then(res => res.json())
-      .then(data => {
-        setPosts(data.map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          date: p.date,
-          excerpt: p.excerpt,
-          image: p.imageUrl,
-        })))
+      .then((res) => res.json())
+      .then((data) => {
+        setPosts(
+          data.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            date: p.date,
+            excerpt: p.excerpt,
+            image: p.imageUrl,
+          }))
+        )
       })
   }, [])
 
@@ -47,33 +50,45 @@ export default function BlogSettings() {
     setPosts(posts.filter((_, idx) => idx !== i))
   }
 
-  const handleSave = async () => {
-    setStatus("Saglabājas...")
+const handleSave = async () => {
+  setAlert(null)
 
-    for (const post of posts) {
-      const formData = new FormData()
-      formData.append("title", post.title)
-      formData.append("date", post.date)
-      formData.append("excerpt", post.excerpt)
-      if (post.image instanceof File) {
-        formData.append("image", post.image)
-      } else if (typeof post.image === "string") {
-        formData.append("existingImageUrl", post.image)
-      }
-
-      await fetch("/api/blog", {
-        method: "POST",
-        body: formData,
-      })
+  // Send all the posts to the API
+  for (const post of posts) {
+    const formData = new FormData()
+    formData.append("title", post.title)
+    formData.append("date", post.date)
+    formData.append("excerpt", post.excerpt)
+    if (post.image instanceof File) {
+      formData.append("image", post.image)
+    } else if (typeof post.image === "string") {
+      formData.append("existingImageUrl", post.image)
+    }
+    if (post.id) {
+      formData.append("id", post.id)  // Include the ID for updating an existing post
     }
 
-    setStatus("Saglabāts veiksmīgi ✅")
+    // Send request to API route for saving post
+    const res = await fetch("/api/blog", {
+      method: "POST", // Will handle both create and update in API
+      body: formData,
+    })
+
+    // Check response status and show appropriate alert
+    if (res.ok) {
+      setAlert({ type: "success", message: "Dati saglabāti veiksmīgi!" })
+    } else {
+      setAlert({ type: "error", message: "Kļūda saglabājot datus!" })
+    }
   }
+}
 
   return (
     <div className="max-w-4xl mx-auto py-10 space-y-8">
       <h2 className="text-2xl font-bold">Bloga ieraksti</h2>
-
+          {alert && (
+            <AlertMessage type={alert.type} message={alert.message} />
+          )}
       {posts.map((post, i) => (
         <div key={i} className="border p-4 rounded-lg space-y-4 bg-gray-50">
           <div className="flex justify-between items-center">
@@ -83,18 +98,35 @@ export default function BlogSettings() {
             </Button>
           </div>
 
-          <Input value={post.title} onChange={(e) => updatePost(i, "title", e.target.value)} placeholder="Virsraksts" />
-          <Input value={post.date} onChange={(e) => updatePost(i, "date", e.target.value)} placeholder="Datums" />
-          <Textarea value={post.excerpt} onChange={(e) => updatePost(i, "excerpt", e.target.value)} placeholder="Apraksts" />
+          <Input
+            value={post.title}
+            onChange={(e) => updatePost(i, "title", e.target.value)}
+            placeholder="Virsraksts"
+          />
+          <Input
+            value={post.date}
+            onChange={(e) => updatePost(i, "date", e.target.value)}
+            placeholder="Datums"
+          />
+          <Textarea
+            value={post.excerpt}
+            onChange={(e) => updatePost(i, "excerpt", e.target.value)}
+            placeholder="Apraksts"
+            className="resize-none h-32"
+          />
 
+        <label className="block w-full max-w-sm px-4 py-2 border border-dashed border-gray-300 rounded-lg text-center cursor-pointer bg-gray-50">
+          <span>Izvēlieties attēlu no failiem</span>
           <Input
             type="file"
             accept="image/*"
             onChange={(e) => updatePost(i, "image", e.target.files?.[0] || null)}
+            className="hidden"
           />
           {typeof post.image === "string" && (
-            <img src={post.image} alt="Preview" className="w-full max-w-xs rounded-md" />
-          )}
+              <img src={post.image} alt="Preview" className="w-full max-w-xs rounded-md mt-2" />
+            )}
+        </label>          
         </div>
       ))}
 
@@ -103,7 +135,6 @@ export default function BlogSettings() {
       </Button>
 
       <Button onClick={handleSave}>Saglabāt izmaiņas</Button>
-      {status && <p className="text-sm mt-2">{status}</p>}
     </div>
   )
 }

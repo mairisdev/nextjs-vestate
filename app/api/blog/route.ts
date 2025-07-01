@@ -5,11 +5,13 @@ import path from "path"
 import { randomUUID } from "crypto"
 import { removeDiacritics } from "@/lib/utils"
 
+// Fetch all blog posts
 export async function GET() {
   const posts = await prisma.blogPost.findMany({ orderBy: { date: "desc" } })
   return NextResponse.json(posts)
 }
 
+// Create or update a blog post
 export async function POST(req: Request) {
   const formData = await req.formData()
 
@@ -18,9 +20,11 @@ export async function POST(req: Request) {
   const excerpt = formData.get("excerpt") as string
   const existingImageUrl = formData.get("existingImageUrl") as string
   const file = formData.get("image") as File | null
+  const id = formData.get("id") as string // Get the blog ID from the form data
 
   let imageUrl = existingImageUrl
 
+  // If image is uploaded, save it
   if (file && file.size > 0) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
@@ -32,9 +36,18 @@ export async function POST(req: Request) {
 
   const slug = removeDiacritics(title.toLowerCase().replace(/\s+/g, "-"))
 
-  const post = await prisma.blogPost.create({
-    data: { title, date, excerpt, slug, imageUrl },
-  })
+  // If an ID is provided, update the existing blog post; otherwise, create a new one
+  let post;
+  if (id) {
+    post = await prisma.blogPost.update({
+      where: { id },
+      data: { title, date, excerpt, slug, imageUrl },
+    })
+  } else {
+    post = await prisma.blogPost.create({
+      data: { title, date, excerpt, slug, imageUrl },
+    })
+  }
 
   return NextResponse.json(post)
 }

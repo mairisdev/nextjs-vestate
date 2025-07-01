@@ -90,54 +90,84 @@ export default function SecondSectionSettings() {
       <AlertMessage type="error" message="Saglabāšanas kļūda!" onClose={() => setShowError(false)} />
     )}
 
-      {/* Attēls */}
+    <div className="grid md:grid-cols-2 gap-6 items-start">
       <div className="space-y-2">
         <Label>Sadaļas attēls</Label>
         {imageUrl && (
-          <img src={imageUrl} alt="Izvēlētais attēls" className="w-full max-w-xs rounded-md mb-2" />
+          <img
+            src={imageUrl}
+            alt="Izvēlētais attēls"
+            className="w-full max-w-sm rounded-md mb-2 object-cover shadow"
+          />
         )}
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files?.[0] || null)}
-        />
+      <label className="block w-full">
+        <div className="mt-2 border border-dashed border-gray-300 bg-white hover:border-[#77D4B4] transition-colors rounded-md cursor-pointer text-center py-3 w-full max-w-sm">
+          <span className="text-sm font-medium text-[#00332D]">
+            {image?.name || "Izvēlieties attēlu no failiem"}
+          </span>
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files?.[0] || null)}
+            className="hidden"
+          />
+        </div>
+      </label>
       </div>
 
-      {/* Virsraksts */}
       <div className="space-y-2">
         <Label>Sadaļas virsraksts</Label>
         <Textarea
-          rows={2}
+          rows={3}
           value={heading}
           onChange={(e) => setHeading(e.target.value)}
+          className="text-sm"
         />
         <p className="text-sm text-muted-foreground">
           Lieto jaunu rindu (“Enter”), lai sadalītu vairākās rindiņās.
         </p>
       </div>
+    </div>
 
-      {/* Iemeslu saraksts */}
-      <div className="space-y-2">
-        <Label>Iemesli</Label>
+    <div className="space-y-2">
+      <Label className="block mb-1">Iemesli</Label>
+
+      <div className="grid md:grid-cols-2 gap-4">
         {reasons.map((reason, index) => (
-          <div key={index} className="flex gap-2 items-start">
+          <div
+            key={index}
+            className="relative bg-white border border-gray-200 rounded-lg shadow-sm p-4"
+          >
+            <div className="absolute top-2 right-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => removeReason(index)}
+                className="text-red-500 hover:text-red-600"
+              >
+                <Trash className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <p className="text-sm font-semibold text-gray-600 mb-2">Iemesls {index + 1}</p>
             <Textarea
               rows={2}
               value={reason}
-              className="flex-1"
               onChange={(e) => handleReasonChange(index, e.target.value)}
+              className="text-sm"
             />
-            <Button variant="ghost" size="icon" onClick={() => removeReason(index)}>
-              <Trash className="text-red-500 w-4 h-4" />
-            </Button>
           </div>
         ))}
-        <Button variant="outline" size="sm" onClick={addReason} className="mt-2">
-          <Plus className="w-4 h-4 mr-1" /> Pievienot iemeslu
-        </Button>
       </div>
 
-      {/* Saglabāt */}
+      <div className="pt-4">
+        <Button variant="outline" size="sm" onClick={addReason}>
+          <Plus className="w-4 h-4 mr-2" />
+          Pievienot iemeslu
+        </Button>
+      </div>
+    </div>
+
       <div>
         <Button className="mt-4" onClick={handleSave}>Saglabāt izmaiņas</Button>
       </div>

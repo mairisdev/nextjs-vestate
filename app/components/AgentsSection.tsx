@@ -13,46 +13,62 @@ export default async function AgentsSection() {
         <h2 className="text-3xl font-bold text-center text-[#00332D] mb-12">
           Mūsu aģenti
         </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {agents.map((agent, idx) => (
-          <div
-            key={idx}
-            className="bg-white rounded-2xl shadow-md transition-all duration-300 ease-in-out flex flex-col"
-          >
-            {agent.image && (
-            <Image
-              src={agent.image}
-              alt={agent.name}
-              width={400}
-              height={400}
-              className="w-full h-[300px] object-cover"
-            />
-            )}
-            <div className="p-4 text-[#00332D] flex flex-col flex-grow justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">{agent.name}</h3>
-                <p className="text-sm">{agent.title}</p>
-                <p className="text-sm text-gray-500 mt-1">{agent.phone}</p>
-              </div>
 
-              {agent.reviews.length > 0 && (
-                <details className="mt-4 text-sm group">
-                  <summary className="cursor-pointer flex items-center gap-2 text-white bg-[#00332D] hover:bg-[#00443B] transition rounded-xl py-2 px-4">
-                    Atsauksmes
-                    <ChevronDown
-                      size={16}
-                      className="transition-transform group-open:rotate-180"
-                    />
-                  </summary>
-                  <div className="mt-2 space-y-1 text-gray-700 bg-gray-100 p-3 rounded-md">
-                    {agent.reviews.map((review: string, i: number) => (
-                      <p key={i} className="text-xs">&quot;{review}&quot;</p>
-                    ))}
-                  </div>
-                </details>
+        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 items-start">
+          {agents.map((agent, idx) => (
+            <div
+              key={idx}
+              className="bg-white rounded-2xl shadow-md flex flex-col overflow-hidden"
+            >
+              {agent.image && (
+                <Image
+                  src={agent.image}
+                  alt={agent.name}
+                  width={400}
+                  height={300}
+                  className="w-full h-[300px] object-cover"
+                />
               )}
+
+              <div className="p-4 text-[#00332D] flex flex-col justify-between flex-grow">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold">{agent.name}</h3>
+                  <p className="text-sm">{agent.title}</p>
+                  <p className="text-sm text-gray-500 mt-1">{agent.phone}</p>
+                </div>
+
+                <div className="mt-auto min-h-[60px]">
+                  {agent.reviews.length > 0 ? (
+                    <details className="text-sm group">
+                      <summary className="cursor-pointer flex items-center gap-2 text-white bg-[#00332D] hover:bg-[#00443B] transition rounded-xl py-2 px-4">
+                        Atsauksmes
+                        <ChevronDown
+                          size={16}
+                          className="transition-transform group-open:rotate-180"
+                        />
+                      </summary>
+                      <div className="mt-2 space-y-3 text-gray-700 bg-gray-100 p-3 rounded-md">
+                        {agent.reviews.map((review: any, i: number) => (
+                          <div key={i} className="text-xs space-y-1">
+                            <p className="text-[13px] text-gray-700">{review.content}</p>
+                        <div className="flex justify-between items-center text-[11px] text-gray-500 font-medium">
+                          <span>{review.author}</span>
+                          <span className="text-[#77D4B4] text-sm">
+                            {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
+                          </span>
+                        </div>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  ) : (
+                    <div className="text-sm text-gray-700 bg-gray-100 p-3 rounded-md">
+                      Šobrīd nav atsauksmju.
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
           ))}
         </div>
       </div>

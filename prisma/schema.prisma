@@ -90,16 +90,28 @@ model ThirdSection {
 }
 
 model Agent {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   name      String
   title     String
   phone     String
   image     String
-  reviews   String[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  reviews   AgentReview[]
 
   @@unique([name, phone], name: "name_phone")
+}
+
+model AgentReview {
+  id        String   @id @default(cuid())
+  content   String
+  author    String
+  rating    Int      @default(5)
+  agentId   String
+  createdAt DateTime @default(now())
+
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
 }
 
 model Testimonial {

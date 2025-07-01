@@ -5,6 +5,23 @@ import { NextResponse, NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import fs from "fs"
 
+export async function GET() {
+  try {
+    const agents = await prisma.agent.findMany({
+      include: {
+        reviews: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    })
+
+    return NextResponse.json({ success: true, agents })
+  } catch (error) {
+    return NextResponse.json({ success: false, message: "Database error", error: String(error) }, { status: 500 })
+  }
+}
+
 export async function POST(req: NextRequest) {
   const formData = await req.formData()
   const uploadDir = path.join(process.cwd(), "public", "agents")
@@ -55,14 +72,27 @@ export async function POST(req: NextRequest) {
         update: {
           title: agent.title,
           image: imageUrl,
-          reviews: agent.reviews || [],
+          reviews: {
+            deleteMany: {},
+            create: agent.reviews.map((r: any) => ({
+              content: r.content,
+              author: r.author,
+              rating: r.rating || 5,
+            })),
+          },
         },
         create: {
           name: agent.name,
           title: agent.title,
           phone: agent.phone,
           image: imageUrl,
-          reviews: agent.reviews || [],
+          reviews: {
+            create: agent.reviews.map((r: any) => ({
+              content: r.content,
+              author: r.author,
+              rating: r.rating || 5,
+            })),
+          },
         },
       })
 
