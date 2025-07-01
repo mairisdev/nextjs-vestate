@@ -141,3 +141,46 @@ model WhyChooseUs {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Statistic {
+  id          String   @id @default(uuid())
+  icon        String
+  value       String
+  description String
+  order       Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PartnersSection {
+  id        String   @id @default("partners-section")
+  title     String
+  subtitle  String
+  partners  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogPost {
+  id        String   @id @default(uuid())
+  title     String
+  date      String
+  excerpt   String
+  slug      String   @unique
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContactSettings {
+  id        String   @id @default("contact-section")
+  heading   String
+  subtext   String
+  address   String
+  phone     String
+  email     String
+  hours     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

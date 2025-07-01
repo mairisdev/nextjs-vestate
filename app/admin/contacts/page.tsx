@@ -1,18 +1,48 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
 import { Button } from "../../components/ui/button"
 
 export default function ContactSettings() {
-  const [heading, setHeading] = useState("Sadarbībai vai bezmaksas konsultācijai – zvaniet 28446677")
-  const [subtext, setSubtext] = useState("vai aizpildiet formu, lai nosūtītu mums ziņu.")
-  const [address, setAddress] = useState("Dominas biroji, Ieriķu iela 3, Rīga, LV-1084")
-  const [phone, setPhone] = useState("+371 28 44 66 77")
-  const [email, setEmail] = useState("info@vestate.lv")
-  const [hours, setHours] = useState("Nenormēts: 24/7")
+  const [heading, setHeading] = useState("")
+  const [subtext, setSubtext] = useState("")
+  const [address, setAddress] = useState("")
+  const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
+  const [hours, setHours] = useState("")
+  const [status, setStatus] = useState("")
+
+  useEffect(() => {
+    fetch("/api/contact")
+      .then((res) => res.json())
+      .then((data) => {
+        setHeading(data.heading || "")
+        setSubtext(data.subtext || "")
+        setAddress(data.address || "")
+        setPhone(data.phone || "")
+        setEmail(data.email || "")
+        setHours(data.hours || "")
+      })
+  }, [])
+
+  const handleSave = async () => {
+    setStatus("Saglabājas...")
+
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ heading, subtext, address, phone, email, hours }),
+    })
+
+    if (res.ok) {
+      setStatus("Saglabāts veiksmīgi ✅")
+    } else {
+      setStatus("Kļūda saglabājot ❌")
+    }
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto py-10">
@@ -48,7 +78,8 @@ export default function ContactSettings() {
         <Input value={hours} onChange={(e) => setHours(e.target.value)} />
       </div>
 
-      <Button className="mt-4">Saglabāt izmaiņas</Button>
+      <Button className="mt-4" onClick={handleSave}>Saglabāt izmaiņas</Button>
+      {status && <p className="mt-2 text-sm">{status}</p>}
     </div>
   )
 }

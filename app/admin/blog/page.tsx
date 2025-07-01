@@ -1,120 +1,109 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
+import { Textarea } from "../../components/ui/textarea"
 import { Button } from "../../components/ui/button"
 import { Plus, Trash } from "lucide-react"
-import { Textarea } from "../../components/ui/textarea"
 
-interface BlogPost {
-  image: string
-  date: string
+type BlogPost = {
+  id?: string
   title: string
+  date: string
   excerpt: string
-  link: string
+  image: File | string | null
 }
 
 export default function BlogSettings() {
-  const [title, setTitle] = useState("Mūsu bloga ieraksti un padomi")
-  const [subtitle, setSubtitle] = useState("JAUNĀKIE RAKSTI")
-  const [posts, setPosts] = useState<BlogPost[]>([
-    {
-      image: "/blog/1.jpg",
-      date: "2024. gada 5. marts",
-      title: "Kā sagatavot īpašumu pārdošanai?",
-      excerpt: "Uzzini, kā izveidot pirmo iespaidu, kas piesaista potenciālos pircējus...",
-      link: "#"
-    },
-    {
-      image: "/blog/2.jpg",
-      date: "2025. gada 2. janvāris",
-      title: "Nekustamā īpašuma tirgus tendences 2025",
-      excerpt: "Apskatām aktuālās izmaiņas un prognozes nākamajam gadam...",
-      link: "#"
-    },
-    {
-      image: "/blog/3.jpg",
-      date: "2024. gada 12. oktobris",
-      title: "Biežāk pieļautās kļūdas īpašuma pārdošanā",
-      excerpt: "Izvairies no kļūdām, kas var izmaksāt tev dārgi. Mūsu eksperta padomi...",
-      link: "#"
-    }
-  ])
+  const [posts, setPosts] = useState<BlogPost[]>([])
+  const [status, setStatus] = useState("")
 
-  const updatePost = (i: number, field: keyof BlogPost, value: string) => {
-    const updated = [...posts]
-    updated[i][field] = value
-    setPosts(updated)
+  useEffect(() => {
+    fetch("/api/blog")
+      .then(res => res.json())
+      .then(data => {
+        setPosts(data.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          date: p.date,
+          excerpt: p.excerpt,
+          image: p.imageUrl,
+        })))
+      })
+  }, [])
+
+  const updatePost = <K extends keyof BlogPost>(i: number, field: K, value: BlogPost[K]) => {
+    const copy = [...posts]
+    copy[i] = { ...copy[i], [field]: value }
+    setPosts(copy)
   }
 
-  const addPost = () =>
-    setPosts([...posts, { image: "", date: "", title: "", excerpt: "", link: "" }])
+  const addPost = () => {
+    setPosts([...posts, { title: "", date: "", excerpt: "", image: null }])
+  }
 
-  const removePost = (i: number) => setPosts(posts.filter((_, idx) => idx !== i))
+  const removePost = (i: number) => {
+    setPosts(posts.filter((_, idx) => idx !== i))
+  }
+
+  const handleSave = async () => {
+    setStatus("Saglabājas...")
+
+    for (const post of posts) {
+      const formData = new FormData()
+      formData.append("title", post.title)
+      formData.append("date", post.date)
+      formData.append("excerpt", post.excerpt)
+      if (post.image instanceof File) {
+        formData.append("image", post.image)
+      } else if (typeof post.image === "string") {
+        formData.append("existingImageUrl", post.image)
+      }
+
+      await fetch("/api/blog", {
+        method: "POST",
+        body: formData,
+      })
+    }
+
+    setStatus("Saglabāts veiksmīgi ✅")
+  }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto py-10">
-      <h2 className="text-2xl font-bold">Bloga sadaļa</h2>
-
-      <div>
-        <Label>Apakšvirsraksts</Label>
-        <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
-      </div>
-
-      <div>
-        <Label>Virsraksts</Label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-      </div>
+    <div className="max-w-4xl mx-auto py-10 space-y-8">
+      <h2 className="text-2xl font-bold">Bloga ieraksti</h2>
 
       {posts.map((post, i) => (
-        <div key={i} className="p-4 border rounded-xl space-y-4 mt-4 bg-gray-50">
+        <div key={i} className="border p-4 rounded-lg space-y-4 bg-gray-50">
           <div className="flex justify-between items-center">
-            <Label className="font-semibold">Bloga ieraksts #{i + 1}</Label>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => removePost(i)}
-            >
-              <Trash className="w-4 h-4 text-red-500" />
+            <Label>Bloga ieraksts #{i + 1}</Label>
+            <Button variant="ghost" size="icon" onClick={() => removePost(i)}>
+              <Trash className="text-red-500 w-4 h-4" />
             </Button>
           </div>
+
+          <Input value={post.title} onChange={(e) => updatePost(i, "title", e.target.value)} placeholder="Virsraksts" />
+          <Input value={post.date} onChange={(e) => updatePost(i, "date", e.target.value)} placeholder="Datums" />
+          <Textarea value={post.excerpt} onChange={(e) => updatePost(i, "excerpt", e.target.value)} placeholder="Apraksts" />
+
           <Input
-            placeholder="Attēla URL"
-            value={post.image}
-            onChange={(e) => updatePost(i, "image", e.target.value)}
+            type="file"
+            accept="image/*"
+            onChange={(e) => updatePost(i, "image", e.target.files?.[0] || null)}
           />
-          <Input
-            placeholder="Datums (piem. 2024. gada 5. marts)"
-            value={post.date}
-            onChange={(e) => updatePost(i, "date", e.target.value)}
-          />
-          <Input
-            placeholder="Virsraksts"
-            value={post.title}
-            onChange={(e) => updatePost(i, "title", e.target.value)}
-          />
-          <Textarea
-            placeholder="Īss apraksts"
-            value={post.excerpt}
-            onChange={(e: { target: { value: string } }) => updatePost(i, "excerpt", e.target.value)}
-          />
-          <Input
-            placeholder="Saite uz rakstu"
-            value={post.link}
-            onChange={(e) => updatePost(i, "link", e.target.value)}
-          />
+          {typeof post.image === "string" && (
+            <img src={post.image} alt="Preview" className="w-full max-w-xs rounded-md" />
+          )}
         </div>
       ))}
 
       <Button variant="outline" onClick={addPost}>
-        <Plus className="w-4 h-4 mr-1" />
-        Pievienot bloga ierakstu
+        <Plus className="w-4 h-4 mr-2" /> Pievienot rakstu
       </Button>
 
-      <div>
-        <Button className="mt-4">Saglabāt izmaiņas</Button>
-      </div>
+      <Button onClick={handleSave}>Saglabāt izmaiņas</Button>
+      {status && <p className="text-sm mt-2">{status}</p>}
     </div>
   )
 }

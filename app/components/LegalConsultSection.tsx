@@ -13,7 +13,7 @@ export default async function LegalConsultSection() {
         src={data.imageUrl || "/placeholder.jpg"}
         alt="Jurista konsultācija"
         fill
-        className="object-contain"
+        className="object-cover"
         priority
       />
 

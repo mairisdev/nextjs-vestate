@@ -1,26 +1,23 @@
 "use client"
 
-import { Clock, BadgeCheck, TrendingUp } from "lucide-react"
+import { useEffect, useState } from "react"
+import * as LucideIcons from "lucide-react"
 
-const stats = [
-  {
-    icon: <Clock className="w-6 h-6 text-white" />,
-    value: "84%",
-    description: "īpašumu pārdodam 28 dienu laikā",
-  },
-  {
-    icon: <BadgeCheck className="w-6 h-6 text-white" />,
-    value: "88%",
-    description: "noturam īpašuma nolīgto cenu",
-  },
-  {
-    icon: <TrendingUp className="w-6 h-6 text-white" />,
-    value: "12%",
-    description: "gadījumu pārdodam īpašumu par augstāku cenu",
-  },
-]
+interface Stat {
+  icon: string
+  value: string
+  description: string
+}
 
 export default function StatsSection() {
+  const [stats, setStats] = useState<Stat[]>([])
+
+  useEffect(() => {
+    fetch("/api/statistics")
+      .then(res => res.json())
+      .then(data => setStats(data || []))
+  }, [])
+
   return (
     <section className="py-20 bg-white px-4 md:px-12">
       <div className="max-w-5xl mx-auto text-center">
@@ -32,20 +29,23 @@ export default function StatsSection() {
         </h2>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {stats.map((item, i) => (
-            <div
-              key={i}
-              className="flex flex-col items-center bg-[#E6F4F1] rounded-2xl p-6 shadow hover:shadow-lg transition"
-            >
-              <div className="w-16 h-16 flex items-center justify-center rounded-full bg-[#00332D] mb-4">
-                {item.icon}
+          {stats.map((item, i) => {
+            const LucideIcon = (LucideIcons as any)[item.icon] || LucideIcons.HelpCircle
+            return (
+              <div
+                key={i}
+                className="flex flex-col items-center bg-[#E6F4F1] rounded-2xl p-6 shadow hover:shadow-lg transition"
+              >
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-[#00332D] mb-4">
+                  <LucideIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-3xl font-bold text-[#00332D] mb-2">{item.value}</div>
+                <p className="text-[#00332D] text-center text-sm font-medium leading-relaxed">
+                  {item.description}
+                </p>
               </div>
-              <div className="text-3xl font-bold text-[#00332D] mb-2">{item.value}</div>
-              <p className="text-[#00332D] text-center text-sm font-medium leading-relaxed">
-                {item.description}
-              </p>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>
