@@ -1,31 +1,68 @@
+"use client"
+
 import Image from "next/image"
 import { Check } from "lucide-react"
-import { getSlides } from "@/lib/queries/slider"
+import { useEffect, useState } from "react"
 
-export default async function HeroSlider() {
-  const slides = await getSlides()
+type Slide = {
+  title: string
+  subtitle: string
+  description: string
+  buttonText: string
+  buttonLink: string
+  imageUrl: string
+}
 
-  if (!slides || slides.length === 0) return null
+export default function HeroSlider() {
+  const [slides, setSlides] = useState<Slide[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
 
-  const benefits = slides[0].description.split("\n")
+  // Fetch slides from API
+  useEffect(() => {
+    const fetchSlides = async () => {
+      const response = await fetch("/api/slides")
+      const data = await response.json()
+      setSlides(data)
+    }
+
+    fetchSlides()
+  }, [])
+
+  // Handle next slide
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length)
+  }
+
+  // Handle previous slide
+  const prevSlide = () => {
+    setCurrentIndex(
+      (prevIndex) => (prevIndex - 1 + slides.length) % slides.length
+    )
+  }
+
+  // Wait for slides data to load
+  if (slides.length === 0) return null
+
+  const currentSlide = slides[currentIndex]
+  const benefits = currentSlide.description.split("\n")
 
   return (
     <section className="relative w-full h-[90vh]">
-<Image
-  src={slides[0].imageUrl ? slides[0].imageUrl : "/default-image.webp"} // Atcerieties, ka imageUrl sākas ar "/slider/"
-  alt="Rīgas panorāma"
-  fill
-  priority
-  className="object-cover"
-/>
+      <Image
+        src={currentSlide.imageUrl ? currentSlide.imageUrl : "/default-image.webp"}
+        alt={currentSlide.title}
+        fill
+        priority
+        className="object-cover"
+      />
 
       <div className="absolute inset-0 flex items-center justify-start px-6 md:px-12">
         <div className="bg-[#00332D]/90 text-white p-6 md:p-10 max-w-xl w-full rounded-md">
           <p className="text-sm font-semibold uppercase mb-2">
-            {slides[0].subtitle || 'MŪSU PROFESIONĀLĀ KOMANDA'}
+            {currentSlide.subtitle || "MŪSU PROFESIONĀLĀ KOMANDA"}
           </p>
           <h1 className="text-2xl md:text-3xl font-bold leading-tight mb-6">
-            {slides[0].title || 'PALĪDZĒS DROŠI UN IZDEVĪGI PĀRDOT JŪSU ĪPAŠUMU'}
+            {currentSlide.title || "PALĪDZĒS DROŠI UN IZDEVĪGI PĀRDOT JŪSU ĪPAŠUMU"}
           </h1>
 
           <ul className="space-y-2 mb-6 text-sm md:text-base">
@@ -39,13 +76,21 @@ export default async function HeroSlider() {
 
           <div className="mt-6">
             <a
-              href={slides[0].buttonLink || '#'}
+              href={currentSlide.buttonLink || "#"}
               className="text-white font-semibold py-2 px-6 bg-[#00332D] rounded-md hover:bg-[#005B48] transition-all"
             >
-              {slides[0].buttonText || "Uzzināt vairāk"}
+              {currentSlide.buttonText || "Uzzināt vairāk"}
             </a>
           </div>
         </div>
+      </div>
+
+      {/* Slīdošo slaidu bultiņas */}
+      <div className="absolute top-1/2 left-4 transform -translate-y-1/2 text-white cursor-pointer" onClick={prevSlide}>
+        <span className="text-3xl">&lt;</span>
+      </div>
+      <div className="absolute top-1/2 right-4 transform -translate-y-1/2 text-white cursor-pointer" onClick={nextSlide}>
+        <span className="text-3xl">&gt;</span>
       </div>
     </section>
   )

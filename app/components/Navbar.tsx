@@ -2,12 +2,6 @@ import Image from "next/image"
 import { Phone } from "lucide-react"
 import { getNavigationSettings } from "@/lib/queries/navigation"
 
-type MenuItem = {
-  label: string
-  link: string
-  isVisible: boolean
-}
-
 export default async function Navbar() {
   const data = await getNavigationSettings()
 
@@ -18,7 +12,15 @@ export default async function Navbar() {
       <div className="max-w-[1600px] mx-auto flex items-center justify-between px-6 py-4">
 
         <div className="flex items-center space-x-2">
-          <Image src="/logo.svg" alt={data.logoAlt} width={200} height={50} />
+          {data.logoUrl ? (
+            <img
+              src={`/uploads/navigation/${data.logoUrl}`}
+              alt={data.logoAlt || "Vestate logo"}
+              className="w-auto h-20 w-auto object-contain"
+            />
+          ) : (
+            <p className="text-gray-500 italic">Nav pievienots logo</p>
+          )}
         </div>
 
         <nav className="hidden md:flex space-x-6 text-md text-gray-700">
@@ -35,7 +37,7 @@ export default async function Navbar() {
           <div className="hidden md:flex items-center">
             <Image
               src="/drosiba.webp"
-              alt={data.securityText}
+              alt={data.securityText || "Drošības attēls"}
               width={200}
               height={50}
               className="object-contain"
@@ -47,7 +49,7 @@ export default async function Navbar() {
               href={`tel:${data.phone}`}
               className="flex items-center hover:underline"
             >
-              <Phone className="w-5 h-5" />
+              <Phone className="w-4.5 h-4.5 mr-1.5" />
               <span>{data.phone}</span>
             </a>
           </div>

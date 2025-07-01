@@ -10,7 +10,7 @@ interface Quiz {
 const quizOptions: Quiz[] = [
   { question: "Cik ir 2 + 3?", answer: "5" },
   { question: "Cik ir 4 - 1?", answer: "3" },
-  { question: "Cik ir 10 dalīts ar 2?", answer: "5" },
+  { question: "Cik ir 10 / 2?", answer: "5" },
   { question: "Cik ir 3 + 4?", answer: "7" },
   { question: "Cik ir 6 - 2?", answer: "4" },
 ]
