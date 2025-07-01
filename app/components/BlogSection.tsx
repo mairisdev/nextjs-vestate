@@ -5,7 +5,7 @@ export default async function BlogSection() {
   
   try {
     // During build, this might not work, so we'll handle it gracefully
-    const res = await fetch('/api/blog', { 
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/blog`, {
       cache: "no-store",
       headers: {
         'Content-Type': 'application/json',
