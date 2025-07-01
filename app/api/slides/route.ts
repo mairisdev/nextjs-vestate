@@ -1,12 +1,11 @@
 import { PrismaClient } from "@prisma/client"
-
 const prisma = new PrismaClient()
 
-// GET pieprasījums - iegūst visus slaidus
+// GET endpoint to fetch all slides
 export async function GET() {
   try {
     const slides = await prisma.slide.findMany({
-      orderBy: { order: "asc" },
+      orderBy: { order: "asc" }, // Atgriež slaidus pēc secības
     })
     return new Response(JSON.stringify(slides), { status: 200 })
   } catch (error) {
@@ -15,13 +14,13 @@ export async function GET() {
   }
 }
 
-// POST pieprasījums - pievienot vai atjaunot slaidu
+// POST endpoint to create or update a slide
 export async function POST(req: Request) {
   try {
     const data = await req.json()
-
+    
+    // Atjaunojam esošo slaidu vai pievienojam jaunu
     if (data.id) {
-      // Ja ID ir, tad veicam atjaunināšanu (update)
       const updatedSlide = await prisma.slide.update({
         where: { id: data.id },
         data: {
@@ -30,13 +29,12 @@ export async function POST(req: Request) {
           description: data.description,
           buttonText: data.buttonText,
           buttonLink: data.buttonLink,
-          imageUrl: data.imageUrl || '', // Ja nav attēla URL, mēs atstājām to tukšu
-          order: data.order || 0,
+          imageUrl: data.imageUrl || '',
+          order: data.order || 0, // Saglabājam secību
         },
       })
       return new Response(JSON.stringify(updatedSlide), { status: 200 })
     } else {
-      // Ja nav ID, tad pievienojam jaunu slaidu (create)
       const newSlide = await prisma.slide.create({
         data: {
           title: data.title,
@@ -44,8 +42,8 @@ export async function POST(req: Request) {
           description: data.description,
           buttonText: data.buttonText,
           buttonLink: data.buttonLink,
-          imageUrl: data.imageUrl || '', // Ja nav attēla URL, mēs atstājām to tukšu
-          order: data.order || 0,
+          imageUrl: data.imageUrl || '',
+          order: data.order || 0, // Saglabājam secību
         },
       })
       return new Response(JSON.stringify(newSlide), { status: 201 })

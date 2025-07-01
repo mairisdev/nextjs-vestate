@@ -3,12 +3,43 @@
 import { ReactNode } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, LayoutGrid, Settings } from "lucide-react"
+import {
+  Home,
+  FileText,
+  LayoutGrid,
+  Settings,
+  Building,
+  Users,
+  BarChart,
+  Star,
+  ImageIcon,
+  MessageSquare,
+  FolderOpen,
+  Shield,
+  Globe,
+  Contact,
+  BookOpen,
+  FilePlus2
+} from "lucide-react"
 
 const navItems = [
   { href: "/admin", label: "Pārskats", icon: <Home className="w-5 h-5" /> },
-  { href: "/admin/sections", label: "Sadaļas", icon: <LayoutGrid className="w-5 h-5" /> },
-  { href: "/admin/iestatijumi", label: "Iestatījumi", icon: <Settings className="w-5 h-5" /> },
+  { href: "/admin/navigation", label: "Navigācija", icon: <LayoutGrid className="w-5 h-5" /> },
+  { href: "/admin/slider", label: "Slideris", icon: <ImageIcon className="w-5 h-5" /> },
+  { href: "/admin/first-section", label: "1. sadaļa", icon: <FileText className="w-5 h-5" /> },
+  { href: "/admin/second-section", label: "2. sadaļa", icon: <FileText className="w-5 h-5" /> },
+  { href: "/admin/third-section", label: "3. sadaļa", icon: <FileText className="w-5 h-5" /> },
+  { href: "/admin/agents", label: "Aģenti", icon: <Users className="w-5 h-5" /> },
+  { href: "/admin/testimonials", label: "Atsauksmes", icon: <Star className="w-5 h-5" /> },
+  { href: "/admin/sixth-section", label: "6. sadaļa", icon: <Shield className="w-5 h-5" /> },
+  { href: "/admin/sold-properties", label: "Pārdotie īpašumi", icon: <FolderOpen className="w-5 h-5" /> },
+  { href: "/admin/private-listings", label: "Privātie sludinājumi", icon: <Shield className="w-5 h-5" /> },
+  { href: "/admin/why-choose-us", label: "Kāpēc izvēlēties mūs", icon: <Globe className="w-5 h-5" /> },
+  { href: "/admin/statistics", label: "Statistika", icon: <BarChart className="w-5 h-5" /> },
+  { href: "/admin/partners", label: "Partneri", icon: <Building className="w-5 h-5" /> },
+  { href: "/admin/blog", label: "Blogs", icon: <BookOpen className="w-5 h-5" /> },
+  { href: "/admin/contacts", label: "Kontakti", icon: <Contact className="w-5 h-5" /> },
+  { href: "/admin/footer", label: "Kājene", icon: <Settings className="w-5 h-5" /> },
 ]
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -16,9 +47,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 p-6">
-        <h1 className="text-2xl font-bold text-[#00332D] mb-8">Admin panelis</h1>
+        <h1 className="text-2xl font-bold text-[#00332D] mb-8">Vestate CMS</h1>
         <nav className="space-y-2">
           {navItems.map((item) => (
             <Link
@@ -37,7 +67,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </nav>
       </aside>
 
-      {/* Main content */}
       <main className="flex-1 p-10">
         {children}
       </main>

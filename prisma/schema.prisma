@@ -41,9 +41,11 @@ model FooterSettings {
 model NavigationSettings {
   id           String   @id @default(cuid())
   logoAlt      String
+  logoUrl      String?
   phone        String
   securityText String
   menuItems    Json
+  createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
