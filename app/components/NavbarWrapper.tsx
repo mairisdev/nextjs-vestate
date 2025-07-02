@@ -4,10 +4,10 @@ import Navbar from "./Navbar"
 export default async function NavbarWrapper() {
   const data = await getNavigationSettings()
 
-  // Pārliecinieties, ka logoUrl tiek aizvietots ar undefined, ja tas ir null
+  // Make sure logoUrl is set to null if it's not available, instead of undefined
   const updatedData = {
     ...data,
-    logoUrl: data?.logoUrl ?? undefined, // Ja logoUrl ir null, aizvietojiet ar undefined
+    logoUrl: data?.logoUrl ?? null, // Use null instead of undefined
   }
 
   return <Navbar data={updatedData} />
