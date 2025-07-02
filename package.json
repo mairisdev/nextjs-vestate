@@ -25,6 +25,7 @@
     "nodemailer": "^7.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "slate": "^0.117.2",
     "tailwind-merge": "^3.3.1",
     "uuid": "^11.1.0"
   },

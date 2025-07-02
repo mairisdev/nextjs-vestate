@@ -5,6 +5,7 @@ import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
 import { Button } from "../../components/ui/button"
+import AlertMessage from "../../components/ui/alert-message"
 
 export default function FooterSettings() {
   const [loading, setLoading] = useState(false)
@@ -27,137 +28,132 @@ export default function FooterSettings() {
   const [copyrightText, setCopyrightText] = useState("")
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const res = await fetch("/api/footer-settings")
-        const data = await res.json()
-
-        if (data?.id) setId(data.id)
-        if (data?.companyName) setCompanyName(data.companyName)
-        if (data?.description) setCompanyDesc(data.description)
-        if (data?.phone) setPhone(data.phone)
-        if (data?.email) setEmail(data.email)
-        if (data?.address) setAddress(data.address)
-        if (data?.facebookUrl) setFacebookUrl(data.facebookUrl)
-        if (data?.instagramUrl) setInstagramUrl(data.instagramUrl)
-        if (data?.linkedinUrl) setLinkedinUrl(data.linkedinUrl)
-        if (data?.developerName) setDeveloperName(data.developerName)
-        if (data?.developerUrl) setDeveloperUrl(data.developerUrl)
-        if (data?.copyrightText) setCopyrightText(data.copyrightText)
-      } catch (error) {
-        console.error("Kļūda ielādējot kājenes datus:", error)
-        setStatus("Neizdevās ielādēt datus ❌")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
+    fetch("/api/footer-settings")
+      .then((res) => res.json())
+      .then((data) => {
+        setId(data.id || "")
+        setCompanyName(data.companyName || "")
+        setCompanyDesc(data.companyDesc || "")
+        setPhone(data.phone || "")
+        setEmail(data.email || "")
+        setAddress(data.address || "")
+        setFacebookUrl(data.facebookUrl || "")
+        setInstagramUrl(data.instagramUrl || "")
+        setLinkedinUrl(data.linkedinUrl || "")
+        setDeveloperName(data.developerName || "")
+        setDeveloperUrl(data.developerUrl || "")
+        setCopyrightText(data.copyrightText || "")
+      })
   }, [])
 
   const handleSave = async () => {
-    setStatus("Saglabājas...")
-    try {
-      const res = await fetch("/api/footer-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          companyName,
-          description: companyDesc,
-          phone,
-          email,
-          address,
-          facebookUrl,
-          instagramUrl,
-          linkedinUrl,
-          developerName,
-          developerUrl,
-          copyrightText,
-        }),
-      })
+    setLoading(true)
+    const res = await fetch("/api/footer-settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        companyName,
+        companyDesc,
+        phone,
+        email,
+        address,
+        facebookUrl,
+        instagramUrl,
+        linkedinUrl,
+        developerName,
+        developerUrl,
+        copyrightText,
+      }),
+    })
 
-      if (res.ok) {
-        const updated = await res.json()
-        setId(updated.id)
-        setStatus("Saglabāts veiksmīgi ✅")
-      } else {
-        setStatus("Kļūda saglabājot ❌")
-      }
-    } catch (error) {
-      console.error("Kļūda saglabājot datus:", error)
-      setStatus("Kļūda savienojumā ❌")
-    }
+    setStatus(res.ok ? "success" : "error")
+    setLoading(false)
+
+    setTimeout(() => setStatus(""), 3000)
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-10 space-y-6">
-      <h2 className="text-2xl font-bold">Kājenes iestatījumi</h2>
+    <div className="max-w-4xl mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-6">Kājenes iestatījumi</h2>
 
-      {loading ? (
-        <p className="text-gray-500">Notiek ielāde...</p>
-      ) : (
-        <>
+        {status === "success" && (
+          <AlertMessage type="success" message="Izmaiņas saglabātas veiksmīgi." />
+        )}
+        {status === "error" && (
+          <AlertMessage type="error" message="Radās kļūda saglabājot izmaiņas." />
+        )}
+
+        <br/>
+
+      <div className="bg-white shadow rounded-2xl p-6 space-y-5">
+        <div>
+          <Label className="mb-1 block">Uzņēmuma nosaukums</Label>
+          <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+        </div>
+
+        <div>
+          <Label className="mb-1 block">Apraksts</Label>
+          <Textarea
+            className="min-h-[80px]"
+            value={companyDesc}
+            onChange={(e) => setCompanyDesc(e.target.value)}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label>Uzņēmuma nosaukums</Label>
-            <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+            <Label className="mb-1 block">Tālrunis</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
-
           <div>
-            <Label>Apraksts</Label>
-            <Textarea value={companyDesc} onChange={(e) => setCompanyDesc(e.target.value)} />
+            <Label className="mb-1 block">E-pasts</Label>
+            <Input value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Tālrunis</Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-            <div>
-              <Label>E-pasts</Label>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-            <div className="md:col-span-2">
-              <Label>Adrese</Label>
-              <Input value={address} onChange={(e) => setAddress(e.target.value)} />
-            </div>
-          </div>
+        <div>
+          <Label className="mb-1 block">Adrese</Label>
+          <Textarea value={address} onChange={(e) => setAddress(e.target.value)} />
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label>Facebook URL</Label>
+            <Label className="mb-1 block">Facebook URL</Label>
             <Input value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} />
           </div>
           <div>
-            <Label>Instagram URL</Label>
+            <Label className="mb-1 block">Instagram URL</Label>
             <Input value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} />
           </div>
           <div>
-            <Label>LinkedIn URL</Label>
+            <Label className="mb-1 block">LinkedIn URL</Label>
             <Input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} />
           </div>
+        </div>
 
-          <div>
-            <Label>Izstrādātāja vārds</Label>
-            <Input value={developerName} onChange={(e) => setDeveloperName(e.target.value)} />
-          </div>
-          <div>
-            <Label>Izstrādātāja URL</Label>
-            <Input value={developerUrl} onChange={(e) => setDeveloperUrl(e.target.value)} />
-          </div>
+        <div>
+          <Label className="mb-1 block">Izstrādātāja vārds</Label>
+          <Input value={developerName} onChange={(e) => setDeveloperName(e.target.value)} />
+        </div>
 
-          <div>
-            <Label>Autortiesību teksts</Label>
-            <Input value={copyrightText} onChange={(e) => setCopyrightText(e.target.value)} />
-          </div>
+        <div>
+          <Label className="mb-1 block">Izstrādātāja URL</Label>
+          <Input value={developerUrl} onChange={(e) => setDeveloperUrl(e.target.value)} />
+        </div>
 
-          <Button className="mt-4" onClick={handleSave}>
-            Saglabāt izmaiņas
+        <div>
+          <Label className="mb-1 block">Autortiesību teksts</Label>
+          <Input value={copyrightText} onChange={(e) => setCopyrightText(e.target.value)} />
+        </div>
+
+        <div className="pt-4">
+          <Button onClick={handleSave} disabled={loading} className="w-full md:w-auto">
+            {loading ? "Saglabājas..." : "Saglabāt izmaiņas"}
           </Button>
+        </div>
 
-          {status && <p className="text-sm mt-2">{status}</p>}
-        </>
-      )}
+      </div>
     </div>
   )
 }

@@ -4,7 +4,20 @@ import { prisma } from "@/lib/prisma"
 export async function GET() {
   try {
     const settings = await prisma.footerSettings.findFirst()
-    return NextResponse.json(settings || {})
+    return NextResponse.json({
+      id: settings?.id,
+      companyName: settings?.companyName,
+      companyDesc: settings?.description,
+      phone: settings?.phone,
+      email: settings?.email,
+      address: settings?.address,
+      facebookUrl: settings?.facebookUrl,
+      instagramUrl: settings?.instagramUrl,
+      linkedinUrl: settings?.linkedinUrl,
+      developerName: settings?.developerName,
+      developerUrl: settings?.developerUrl,
+      copyrightText: settings?.copyrightText,
+    })
   } catch (error) {
     console.error("[FOOTER_SETTINGS_GET]", error)
     return new NextResponse("Server error", { status: 500 })
@@ -24,7 +37,7 @@ export async function POST(req: Request) {
         where: { id: existing.id },
         data: {
           companyName: data.companyName,
-          description: data.description,
+          description: data.companyDesc,
           phone: data.phone,
           email: data.email,
           address: data.address,
@@ -40,7 +53,7 @@ export async function POST(req: Request) {
       result = await prisma.footerSettings.create({
         data: {
           companyName: data.companyName,
-          description: data.description,
+          description: data.companyDesc,
           phone: data.phone,
           email: data.email,
           address: data.address,

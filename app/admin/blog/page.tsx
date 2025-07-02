@@ -7,6 +7,9 @@ import { Textarea } from "../../components/ui/textarea"
 import { Button } from "../../components/ui/button"
 import { Plus, Trash } from "lucide-react"
 import AlertMessage from "../../components/ui/alert-message"
+import { Slate, Editable, withReact } from "slate-react"
+import { Editor } from "slate"
+import { withHistory } from "slate-history"
 
 type BlogPost = {
   id?: string
@@ -50,45 +53,45 @@ export default function BlogSettings() {
     setPosts(posts.filter((_, idx) => idx !== i))
   }
 
-const handleSave = async () => {
-  setAlert(null)
+  const handleSave = async () => {
+    setAlert(null)
 
-  // Send all the posts to the API
-  for (const post of posts) {
-    const formData = new FormData()
-    formData.append("title", post.title)
-    formData.append("date", post.date)
-    formData.append("excerpt", post.excerpt)
-    if (post.image instanceof File) {
-      formData.append("image", post.image)
-    } else if (typeof post.image === "string") {
-      formData.append("existingImageUrl", post.image)
-    }
-    if (post.id) {
-      formData.append("id", post.id)  // Include the ID for updating an existing post
-    }
+    // Send all the posts to the API
+    for (const post of posts) {
+      const formData = new FormData()
+      formData.append("title", post.title)
+      formData.append("date", post.date)
+      formData.append("excerpt", post.excerpt)
+      if (post.image instanceof File) {
+        formData.append("image", post.image)
+      } else if (typeof post.image === "string") {
+        formData.append("existingImageUrl", post.image)
+      }
+      if (post.id) {
+        formData.append("id", post.id)  // Include the ID for updating an existing post
+      }
 
-    // Send request to API route for saving post
-    const res = await fetch("/api/blog", {
-      method: "POST", // Will handle both create and update in API
-      body: formData,
-    })
+      // Send request to API route for saving post
+      const res = await fetch("/api/blog", {
+        method: "POST", // Will handle both create and update in API
+        body: formData,
+      })
 
-    // Check response status and show appropriate alert
-    if (res.ok) {
-      setAlert({ type: "success", message: "Dati saglabāti veiksmīgi!" })
-    } else {
-      setAlert({ type: "error", message: "Kļūda saglabājot datus!" })
+      // Check response status and show appropriate alert
+      if (res.ok) {
+        setAlert({ type: "success", message: "Dati saglabāti veiksmīgi!" })
+      } else {
+        setAlert({ type: "error", message: "Kļūda saglabājot datus!" })
+      }
     }
   }
-}
 
   return (
     <div className="max-w-4xl mx-auto py-10 space-y-8">
       <h2 className="text-2xl font-bold">Bloga ieraksti</h2>
-          {alert && (
-            <AlertMessage type={alert.type} message={alert.message} />
-          )}
+      {alert && (
+        <AlertMessage type={alert.type} message={alert.message} />
+      )}
       {posts.map((post, i) => (
         <div key={i} className="border p-4 rounded-lg space-y-4 bg-gray-50">
           <div className="flex justify-between items-center">
@@ -108,25 +111,27 @@ const handleSave = async () => {
             onChange={(e) => updatePost(i, "date", e.target.value)}
             placeholder="Datums"
           />
-          <Textarea
-            value={post.excerpt}
-            onChange={(e) => updatePost(i, "excerpt", e.target.value)}
-            placeholder="Apraksts"
-            className="resize-none h-32"
-          />
+          
+          {/* Slate editor for content */}
+          <div>
+            <Label className="block text-sm font-semibold mb-2">Apraksts</Label>
+            <Slate editor={withHistory(withReact(Editor.create()))} value={post.excerpt} onChange={(newValue: any) => updatePost(i, "excerpt", JSON.stringify(newValue))}>
+              <Editable className="resize-none h-32 border p-4 rounded-md" />
+            </Slate>
+          </div>
 
-        <label className="block w-full max-w-sm px-4 py-2 border border-dashed border-gray-300 rounded-lg text-center cursor-pointer bg-gray-50">
-          <span>Izvēlieties attēlu no failiem</span>
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={(e) => updatePost(i, "image", e.target.files?.[0] || null)}
-            className="hidden"
-          />
-          {typeof post.image === "string" && (
+          <label className="block w-full max-w-sm px-4 py-2 border border-dashed border-gray-300 rounded-lg text-center cursor-pointer bg-gray-50">
+            <span>Izvēlieties attēlu no failiem</span>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => updatePost(i, "image", e.target.files?.[0] || null)}
+              className="hidden"
+            />
+            {typeof post.image === "string" && (
               <img src={post.image} alt="Preview" className="w-full max-w-xs rounded-md mt-2" />
             )}
-        </label>          
+          </label>
         </div>
       ))}
 
