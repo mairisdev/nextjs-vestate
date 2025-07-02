@@ -2,16 +2,12 @@ import { getBlogPostBySlug, getAllBlogPosts } from "@/lib/queries/blog"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 
-type BlogPost = {
-  title: string
-  date: string
-  excerpt: string
-  imageUrl: string
-}
-
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  // Await the params since they're now async in Next.js 15
+  const { slug } = await params
+  
   // Fetch the blog post by slug
-  const post = await getBlogPostBySlug(params.slug)
+  const post = await getBlogPostBySlug(slug)
 
   if (!post) return notFound()
 
@@ -36,8 +32,9 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   )
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const post = await getBlogPostBySlug(params.slug)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const post = await getBlogPostBySlug(slug)
 
   if (!post) return {}
 
