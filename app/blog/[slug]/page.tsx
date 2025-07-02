@@ -3,14 +3,29 @@ import Image from "next/image"
 import { notFound } from "next/navigation"
 
 type Props = {
-  params: {
-    slug: string
+  post: {
+    title: string
+    date: string
+    excerpt: string
+    imageUrl: string
   }
 }
 
-export default async function BlogPostPage({ params }: Props) {
+export async function getServerSideProps({ params }: { params: { slug: string } }) {
   const post = await getBlogPostBySlug(params.slug)
 
+  if (!post) {
+    return { notFound: true }
+  }
+
+  return {
+    props: {
+      post,
+    },
+  }
+}
+
+export default function BlogPostPage({ post }: Props) {
   if (!post) return notFound()
 
   return (
