@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
-import { Textarea } from "../../components/ui/textarea"
 import { Button } from "../../components/ui/button"
 import { Plus, Trash } from "lucide-react"
 import AlertMessage from "../../components/ui/alert-message"
-import { Editor } from "slate"
 
 type BlogPost = {
   id?: string
