@@ -7,9 +7,7 @@ import { Textarea } from "../../components/ui/textarea"
 import { Button } from "../../components/ui/button"
 import { Plus, Trash } from "lucide-react"
 import AlertMessage from "../../components/ui/alert-message"
-import { Slate, Editable, withReact } from "slate-react"
 import { Editor } from "slate"
-import { withHistory } from "slate-history"
 
 type BlogPost = {
   id?: string
@@ -115,9 +113,7 @@ export default function BlogSettings() {
           {/* Slate editor for content */}
           <div>
             <Label className="block text-sm font-semibold mb-2">Apraksts</Label>
-            <Slate editor={withHistory(withReact(Editor.create()))} value={post.excerpt} onChange={(newValue: any) => updatePost(i, "excerpt", JSON.stringify(newValue))}>
-              <Editable className="resize-none h-32 border p-4 rounded-md" />
-            </Slate>
+
           </div>
 
           <label className="block w-full max-w-sm px-4 py-2 border border-dashed border-gray-300 rounded-lg text-center cursor-pointer bg-gray-50">
