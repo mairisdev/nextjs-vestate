@@ -38,7 +38,7 @@ export default function SportEvents() {
             >
 
               {/* Top info bar */}
-              <div className="bg-[#BF3131] text-white flex items-center justify-between px-4 h-12 text-[15px] font-medium overflow-x-auto whitespace-nowrap gap-4">
+              <div className="bg-[#BF3131] text-white flex items-center justify-between px-4 h-12 text-[13px] overflow-x-auto whitespace-nowrap gap-4">
                 <div className="flex items-center">
                   <CalendarCheck className="w-4 h-4 mb-0.5 mr-1" />
                   <span>{event.date}</span>
