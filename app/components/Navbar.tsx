@@ -6,13 +6,13 @@ import { Phone, Menu, X } from "lucide-react"
 
 type NavigationData = {
   logoUrl: string | null;
-  logoAlt: string;
+  logoAlt: string | undefined;
   phone: string;
   securityText: string;
   menuItems?: Array<{
-    label: string
-    link: string
-    isVisible: boolean
+    label: string;
+    link: string;
+    isVisible: boolean;
   }>
 }
 
