@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import SportEvents from './../components/SportEvents'
 
 const galleryTitle = 'PČ Hokejā 2025';
 
@@ -138,6 +139,9 @@ export default function GalleryPage() {
           </div>
         </div>
       )}
+        <SportEvents />
     </div>
+    
   );
+
 }
