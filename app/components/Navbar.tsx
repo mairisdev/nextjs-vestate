@@ -5,10 +5,10 @@ import Image from "next/image"
 import { Phone, Menu, X } from "lucide-react"
 
 type NavigationData = {
-  logoUrl?: string
-  logoAlt?: string
-  phone?: string
-  securityText?: string
+  logoUrl: string | null;
+  logoAlt: string;
+  phone: string;
+  securityText: string;
   menuItems?: Array<{
     label: string
     link: string
