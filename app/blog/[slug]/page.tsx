@@ -2,41 +2,17 @@ import { getBlogPostBySlug, getAllBlogPosts } from "@/lib/queries/blog"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 
-type Props = {
-  post: {
-    title: string
-    date: string
-    excerpt: string
-    imageUrl: string
-  }
+type BlogPost = {
+  title: string
+  date: string
+  excerpt: string
+  imageUrl: string
 }
 
-// Static Paths (for dynamic routes with slugs)
-export async function getStaticPaths() {
-  const posts = await getAllBlogPosts() // Fetch all posts
-  const paths = posts.map((post: any) => ({
-    params: { slug: post.slug },
-  }))
-
-  return { paths, fallback: "blocking" }
-}
-
-// Static Props (for each individual post)
-export async function getStaticProps({ params }: { params: { slug: string } }) {
+export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+  // Fetch the blog post by slug
   const post = await getBlogPostBySlug(params.slug)
 
-  if (!post) {
-    return { notFound: true }
-  }
-
-  return {
-    props: {
-      post,
-    },
-  }
-}
-
-export default function BlogPostPage({ post }: Props) {
   if (!post) return notFound()
 
   return (
@@ -58,4 +34,22 @@ export default function BlogPostPage({ post }: Props) {
       </div>
     </div>
   )
+}
+
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const post = await getBlogPostBySlug(params.slug)
+
+  if (!post) return {}
+
+  return {
+    title: post.title,
+    description: post.excerpt,
+  }
+}
+
+export async function generateStaticParams() {
+  const posts = await getAllBlogPosts()
+  return posts.map((post) => ({
+    slug: post.slug,
+  }))
 }
