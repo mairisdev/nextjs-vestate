@@ -7,7 +7,6 @@ export async function getNavigationSettings() {
 
   return {
     ...data,
-    logoUrl: data.logoUrl ?? null,
     menuItems: Array.isArray(data.menuItems) ? data.menuItems : [],
   }
 }
