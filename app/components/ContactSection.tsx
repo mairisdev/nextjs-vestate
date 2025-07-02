@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import AlertMessage from "./ui/alert-message"
 
 interface Quiz {
   question: string
@@ -19,38 +20,49 @@ export default function ContactSection() {
   const [data, setData] = useState<any>(null)
   const [form, setForm] = useState({ name: "", email: "", message: "", answer: "" })
   const [quiz, setQuiz] = useState<Quiz | null>(null)
-  const [status, setStatus] = useState("")
+  const [alert, setAlert] = useState<{ type: "success" | "error"; message: string } | null>(null)
 
   useEffect(() => {
-    fetch("/api/contact")
-      .then((res) => res.json())
-      .then(setData)
-
+    fetch("/api/contact").then((res) => res.json()).then(setData)
     const random = quizOptions[Math.floor(Math.random() * quizOptions.length)]
     setQuiz(random)
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setAlert(null)
 
     if (!quiz || form.answer.trim() !== quiz.answer) {
-      setStatus("Nepareiza atbilde uz jautājumu")
+      setAlert({ type: "error", message: "Nepareiza atbilde uz jautājumu." })
       return
     }
 
     if (!form.email.includes("@")) {
-      setStatus("Lūdzu, ievadiet derīgu e-pastu.")
+      setAlert({ type: "error", message: "Lūdzu, ievadiet derīgu e-pastu." })
       return
     }
 
-    setStatus("Sūtam ziņu...")
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          message: form.message,
+        }),
+      })
 
-    setTimeout(() => {
-      setStatus("Ziņa nosūtīta! ✅ (demo režīms)")
-      setForm({ name: "", email: "", message: "", answer: "" })
-      const newQuiz = quizOptions[Math.floor(Math.random() * quizOptions.length)]
-      setQuiz(newQuiz)
-    }, 1000)
+      if (res.ok) {
+        setAlert({ type: "success", message: "Paldies, ziņa nosūtīta veiksmīgi!" })
+        setForm({ name: "", email: "", message: "", answer: "" })
+        setQuiz(quizOptions[Math.floor(Math.random() * quizOptions.length)])
+      } else {
+        throw new Error()
+      }
+    } catch (err) {
+      setAlert({ type: "error", message: "Neizdevās nosūtīt ziņu. Mēģiniet vēlreiz." })
+    }
   }
 
   if (!data || !quiz) return null
@@ -88,6 +100,11 @@ export default function ContactSection() {
           className="bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-4"
           onSubmit={handleSubmit}
         >
+
+          {alert && (
+            <AlertMessage type={alert.type} message={alert.message} />
+          )}
+
           <h3 className="text-2xl font-bold text-[#00332D] mb-2">Nosūtīt ziņu</h3>
           <input
             type="text"
@@ -127,7 +144,7 @@ export default function ContactSection() {
           >
             Nosūtīt
           </button>
-          {status && <p className="text-sm mt-2">{status}</p>}
+
         </form>
       </div>
     </section>
