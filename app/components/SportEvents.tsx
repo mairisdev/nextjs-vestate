@@ -9,7 +9,7 @@ const events = [
     subtitle: 'Ice Hockey',
     title: '2025 IIHF World Championship',
     location: 'Stockholm/Sweden – Herning/Denmark',
-    logo: '/ice-hockey.png',
+    icon: '/ice-hockey.png',
     image: 'https://sdkthunder.com/wp-content/uploads/2025/04/Untitled.jpg',
   },
   {
@@ -17,7 +17,7 @@ const events = [
     subtitle: 'FIBA EuroBasket 2025',
     title: '2025. gada Eiropas vīriešu basketbola čempionāts',
     location: 'Rīga, Latvija',
-    logo: '/basketball.png',
+    icon: '/basketball.png',
     image: 'https://sdkthunder.com/wp-content/uploads/2025/04/Untitled.png',
   },
 ]
@@ -34,26 +34,26 @@ export default function SportEvents() {
           {events.map((event, idx) => (
             <div
               key={idx}
-              className="relative bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all overflow-hidden"
+              className="bg-white rounded-3xl shadow-xl overflow-hidden"
             >
-              {/* Red top stripe */}
-              <div className="bg-[#BF3131] text-white flex justify-between items-center px-4 h-[40px] text-[15px] font-medium">
-                <div className="flex items-center gap-2">
+              {/* Top info bar */}
+              <div className="bg-[#BF3131] text-white flex flex-wrap items-center justify-between px-4 h-auto py-2 text-[15px] font-medium gap-2">
+                <div className="flex items-center gap-1">
                   <CalendarDays className="w-4 h-4" />
                   <span>{event.date}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
                   <span>{event.location}</span>
                 </div>
               </div>
 
               {/* Content */}
-              <div className="p-6 md:p-8 flex items-center gap-6">
+              <div className="p-6 md:p-8 flex flex-col sm:flex-row items-center gap-6">
                 {/* Sport icon */}
                 <div className="w-14 h-14 flex-shrink-0">
                   <Image
-                    src={event.logo}
+                    src={event.icon}
                     alt={event.subtitle}
                     width={56}
                     height={56}
@@ -62,7 +62,7 @@ export default function SportEvents() {
                 </div>
 
                 {/* Text block */}
-                <div className="flex-grow text-left">
+                <div className="flex-grow text-center sm:text-left">
                   <p className="text-sm font-medium text-[#BF3131] uppercase mb-1">
                     {event.subtitle}
                   </p>
@@ -71,8 +71,8 @@ export default function SportEvents() {
                   </h3>
                 </div>
 
-                {/* Right side image */}
-                <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-xl p-2 shadow">
+                {/* Right logo image */}
+                <div className="w-20 h-20 md:w-28 md:h-28 bg-white rounded-xl p-2 shadow">
                   <img
                     src={event.image}
                     alt={event.title}
