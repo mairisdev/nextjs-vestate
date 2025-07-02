@@ -150,7 +150,7 @@ useEffect(() => {
 
         {showCodeSuccess && (
           <div className="bg-green-100 text-green-800 px-6 py-4 rounded-md mb-6 mt-6">
-            Apstiprināts! Lapa tiks pārlādēta...
+            E-pasts apstiprināts! Lapa tiks pārlādēta..
           </div>
         )}
 
@@ -166,20 +166,21 @@ useEffect(() => {
         {listings.length > 0 && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
             {listings.map((item, idx) => (
-              <div key={idx} className="bg-white rounded-2xl shadow-lg p-6">
+              <div
+                key={idx}
+                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition duration-300 ease-in-out transform hover:scale-105"
+              >
                 <img
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-48 object-cover rounded-md mb-4"
+                  className="w-full h-48 object-cover rounded-md mb-4 transition duration-300 ease-in-out transform hover:scale-110"
                 />
-                <h3 className="text-lg font-semibold text-[#00332D] mb-2">
-                  {item.title}
-                </h3>
+                <h3 className="text-lg font-semibold text-[#00332D] mb-2">{item.title}</h3>
                 <p className="text-[#00332D] font-bold text-xl mb-1">{item.price}</p>
-                <p className="text-sm text-gray-700">{item.description}</p>
+                <p className="text-sm text-gray-700 mb-2">{item.description}</p>
                 <p className="text-sm text-gray-700">{item.size}</p>
                 <p className="text-sm text-gray-700 mb-4">{item.extra}</p>
-                <button className="bg-[#00332D] text-white px-4 py-2 rounded-md hover:bg-[#00443B]">
+                <button className="bg-[#00332D] text-white px-4 py-2 rounded-md hover:bg-[#00443B] transition duration-300 ease-in-out transform hover:scale-105">
                   Apskatīt vairāk
                 </button>
               </div>

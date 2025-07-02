@@ -16,42 +16,43 @@ export default async function ServicesZigZag() {
   }
 
   return (
-    <section className="bg-white py-20 px-4 md:px-12">
-      <div className="max-w-6xl mx-auto">
-        <p className="text-sm font-semibold uppercase text-[#77D4B4] text-center mb-2">
-          {section.subheading || "Pieredzes bagāti nekustamo īpašumu speciālisti"}
-        </p>
-        <h2 className="text-2xl md:text-3xl font-bold text-[#00332D] text-center mb-20">
-          {section.heading || "Pakalpojumi, ko sniedz mūsu komanda"}
-        </h2>
+<section className="bg-white py-8 sm:py-16 px-4 sm:px-12">
+  <div className="max-w-6xl mx-auto">
+    <p className="text-sm font-semibold uppercase text-[#77D4B4] text-center mb-2">
+      {section.subheading || "Pieredzes bagāti nekustamo īpašumu speciālisti"}
+    </p>
+    <h2 className="text-2xl sm:text-3xl font-bold text-[#00332D] text-center mb-16 sm:mb-20">
+      {section.heading || "Pakalpojumi, ko sniedz mūsu komanda"}
+    </h2>
 
-        <div className="space-y-10 md:space-y-12">
-{paired.map(([left, right], i) => (
-  <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center">
-    {/* Kreisā puse */}
-    <div className="flex items-center gap-4 self-start md:self-center">
-      <div className="w-9 h-9 flex items-center justify-center">
-        <ChevronRight size={30} stroke="#77D4B4" strokeWidth={3} />
-      </div>
-      <p className="text-base leading-relaxed text-[#00332D]">{left}</p>
+    <div className="space-y-8 sm:space-y-10">
+      {paired.map(([left, right], i) => (
+        <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-20 items-center">
+          {/* Kreisā puse */}
+          <div className="flex items-center gap-4 self-start">
+            <div className="w-9 h-9 flex items-center justify-center">
+              <ChevronRight size={30} stroke="#77D4B4" strokeWidth={3} />
+            </div>
+            <p className="text-base leading-relaxed text-[#00332D]">{left}</p>
+          </div>
+
+          {/* Labā puse tikai, ja ir */}
+          {right ? (
+            <div className="flex items-center gap-4 self-start">
+              <div className="w-9 h-9 flex items-center justify-center">
+                <ChevronRight size={30} stroke="#77D4B4" strokeWidth={3} />
+              </div>
+              <p className="text-base leading-relaxed text-[#00332D]">{right}</p>
+            </div>
+          ) : (
+            // Ja nav `right`, aizpilda tukšu vietu, lai saglabā struktūru
+            <div className="hidden md:block" />
+          )}
+        </div>
+      ))}
     </div>
-
-    {/* Labā puse tikai, ja ir */}
-    {right ? (
-      <div className="flex items-center gap-4 self-start md:self-center">
-        <div className="w-9 h-9 flex items-center justify-center">
-          <ChevronRight size={30} stroke="#77D4B4" strokeWidth={3} />
-        </div>
-        <p className="text-base leading-relaxed text-[#00332D]">{right}</p>
-      </div>
-    ) : (
-      // Ja nav `right`, aizpilda tukšu vietu, lai saglabā struktūru
-      <div className="hidden md:block" />
-    )}
   </div>
-))}
-        </div>
-      </div>
-    </section>
+</section>
+
   )
 }

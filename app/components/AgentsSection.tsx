@@ -26,7 +26,7 @@ export default async function AgentsSection() {
                   alt={agent.name}
                   width={400}
                   height={300}
-                  className="w-full h-[300px] object-cover"
+                  className="w-full h-[360px] md:h-[300px] object-cover"
                 />
               )}
 

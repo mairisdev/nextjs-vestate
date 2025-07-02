@@ -15,21 +15,3 @@
   scrollbar-color: #BF3131 transparent;
   scrollbar-width: thin;
 }
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-th, td {
-  padding: 10px;
-  text-align: left;
-}
-
-th {
-  background-color: #f4f4f4;
-}
-
-input[type="checkbox"] {
-  margin: 0;
-}

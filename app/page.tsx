@@ -1,4 +1,4 @@
-import Navbar from './components/Navbar'
+import NavbarWrapper from "./components/NavbarWrapper"
 import HeroSlider from './components/HeroSlider'
 import ConsultationSection from './components/ConsultationSection'
 import AgentReasons from './components/AgentReasons'
@@ -18,7 +18,7 @@ import FooterSection from './components/FooterSection'
 export default function Home() {
   return (
     <>
-      <Navbar />
+      <NavbarWrapper />
       <HeroSlider />
       <main className="min-h-screen">
         <ConsultationSection />
