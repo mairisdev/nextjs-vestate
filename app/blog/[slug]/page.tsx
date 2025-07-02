@@ -1,4 +1,4 @@
-import { getBlogPostBySlug } from "@/lib/queries/blog"
+import { getBlogPostBySlug, getAllBlogPosts } from "@/lib/queries/blog"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 
@@ -11,7 +11,18 @@ type Props = {
   }
 }
 
-export async function getServerSideProps({ params }: { params: { slug: string } }) {
+// Static Paths (for dynamic routes with slugs)
+export async function getStaticPaths() {
+  const posts = await getAllBlogPosts() // Fetch all posts
+  const paths = posts.map((post: any) => ({
+    params: { slug: post.slug },
+  }))
+
+  return { paths, fallback: "blocking" }
+}
+
+// Static Props (for each individual post)
+export async function getStaticProps({ params }: { params: { slug: string } }) {
   const post = await getBlogPostBySlug(params.slug)
 
   if (!post) {
