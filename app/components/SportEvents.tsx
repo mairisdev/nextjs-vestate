@@ -1,14 +1,14 @@
 'use client'
 
 import Image from 'next/image'
-import { CalendarDays, MapPin } from 'lucide-react'
+import { CalendarCheck, MapPinHouse } from 'lucide-react'
 
 const events = [
   {
-    date: '9/05 – 26/05/2025',
+    date: '09/05 – 26/05',
     subtitle: 'Ice Hockey',
     title: '2025 IIHF World Championship',
-    location: 'Stockholm/Sweden – Herning/Denmark',
+    location: 'Stockholm / Denmark',
     icon: '/ice-hockey.png',
     image: 'https://sdkthunder.com/wp-content/uploads/2025/04/Untitled.jpg',
   },
@@ -36,14 +36,15 @@ export default function SportEvents() {
               key={idx}
               className="bg-white rounded-3xl shadow-xl overflow-hidden"
             >
+
               {/* Top info bar */}
-              <div className="bg-[#BF3131] text-white flex flex-wrap items-center justify-between px-4 h-auto py-2 text-[15px] font-medium gap-2">
-                <div className="flex items-center gap-1">
-                  <CalendarDays className="w-4 h-4" />
+              <div className="bg-[#BF3131] text-white flex items-center justify-between px-4 h-12 text-[15px] font-medium overflow-x-auto whitespace-nowrap gap-4">
+                <div className="flex items-center">
+                  <CalendarCheck className="w-4 h-4 mb-0.5 mr-1" />
                   <span>{event.date}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
+                <div className="flex items-center">
+                  <MapPinHouse className="w-4 h-4 mr-1" />
                   <span>{event.location}</span>
                 </div>
               </div>
@@ -72,7 +73,7 @@ export default function SportEvents() {
                 </div>
 
                 {/* Right logo image */}
-                <div className="w-20 h-20 md:w-28 md:h-28 bg-white rounded-xl p-2 shadow">
+                <div className="w-40 h-50 md:w-70 md:h-40 bg-white rounded-xl shadow flex items-center justify-center">
                   <img
                     src={event.image}
                     alt={event.title}
