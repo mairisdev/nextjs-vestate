@@ -105,13 +105,13 @@ export default function GalleryPage() {
             />
 
             {/* Thumbnail scroller */}
-            <div className="flex gap-2 justify-center mt-4 mb-6 overflow-x-auto px-6 pb-5 custom-scroll">
+            <div className="flex gap-2 justify-start overflow-x-auto px-6 pb-5 custom-scroll scroll-smooth max-w-full md:justify-center">
               {images.map((img, i) => (
                 <img
                   key={i}
                   src={img.src}
                   onClick={() => setSelectedIndex(i)}
-                  className={`w-24 h-16 object-cover rounded-md border-1 mt-6 cursor-pointer transition-all ${
+                  className={`min-w-[6rem] h-16 object-cover rounded-md border-1 mt-6 cursor-pointer transition-all ${
                     i === selectedIndex
                       ? 'ring-2 ring-[#BF3131] border-[#BF3131]'
                       : 'border-gray-200 hover:border-[#223645]'
