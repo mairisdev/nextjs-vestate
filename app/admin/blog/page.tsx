@@ -6,6 +6,7 @@ import { Label } from "../../components/ui/label"
 import { Button } from "../../components/ui/button"
 import { Plus, Trash } from "lucide-react"
 import AlertMessage from "../../components/ui/alert-message"
+import { Textarea } from "@/app/components/ui/textarea"
 
 type BlogPost = {
   id?: string
@@ -52,7 +53,6 @@ export default function BlogSettings() {
   const handleSave = async () => {
     setAlert(null)
 
-    // Send all the posts to the API
     for (const post of posts) {
       const formData = new FormData()
       formData.append("title", post.title)
@@ -64,16 +64,14 @@ export default function BlogSettings() {
         formData.append("existingImageUrl", post.image)
       }
       if (post.id) {
-        formData.append("id", post.id)  // Include the ID for updating an existing post
+        formData.append("id", post.id)
       }
 
-      // Send request to API route for saving post
       const res = await fetch("/api/blog", {
-        method: "POST", // Will handle both create and update in API
+        method: "POST",
         body: formData,
       })
 
-      // Check response status and show appropriate alert
       if (res.ok) {
         setAlert({ type: "success", message: "Dati saglabāti veiksmīgi!" })
       } else {
@@ -108,10 +106,13 @@ export default function BlogSettings() {
             placeholder="Datums"
           />
           
-          {/* Slate editor for content */}
           <div>
             <Label className="block text-sm font-semibold mb-2">Apraksts</Label>
-
+                    <Textarea
+            value={post.excerpt}
+            onChange={(e) => updatePost(i, "date", e.target.value)}
+            placeholder="Apraksts"
+          />
           </div>
 
           <label className="block w-full max-w-sm px-4 py-2 border border-dashed border-gray-300 rounded-lg text-center cursor-pointer bg-gray-50">

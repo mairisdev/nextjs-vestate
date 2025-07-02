@@ -18,6 +18,7 @@ import FooterSection from './components/FooterSection'
 export default function Home() {
   return (
     <>
+      <Navbar />
       <HeroSlider />
       <main className="min-h-screen">
         <ConsultationSection />
