@@ -1,11 +1,12 @@
-import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForDzivokli } from "@/lib/queries/properties"
+import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForDzivokli, getProjectsForCategory } from "@/lib/queries/properties"
 import PropertyGrid from "../../components/PropertyGrid"
-import PropertyFilters from "../../components/PropertyFilters"
+import PropertyFiltersClientWrapper from "../../components/PropertyFiltersClientWrapper"
 import { notFound } from "next/navigation"
+import Navbar from "../../components/Navbar"
 
 interface PageProps {
   params: Promise<{ category: string }>
-  searchParams: Promise<{ 
+  searchParams: Promise<{
     page?: string
     minPrice?: string
     maxPrice?: string
@@ -65,6 +66,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       <div className="bg-white border-b">
         <div className="max-w-[1600px] mx-auto px-6 py-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -82,7 +84,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       <div className="max-w-[1600px] mx-auto px-6 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-80 flex-shrink-0">
-            <PropertyFilters 
+            <PropertyFiltersClientWrapper 
               categories={categories}
               currentCategory={resolvedParams.category}
               cities={cities}

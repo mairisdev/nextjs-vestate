@@ -243,6 +243,8 @@ model Property {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  propertyProject String?
+
   @@index([categoryId])
   @@index([status])
   @@index([isActive])

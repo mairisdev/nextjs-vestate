@@ -1,7 +1,6 @@
 'use client'
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { MapPin, ChevronDown } from "lucide-react"
 
 interface Category {
   id: string
@@ -10,7 +9,7 @@ interface Category {
   _count: { properties: number }
 }
 
-interface PropertyFiltersProps {
+export interface PropertyFiltersProps {
   categories: Category[]
   currentCategory: string
   cities?: string[]
@@ -30,8 +29,6 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
     city: searchParams.get('city') || '',
     district: searchParams.get('district') || '',
   })
-
-  const [showNewProjects, setShowNewProjects] = useState(false)
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -60,62 +57,90 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
   }
 
   return (
-    <div className="space-y-6">
-      <button 
-        onClick={clearFilters}
-        className="text-sm text-[#00332D] hover:underline"
-      >
-        Notīrīt filtru
-      </button>
+    <div className="space-y-6 bg-white p-6 rounded-xl shadow border w-full">
+      {/* Reset filters button */}
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-lg font-semibold text-[#00332D]">Filtri</span>
+        <button 
+          onClick={clearFilters}
+          className="text-xs text-[#B91C1C] hover:underline"
+        >
+          Notīrīt visus
+        </button>
+      </div>
 
-      <div className="bg-white p-4 rounded-lg border">
-        <div className="flex items-center space-x-2 mb-3">
+      <div className="mb-4">
+        <div className="flex items-center space-x-2 mb-2">
           <span className="font-medium">Darījuma veids</span>
         </div>
-        
-        <div className="space-y-2">
-          <div className="flex space-x-2">
+        <div className="space-y-2 pl-7">
+          <div className="flex space-x-2 items-center">
             <input type="checkbox" id="ire" className="rounded" />
             <label htmlFor="ire" className="text-sm">Īrē</label>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 items-center">
             <input type="checkbox" id="pirkt" className="rounded" />
             <label htmlFor="pirkt" className="text-sm">Pirkt</label>
           </div>
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-lg border">
-        <h3 className="font-medium mb-3">Cena EUR</h3>
+      {cities && cities.length > 0 && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1" htmlFor="city">Pilsēta</label>
+          <select
+            id="city"
+            value={filters.city}
+            onChange={e => handleFilterChange('city', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D] bg-white"
+          >
+            <option value="">Visas pilsētas</option>
+            {cities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {districts && districts.length > 0 && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1" htmlFor="district">Rajons</label>
+          <select
+            id="district"
+            value={filters.district}
+            onChange={e => handleFilterChange('district', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D] bg-white"
+          >
+            <option value="">Visi rajoni</option>
+            {districts.map(district => (
+              <option key={district} value={district}>{district}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="mb-4">
+        <h3 className="font-medium mb-2">Cena EUR</h3>
         <div className="grid grid-cols-2 gap-2">
           <input
             type="number"
-            placeholder="300"
+            placeholder="No"
             value={filters.minPrice}
             onChange={(e) => handleFilterChange('minPrice', e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           />
           <input
             type="number"
-            placeholder="300 000+"
+            placeholder="Līdz"
             value={filters.maxPrice}
             onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           />
         </div>
-        
-        <div className="mt-4">
-          <div className="relative">
-            <div className="w-full h-2 bg-gray-200 rounded-full">
-              <div className="absolute left-0 w-6 h-6 bg-[#B91C1C] rounded-full -mt-2 border-2 border-white shadow"></div>
-              <div className="absolute right-0 w-6 h-6 bg-[#B91C1C] rounded-full -mt-2 border-2 border-white shadow"></div>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <div className="bg-white p-4 rounded-lg border">
-        <h3 className="font-medium mb-3">Istabu skaits</h3>
+      <div className="mb-4">
+        <h3 className="font-medium mb-2">Istabu skaits</h3>
         <div className="grid grid-cols-6 gap-2">
           {[1, 2, 3, 4, 5, '+'].map((num) => (
             <button
@@ -133,33 +158,8 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-lg border">
-        <h3 className="font-medium mb-3">Projekts</h3>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <input 
-              type="checkbox" 
-              id="newProjects"
-              checked={showNewProjects}
-              onChange={(e) => setShowNewProjects(e.target.checked)}
-              className="rounded" 
-            />
-            <label htmlFor="newProjects" className="text-sm">
-              Atlasīt tikai jaunos projektus
-            </label>
-          </div>
-        </div>
-        
-        <div className="mt-3">
-          <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]">
-            <option>Visi projekti</option>
-          </select>
-          <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-        </div>
-      </div>
-
-      <div className="bg-white p-4 rounded-lg border">
-        <h3 className="font-medium mb-3">Platība / m²</h3>
+      <div className="mb-4">
+        <h3 className="font-medium mb-2">Platība / m²</h3>
         <div className="grid grid-cols-2 gap-2">
           <input
             type="number"
@@ -178,43 +178,9 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         </div>
       </div>
 
-      {/* City filter */}
-      {cities && cities.length > 0 && (
-        <div className="bg-white p-4 rounded-lg border">
-          <h3 className="font-medium mb-3">Pilsēta</h3>
-          <select
-            value={filters.city}
-            onChange={e => handleFilterChange('city', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
-          >
-            <option value="">Visas pilsētas</option>
-            {cities.map(city => (
-              <option key={city} value={city}>{city}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* District filter */}
-      {districts && districts.length > 0 && (
-        <div className="bg-white p-4 rounded-lg border">
-          <h3 className="font-medium mb-3">Rajons</h3>
-          <select
-            value={filters.district}
-            onChange={e => handleFilterChange('district', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
-          >
-            <option value="">Visi rajoni</option>
-            {districts.map(district => (
-              <option key={district} value={district}>{district}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
       <button
         onClick={applyFilters}
-        className="w-full bg-[#00332D] text-white py-3 rounded-md font-medium hover:bg-[#004940] transition-colors"
+        className="w-full bg-[#00332D] text-white py-3 rounded-md font-medium hover:bg-[#004940] transition-colors mt-2"
       >
         Pielietot filtrus
       </button>

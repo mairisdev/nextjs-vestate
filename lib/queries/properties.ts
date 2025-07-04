@@ -66,8 +66,31 @@ export async function getPropertiesByCategory(categorySlug: string, page = 1, li
 
   const properties = await prisma.property.findMany({
     where,
-    include: {
-      category: true
+    select: {
+      id: true,
+      propertyProject: true,
+      title: true,
+      price: true,
+      currency: true,
+      address: true,
+      city: true,
+      district: true,
+      rooms: true,
+      area: true,
+      floor: true,
+      totalFloors: true,
+      status: true,
+      mainImage: true,
+      images: true,
+      isActive: true,
+      isFeatured: true,
+      createdAt: true,
+      category: {
+        select: {
+          name: true,
+          slug: true,
+        }
+      }
     },
     orderBy,
     skip,

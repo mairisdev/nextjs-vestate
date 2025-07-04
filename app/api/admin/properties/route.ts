@@ -53,6 +53,7 @@ export async function POST(req: Request) {
       const status = formData.get("status")?.toString() || "AVAILABLE"
       const isActive = formData.get("isActive") === "true"
       const isFeatured = formData.get("isFeatured") === "true"
+      const propertyProject = formData.get("propertyProject")?.toString() || null
 
       // Validācija
       if (!title || !categoryId || !address || !city) {
@@ -124,7 +125,8 @@ export async function POST(req: Request) {
           isActive,
           isFeatured,
           mainImage: mainImagePath,
-          images: additionalImagePaths
+          images: additionalImagePaths,
+          propertyProject
         },
         include: {
           category: true
@@ -154,7 +156,8 @@ export async function POST(req: Request) {
           isActive: data.isActive !== undefined ? data.isActive : true,
           isFeatured: data.isFeatured !== undefined ? data.isFeatured : false,
           mainImage: null,
-          images: []
+          images: [],
+          propertyProject: data.propertyProject || null
         },
         include: {
           category: true

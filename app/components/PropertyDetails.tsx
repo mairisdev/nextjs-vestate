@@ -14,6 +14,7 @@ interface Property {
   category: {
     name: string
   }
+
 }
 
 interface PropertyDetailsProps {

@@ -34,6 +34,7 @@ interface Property {
   isFeatured: boolean
   mainImage: string | null
   images: string[]
+  propertyProject?: string
 }
 
 interface EditPropertyProps {
@@ -64,7 +65,8 @@ export default function EditProperty({ params }: EditPropertyProps) {
     categoryId: "",
     status: "AVAILABLE",
     isActive: true,
-    isFeatured: false
+    isFeatured: false,
+    propertyProject: ""
   })
 
   // Attēlu stāvokļi
@@ -117,7 +119,8 @@ export default function EditProperty({ params }: EditPropertyProps) {
         categoryId: property.categoryId,
         status: property.status,
         isActive: property.isActive,
-        isFeatured: property.isFeatured
+        isFeatured: property.isFeatured,
+        propertyProject: property.propertyProject || ""
       })
 
       setCurrentMainImage(property.mainImage)
@@ -221,6 +224,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
       formDataToSend.append("status", formData.status)
       formDataToSend.append("isActive", formData.isActive.toString())
       formDataToSend.append("isFeatured", formData.isFeatured.toString())
+      formDataToSend.append("propertyProject", formData.propertyProject)
 
       // Pievienojam jauno galveno attēlu
       if (newMainImage) {
@@ -339,6 +343,17 @@ export default function EditProperty({ params }: EditPropertyProps) {
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Detalizēts īpašuma apraksts..."
                 rows={4}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="propertyProject">Projekts</Label>
+              <Input
+                id="propertyProject"
+                type="text"
+                value={formData.propertyProject}
+                onChange={e => handleInputChange("propertyProject", e.target.value)}
+                placeholder="Projekta nosaukums (ja ir)"
               />
             </div>
           </div>

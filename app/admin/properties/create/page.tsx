@@ -39,7 +39,8 @@ export default function CreateProperty() {
     categoryId: "",
     status: "AVAILABLE",
     isActive: true,
-    isFeatured: false
+    isFeatured: false,
+    propertyProject: ""
   })
 
     // Pievienojam attēlu stāvokļus
@@ -141,6 +142,7 @@ export default function CreateProperty() {
         formDataToSend.append("status", formData.status)
         formDataToSend.append("isActive", formData.isActive.toString())
         formDataToSend.append("isFeatured", formData.isFeatured.toString())
+        formDataToSend.append("propertyProject", formData.propertyProject)
 
         // Pievienojam attēlus
         if (mainImage) {
@@ -319,6 +321,17 @@ export default function CreateProperty() {
                         )}
                     </div>
                 </div>
+            </div>
+
+            <div>
+              <Label htmlFor="propertyProject">Projekts</Label>
+              <Input
+                id="propertyProject"
+                type="text"
+                value={formData.propertyProject}
+                onChange={e => handleInputChange("propertyProject", e.target.value)}
+                placeholder="Projekta nosaukums (ja ir)"
+              />
             </div>
 
           </div>

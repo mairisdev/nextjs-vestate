@@ -60,6 +60,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       const status = formData.get("status")?.toString() || "AVAILABLE"
       const isActive = formData.get("isActive") === "true"
       const isFeatured = formData.get("isFeatured") === "true"
+      const propertyProject = formData.get("propertyProject")?.toString() || null
 
       // Iegūstam esošo īpašumu
       const existingProperty = await prisma.property.findUnique({
@@ -153,7 +154,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           isActive,
           isFeatured,
           mainImage: finalMainImage,
-          images: finalAdditionalImages
+          images: finalAdditionalImages,
+          propertyProject
         },
         include: {
          category: true
@@ -182,7 +184,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
          categoryId: data.categoryId,
          status: (data.status as PropertyStatus) || PropertyStatus.AVAILABLE,
          isActive: data.isActive !== undefined ? data.isActive : true,
-         isFeatured: data.isFeatured !== undefined ? data.isFeatured : false
+         isFeatured: data.isFeatured !== undefined ? data.isFeatured : false,
+         propertyProject: data.propertyProject || null
        },
        include: {
          category: true
