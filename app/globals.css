@@ -31,6 +31,15 @@ section {
 }
 
 @media (max-width: 768px) {
+
+  html {
+    scroll-padding-top: 80px;
+  }
+  
+  section {
+    scroll-margin-top: 80px;
+  }
+
   .mobile-menu-enter {
     animation: slideDown 0.2s ease-out;
   }
