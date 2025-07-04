@@ -68,7 +68,7 @@ export default function ContactSection() {
   if (!data || !quiz) return null
 
   return (
-<section className="bg-[#F9FAFB] py-16 sm:py-20 px-6 sm:px-12">
+<section id="kontakti" className="bg-[#F9FAFB] py-16 sm:py-20 px-6 sm:px-12">
   <div className="max-w-7xl mx-auto grid gap-12 sm:grid-cols-1 md:grid-cols-2 items-start">
     {/* Teksta bloks */}
     <div>

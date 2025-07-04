@@ -20,7 +20,7 @@ export default async function BlogSection() {
   }
 
   return (
-    <section className="py-20 px-4 md:px-12 bg-white">
+    <section id="blogs" className="py-20 px-4 md:px-12 bg-white">
       <div className="max-w-7xl mx-auto text-center">
         <p className="text-md uppercase text-[#77D4B4] font-semibold tracking-wide mb-2">
           Jaunākie raksti

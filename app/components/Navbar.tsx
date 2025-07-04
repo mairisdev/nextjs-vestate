@@ -4,7 +4,6 @@ import { getNavigationSettings } from "@/lib/queries/navigation"
 
 export default async function Navbar() {
   const data = await getNavigationSettings();
-  console.log("Fetched navigation settings:", data);
 
   if (!data) return null;
 
@@ -27,7 +26,7 @@ export default async function Navbar() {
         <nav className="hidden md:flex space-x-6 text-md text-gray-700">
           {Array.isArray(data.menuItems) && data.menuItems.map((item: any) => (
             item.isVisible && (
-              <a key={item.link} href={item.link} className="hover:text-black">
+              <a key={item.link} href={item.link} className="hover:text-black scroll-smooth">
                 {item.label}
               </a>
             )

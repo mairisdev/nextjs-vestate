@@ -8,7 +8,7 @@ export default async function AgentsSection() {
   if (!agents || agents.length === 0) return null
 
   return (
-    <section className="py-20 px-4 md:px-12 bg-[#F3F4F6]">
+    <section id="musu-komanda" className="py-20 px-4 md:px-12 bg-[#F3F4F6]">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl font-bold text-center text-[#00332D] mb-12">
           Mūsu aģenti

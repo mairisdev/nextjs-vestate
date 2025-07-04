@@ -7,7 +7,7 @@ export default async function TestimonialsSection() {
   if (!testimonials || testimonials.length === 0) return null
 
   return (
-    <section className="py-20 px-4 md:px-12 bg-white">
+    <section id="atsauksmes" className="py-20 px-4 md:px-12 bg-white">
       <div className="max-w-6xl mx-auto text-center">
         <h2 className="text-3xl font-bold text-[#00332D] mb-4">
           Ko klienti saka par mums

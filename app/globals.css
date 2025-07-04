@@ -1,6 +1,20 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+html {
+  scroll-padding-top: 120px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+section {
+  scroll-margin-top: 120px;
+}
+
 .custom-scroll::-webkit-scrollbar {
   height: 6px;
 }

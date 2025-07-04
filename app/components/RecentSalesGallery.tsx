@@ -37,7 +37,7 @@ export default function ClientGallery({ properties }: { properties: Property[] }
   }
 
   return (
-    <section className="py-20 px-4 md:px-12 bg-[#F3F4F6]">
+    <section id="musu-darbi" className="py-20 px-4 md:px-12 bg-[#F3F4F6]">
       <div className="max-w-7xl mx-auto text-center">
         <h2 className="text-3xl font-bold text-[#00332D] mb-2">
           Mūsu nesen pārdotie īpašumi

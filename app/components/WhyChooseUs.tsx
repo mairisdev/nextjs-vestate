@@ -15,7 +15,7 @@ export default async function WhyChooseUs() {
   if (!data) return null
 
   return (
-<section className="relative py-16 sm:py-20 px-6 sm:px-12 bg-white overflow-hidden">
+<section id="kapec-mes" className="relative py-16 sm:py-20 px-6 sm:px-12 bg-white overflow-hidden">
   <div className="relative z-10 max-w-7xl mx-auto flex flex-col sm:flex-row items-center gap-12 sm:gap-20">
     {/* Teksta bloks */}
     <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-8 sm:max-w-[500px] w-full">
