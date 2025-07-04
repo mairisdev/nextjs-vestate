@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   Home,
+  HousePlus,
   FileText,
   LayoutGrid,
   Settings,
@@ -23,6 +24,7 @@ import {
 
 const navItems = [
   { href: "/admin", label: "Pārskats", icon: <Home className="w-5 h-5" /> },
+  { href: "/admin/properties", label: <span className="font-semibold">Īpašumi</span>, icon: <HousePlus className="w-5 h-5" /> },
   { href: "/admin/navigation", label: "Navigācija", icon: <LayoutGrid className="w-5 h-5" /> },
   { href: "/admin/slider", label: "Slideris", icon: <ImageIcon className="w-5 h-5" /> },
   { href: "/admin/first-section", label: "1. sadaļa", icon: <FileText className="w-5 h-5" /> },

@@ -2,6 +2,7 @@ import Image from "next/image"
 import { Phone } from "lucide-react"
 import { getNavigationSettings } from "@/lib/queries/navigation"
 import MobileMenu from "./MobileMenu"
+import DropdownMenu from "./DropdownMenu"
 
 export default async function Navbar() {
   const data = await getNavigationSettings();
@@ -12,7 +13,7 @@ export default async function Navbar() {
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="max-w-[1600px] mx-auto flex items-center justify-between px-6 py-4">
 
-        {/* Logo - samazināts mobilajiem */}
+        {/* Logo */}
         <div className="flex items-center space-x-2">
           {data.logoUrl ? (
             <img
@@ -27,11 +28,23 @@ export default async function Navbar() {
 
         {/* Desktop navigācija */}
         <nav className="hidden md:flex space-x-6 text-md text-gray-700">
+          {/* Parastie linki */}
           {Array.isArray(data.menuItems) && data.menuItems.map((item: any) => (
             item.isVisible && (
               <a key={item.link} href={item.link} className="hover:text-black">
                 {item.label}
               </a>
+            )
+          ))}
+          
+          {/* Dropdown linki */}
+          {Array.isArray(data.dropdownItems) && data.dropdownItems.map((item: any) => (
+            item.isVisible && item.subItems && (
+              <DropdownMenu 
+                key={item.link}
+                label={item.label}
+                subItems={item.subItems}
+              />
             )
           ))}
         </nav>
@@ -59,10 +72,11 @@ export default async function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu komponente */}
+        {/* Mobile menu */}
         <MobileMenu 
           phone={data.phone}
-          menuItems={data.menuItems}
+          menuItems={data.menuItems || []}
+          dropdownItems={data.dropdownItems || []}
           securityText={data.securityText}
         />
       </div>

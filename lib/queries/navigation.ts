@@ -8,5 +8,6 @@ export async function getNavigationSettings() {
   return {
     ...data,
     menuItems: Array.isArray(data.menuItems) ? data.menuItems : [],
+    dropdownItems: data.dropdownItems ? (Array.isArray(data.dropdownItems) ? data.dropdownItems : []) : []
   }
 }

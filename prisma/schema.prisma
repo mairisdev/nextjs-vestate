@@ -45,6 +45,7 @@ model NavigationSettings {
   phone        String
   securityText String
   menuItems    Json
+  dropdownItems Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -197,4 +198,75 @@ model ContactSettings {
   hours     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model PropertyCategory {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  isVisible   Boolean    @default(true)
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  properties  Property[]
+}
+
+model Property {
+  id           String   @id @default(cuid())
+  title        String
+  description  String   @db.Text
+  price        Int      
+  currency     String   @default("EUR")
+  
+  address      String
+  city         String
+  district     String?
+  
+  rooms        Int?
+  area         Float?
+  floor        Int?
+  totalFloors  Int?
+  
+  categoryId   String
+  category     PropertyCategory @relation(fields: [categoryId], references: [id])
+  
+  mainImage    String?
+  images       String[]
+  
+  status       PropertyStatus @default(AVAILABLE)
+  isActive     Boolean  @default(true)
+  isFeatured   Boolean  @default(false)
+  
+  propertyViews PropertyView[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([isActive])
+  @@index([isFeatured])
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  RENTED
+  UNAVAILABLE
+}
+
+model PropertyView {
+  id         String   @id @default(cuid())
+  propertyId String
+  ipAddress  String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, ipAddress], name: "unique_property_view")
+  @@index([propertyId])
+  @@index([ipAddress])
 }

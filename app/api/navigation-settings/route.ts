@@ -12,7 +12,6 @@ export async function GET() {
 export async function POST(req: Request) {
   const contentType = req.headers.get("content-type")
 
-  // Ja form-data, tad jāapstrādā failu augšupielāde
   if (contentType?.includes("multipart/form-data")) {
     const formData = await req.formData()
 
@@ -21,7 +20,9 @@ export async function POST(req: Request) {
     const securityText = formData.get("securityText")?.toString() ?? ""
     const phone = formData.get("phone")?.toString() ?? ""
     const menuItemsRaw = formData.get("menuItems")?.toString()
+    const dropdownItemsRaw = formData.get("dropdownItems")?.toString()
     const menuItems = menuItemsRaw ? JSON.parse(menuItemsRaw) : []
+    const dropdownItems = dropdownItemsRaw ? JSON.parse(dropdownItemsRaw) : []
 
     let logoUrl: string | null = null
 
@@ -42,7 +43,8 @@ export async function POST(req: Request) {
         securityText,
         phone,
         menuItems,
-        ...(logoUrl ? { logoUrl } : {}), // Tikai ja jauns logo ir augšupielādēts
+        dropdownItems,
+        ...(logoUrl ? { logoUrl } : {}),
       },
       create: {
         id: id || "navigation-single-record",
@@ -50,6 +52,7 @@ export async function POST(req: Request) {
         securityText,
         phone,
         menuItems,
+        dropdownItems,
         logoUrl: logoUrl || null,
       },
     })
@@ -57,7 +60,6 @@ export async function POST(req: Request) {
     return NextResponse.json(updated)
   }
 
-  // Pretējā gadījumā sagaida JSON
   const data = await req.json()
 
   const updated = await prisma.navigationSettings.upsert({
@@ -67,6 +69,7 @@ export async function POST(req: Request) {
       securityText: data.securityText,
       phone: data.phone,
       menuItems: data.menuItems,
+      dropdownItems: data.dropdownItems || [],
       ...(data.logoUrl ? { logoUrl: data.logoUrl } : {}),
     },
     create: {
@@ -75,6 +78,7 @@ export async function POST(req: Request) {
       securityText: data.securityText,
       phone: data.phone,
       menuItems: data.menuItems,
+      dropdownItems: data.dropdownItems || [],
       logoUrl: data.logoUrl || null,
     },
   })
