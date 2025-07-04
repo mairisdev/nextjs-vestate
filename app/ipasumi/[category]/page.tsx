@@ -1,4 +1,4 @@
-import { getPropertiesByCategory, getPropertyCategories } from "@/lib/queries/properties"
+import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForDzivokli } from "@/lib/queries/properties"
 import PropertyGrid from "../../components/PropertyGrid"
 import PropertyFilters from "../../components/PropertyFilters"
 import { notFound } from "next/navigation"
@@ -12,6 +12,9 @@ interface PageProps {
     rooms?: string
     minArea?: string
     maxArea?: string
+    city?: string
+    district?: string
+    'kartot-pec'?: string
   }>
 }
 
@@ -23,14 +26,25 @@ export async function generateStaticParams() {
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
-  // Await params un searchParams
   const resolvedParams = await params
   const resolvedSearchParams = await searchParams
   
   const page = parseInt(resolvedSearchParams.page || "1")
-  const { properties, total, pages } = await getPropertiesByCategory(resolvedParams.category, page, 12)
+  const filters = {
+    minPrice: resolvedSearchParams.minPrice || '',
+    maxPrice: resolvedSearchParams.maxPrice || '',
+    rooms: resolvedSearchParams.rooms || '',
+    minArea: resolvedSearchParams.minArea || '',
+    maxArea: resolvedSearchParams.maxArea || '',
+    city: resolvedSearchParams.city || '',
+    district: resolvedSearchParams.district || '',
+  }
+  const sort = resolvedSearchParams['kartot-pec'] || ""
+  const { properties, total, pages } = await getPropertiesByCategory(resolvedParams.category, page, 12, sort, filters)
   
-  if (properties.length === 0 && page === 1) {
+  // Only call notFound if no properties and no filters are applied
+  const filtersApplied = Object.values(filters).some(v => v)
+  if (properties.length === 0 && page === 1 && !filtersApplied) {
     notFound()
   }
 
@@ -41,9 +55,16 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     notFound()
   }
 
+  let cities: string[] = []
+  let districts: string[] = []
+  if (resolvedParams.category === 'dzivokli') {
+    const result = await getCitiesAndDistrictsForDzivokli()
+    cities = result.cities.filter((c): c is string => Boolean(c))
+    districts = result.districts.filter((d): d is string => Boolean(d))
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-[1600px] mx-auto px-6 py-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -60,15 +81,15 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
       <div className="max-w-[1600px] mx-auto px-6 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
           <div className="lg:w-80 flex-shrink-0">
             <PropertyFilters 
               categories={categories}
               currentCategory={resolvedParams.category}
+              cities={cities}
+              districts={districts}
             />
           </div>
 
-          {/* Properties Grid */}
           <div className="flex-1">
             <PropertyGrid 
               properties={properties}

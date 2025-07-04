@@ -13,9 +13,11 @@ interface Category {
 interface PropertyFiltersProps {
   categories: Category[]
   currentCategory: string
+  cities?: string[]
+  districts?: string[]
 }
 
-export default function PropertyFilters({ categories, currentCategory }: PropertyFiltersProps) {
+export default function PropertyFilters({ categories, currentCategory, cities, districts }: PropertyFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -25,6 +27,8 @@ export default function PropertyFilters({ categories, currentCategory }: Propert
     rooms: searchParams.get('rooms') || '',
     minArea: searchParams.get('minArea') || '',
     maxArea: searchParams.get('maxArea') || '',
+    city: searchParams.get('city') || '',
+    district: searchParams.get('district') || '',
   })
 
   const [showNewProjects, setShowNewProjects] = useState(false)
@@ -49,13 +53,14 @@ export default function PropertyFilters({ categories, currentCategory }: Propert
       rooms: '',
       minArea: '',
       maxArea: '',
+      city: '',
+      district: '',
     })
     router.push(`/ipasumi/${currentCategory}`)
   }
 
   return (
     <div className="space-y-6">
-      {/* Reset filters button */}
       <button 
         onClick={clearFilters}
         className="text-sm text-[#00332D] hover:underline"
@@ -63,12 +68,9 @@ export default function PropertyFilters({ categories, currentCategory }: Propert
         Notīrīt filtru
       </button>
 
-      {/* Location filter */}
       <div className="bg-white p-4 rounded-lg border">
         <div className="flex items-center space-x-2 mb-3">
-          <MapPin className="w-5 h-5 text-[#B91C1C]" />
-          <span className="font-medium">Vieta</span>
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <span className="font-medium">Darījuma veids</span>
         </div>
         
         <div className="space-y-2">
@@ -83,7 +85,6 @@ export default function PropertyFilters({ categories, currentCategory }: Propert
         </div>
       </div>
 
-      {/* Price filter */}
       <div className="bg-white p-4 rounded-lg border">
         <h3 className="font-medium mb-3">Cena EUR</h3>
         <div className="grid grid-cols-2 gap-2">
@@ -103,7 +104,6 @@ export default function PropertyFilters({ categories, currentCategory }: Propert
           />
         </div>
         
-        {/* Price range slider placeholder */}
         <div className="mt-4">
           <div className="relative">
             <div className="w-full h-2 bg-gray-200 rounded-full">
@@ -114,7 +114,6 @@ export default function PropertyFilters({ categories, currentCategory }: Propert
         </div>
       </div>
 
-      {/* Rooms filter */}
       <div className="bg-white p-4 rounded-lg border">
         <h3 className="font-medium mb-3">Istabu skaits</h3>
         <div className="grid grid-cols-6 gap-2">
@@ -134,7 +133,6 @@ export default function PropertyFilters({ categories, currentCategory }: Propert
         </div>
       </div>
 
-      {/* New projects */}
       <div className="bg-white p-4 rounded-lg border">
         <h3 className="font-medium mb-3">Projekts</h3>
         <div className="space-y-2">
@@ -152,7 +150,6 @@ export default function PropertyFilters({ categories, currentCategory }: Propert
           </div>
         </div>
         
-        {/* Dropdown placeholder */}
         <div className="mt-3">
           <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]">
             <option>Visi projekti</option>
@@ -161,7 +158,6 @@ export default function PropertyFilters({ categories, currentCategory }: Propert
         </div>
       </div>
 
-      {/* Area filter */}
       <div className="bg-white p-4 rounded-lg border">
         <h3 className="font-medium mb-3">Platība / m²</h3>
         <div className="grid grid-cols-2 gap-2">
@@ -182,7 +178,40 @@ export default function PropertyFilters({ categories, currentCategory }: Propert
         </div>
       </div>
 
-      {/* Apply filters button */}
+      {/* City filter */}
+      {cities && cities.length > 0 && (
+        <div className="bg-white p-4 rounded-lg border">
+          <h3 className="font-medium mb-3">Pilsēta</h3>
+          <select
+            value={filters.city}
+            onChange={e => handleFilterChange('city', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
+          >
+            <option value="">Visas pilsētas</option>
+            {cities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* District filter */}
+      {districts && districts.length > 0 && (
+        <div className="bg-white p-4 rounded-lg border">
+          <h3 className="font-medium mb-3">Rajons</h3>
+          <select
+            value={filters.district}
+            onChange={e => handleFilterChange('district', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
+          >
+            <option value="">Visi rajoni</option>
+            {districts.map(district => (
+              <option key={district} value={district}>{district}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <button
         onClick={applyFilters}
         className="w-full bg-[#00332D] text-white py-3 rounded-md font-medium hover:bg-[#004940] transition-colors"

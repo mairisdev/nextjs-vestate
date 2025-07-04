@@ -1,5 +1,8 @@
+"use client"
+
 import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
 
 interface Property {
   id: string
@@ -29,6 +32,28 @@ interface PropertyGridProps {
 }
 
 export default function PropertyGrid({ properties, currentPage, totalPages, category }: PropertyGridProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const currentSort = searchParams.get('kartot-pec') || ''
+
+  const sortOptions = [
+    { label: 'datuma', value: 'datums' },
+    { label: 'lētākajiem', value: 'letakie-dzivokli' },
+    { label: 'dārgākājiem', value: 'dargakie-dzivokli' },
+    { label: 'platības', value: 'platiba' },
+  ]
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const params = new URLSearchParams(Array.from(searchParams.entries()))
+    if (e.target.value) {
+      params.set('kartot-pec', e.target.value)
+    } else {
+      params.delete('kartot-pec')
+    }
+    router.push(`/ipasumi/${category}?${params.toString()}`)
+  }
+
   const formatPrice = (price: number, currency: string) => {
     return `${(price / 100).toLocaleString()} €`
   }
@@ -57,26 +82,23 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
 
   return (
     <div className="space-y-6">
-      {/* Sort controls */}
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4 text-sm text-gray-600">
           <span>Kārtot pēc:</span>
-          <select className="border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-[#00332D]">
-            <option>Datums</option>
-            <option>Cena (augošā)</option>
-            <option>Cena (dilstošā)</option>
-            <option>Platība</option>
+          <select
+            className="border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-[#00332D]"
+            value={currentSort}
+            onChange={handleSortChange}
+          >
+            <option value="">Noklusējuma</option>
+            {sortOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </div>
         
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <span>Cena</span>
-          <span className="mx-2">|</span>
-          <button className="text-[#00332D] font-medium">Sarakst kartē</button>
-        </div>
       </div>
 
-      {/* Properties Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {properties.map((property) => (
           <Link 
@@ -85,7 +107,6 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
             className="group"
           >
             <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 group-hover:-translate-y-1">
-              {/* Image */}
               <div className="relative h-48 bg-gray-200">
                 {property.mainImage ? (
                 <img
@@ -99,12 +120,10 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
                 </div>
                 )}
                 
-                {/* Status badge */}
                 <div className={`absolute top-3 left-3 px-2 py-1 rounded text-white text-xs font-medium ${getStatusColor(property.status)}`}>
                   {getStatusLabel(property.status)}
                 </div>
                 
-                {/* Room count badge */}
                 {property.rooms && (
                   <div className="absolute top-3 right-3 bg-[#00332D] text-white px-2 py-1 rounded text-xs font-medium">
                     {property.rooms} istaba{property.rooms !== 1 ? 's' : ''}
@@ -112,7 +131,6 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
                 )}
               </div>
 
-              {/* Content */}
               <div className="p-4">
                 <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-[#00332D] transition-colors">
                   {property.title}
@@ -123,7 +141,6 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
                   {property.district && `, ${property.district}`}
                 </p>
 
-                {/* Property details */}
                 <div className="flex items-center space-x-4 text-xs text-gray-500 mb-3">
                   {property.rooms && (
                     <span>{property.rooms}/{property.totalFloors || '?'} stāvs</span>
@@ -136,7 +153,6 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
                   )}
                 </div>
 
-                {/* Price */}
                 <div className="flex items-center justify-between">
                   <div className="text-lg font-bold text-[#00332D]">
                     {formatPrice(property.price, property.currency)}
@@ -148,7 +164,6 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
         ))}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center space-x-2 pt-8">
           {currentPage > 1 && (
