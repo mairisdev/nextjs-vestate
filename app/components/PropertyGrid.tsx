@@ -38,10 +38,10 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
   const currentSort = searchParams.get('kartot-pec') || ''
 
   const sortOptions = [
-    { label: 'datuma', value: 'datums' },
-    { label: 'lētākajiem', value: 'letakie-dzivokli' },
-    { label: 'dārgākājiem', value: 'dargakie-dzivokli' },
-    { label: 'platības', value: 'platiba' },
+    { label: 'datuma', value: 'date_desc' },
+    { label: 'lētākajiem', value: 'price_asc' },
+    { label: 'dārgākājiem', value: 'price_desc' },
+    { label: 'platības', value: 'area_desc' },
   ]
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
