@@ -1,4 +1,4 @@
-import { Home, Ruler, Building, MapPin, Calendar, Hash } from "lucide-react"
+import { Home, Ruler, Building, MapPin, Calendar, Dock } from "lucide-react"
 
 interface Property {
   id: string
@@ -14,6 +14,7 @@ interface Property {
   category: {
     name: string
   }
+  videoUrl?: string
 
 }
 
@@ -51,11 +52,6 @@ export default function PropertyDetails({ property }: PropertyDetailsProps) {
       icon: Calendar,
       label: "Publicēts",
       value: new Date(property.createdAt).toLocaleDateString('lv-LV')
-    },
-    {
-      icon: Hash,
-      label: "ID",
-      value: property.id.slice(-8).toUpperCase()
     }
   ]
 
@@ -66,8 +62,8 @@ export default function PropertyDetails({ property }: PropertyDetailsProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {details.map((detail, index) => (
           <div key={index} className="flex items-start space-x-3">
-            <div className="bg-[#00332D] bg-opacity-10 p-2 rounded-lg">
-              <detail.icon className="w-5 h-5 text-[#00332D]" />
+            <div className="p-2">
+              <detail.icon className="w-6 h-6 text-[#00332D]" />
             </div>
             <div>
               <p className="text-sm text-gray-600 font-medium">{detail.label}</p>
@@ -79,8 +75,8 @@ export default function PropertyDetails({ property }: PropertyDetailsProps) {
 
       <div className="mt-6 pt-6 border-t">
         <div className="flex items-center space-x-3">
-          <div className="bg-[#00332D] bg-opacity-10 p-2 rounded-lg">
-            <Building className="w-5 h-5 text-[#00332D]" />
+          <div className="p-2">
+            <Dock className="w-6 h-6 text-[#00332D]" />
           </div>
           <div>
             <p className="text-sm text-gray-600 font-medium">Kategorija</p>
@@ -88,6 +84,22 @@ export default function PropertyDetails({ property }: PropertyDetailsProps) {
           </div>
         </div>
       </div>
+
+      {property.videoUrl && (
+        <div className="mt-6 pt-6 border-t">
+          <h3 className="text-lg font-semibold mb-4">Īpašuma video</h3>
+          <div className="aspect-video w-full rounded-lg overflow-hidden">
+            <iframe
+              src={property.videoUrl}
+              title="Īpašuma video"
+              className="w-full h-full"
+              frameBorder="0"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

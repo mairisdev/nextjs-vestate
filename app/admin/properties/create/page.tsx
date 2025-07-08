@@ -32,6 +32,7 @@ export default function CreateProperty() {
     address: "",
     city: "",
     district: "",
+    videoUrl: "",
     rooms: "",
     area: "",
     floor: "",
@@ -320,6 +321,18 @@ export default function CreateProperty() {
                             </div>
                         )}
                     </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="videoUrl">YouTube video saite</Label>
+                      <Input
+                        id="videoUrl"
+                        type="url"
+                        value={formData.videoUrl}
+                        onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                        placeholder="https://www.youtube.com/embed/..."
+                      />
+                    </div>
+
                 </div>
             </div>
 

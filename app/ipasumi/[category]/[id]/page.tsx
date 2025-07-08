@@ -6,6 +6,7 @@ import PropertyContact from "../../../components/PropertyContact"
 import Link from "next/link"
 import { ArrowLeft, MapPin, Eye } from "lucide-react"
 import { incrementUniqueView } from "@/lib/utils/property-views"
+import Navbar from "../../../components/Navbar"
 
 interface PropertyPageProps {
   params: Promise<{ category: string; id: string }>
@@ -76,6 +77,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       <div className="bg-white border-b">
         <div className="max-w-[1600px] mx-auto px-6 py-4">
           <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -142,7 +144,10 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
               </div>
             </div>
 
-            <PropertyDetails property={property} />
+            <PropertyDetails property={{
+              ...property,
+              videoUrl: property.videoUrl ?? undefined
+            }} />
           </div>
 
           <div className="space-y-6">

@@ -35,6 +35,7 @@ interface Property {
   mainImage: string | null
   images: string[]
   propertyProject?: string
+  videoUrl: string
 }
 
 interface EditPropertyProps {
@@ -58,6 +59,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
     address: "",
     city: "",
     district: "",
+    videoUrl: "",
     rooms: "",
     area: "",
     floor: "",
@@ -112,6 +114,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
         address: property.address,
         city: property.city,
         district: property.district || "",
+        videoUrl: property.videoUrl || "",
         rooms: property.rooms?.toString() || "",
         area: property.area?.toString() || "",
         floor: property.floor?.toString() || "",
@@ -225,6 +228,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
       formDataToSend.append("isActive", formData.isActive.toString())
       formDataToSend.append("isFeatured", formData.isFeatured.toString())
       formDataToSend.append("propertyProject", formData.propertyProject)
+      formDataToSend.append("videoUrl", formData.videoUrl || "")
 
       // Pievienojam jauno galveno attēlu
       if (newMainImage) {
@@ -243,6 +247,11 @@ export default function EditProperty({ params }: EditPropertyProps) {
       formDataToSend.append("currentMainImage", currentMainImage || "")
       formDataToSend.append("currentAdditionalImages", JSON.stringify(currentAdditionalImages))
 
+      console.log("FormData to be sent:")
+      for (const [key, value] of formDataToSend.entries()) {
+        console.log(`${key}:`, value)
+      }
+
       const res = await fetch(`/api/admin/properties/${propertyId}`, {
         method: "PUT",
         body: formDataToSend
@@ -256,6 +265,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
           router.push("/admin/properties")
         }, 1500)
       } else {
+        console.error("Server responded with error:", responseData)
         setErrorMessage(responseData.error || "Kļūda atjauninot īpašumu")
       }
     } catch (error) {
@@ -589,6 +599,19 @@ export default function EditProperty({ params }: EditPropertyProps) {
               )}
             </div>
           </div>
+
+          <div className="space-y-2">
+  <Label htmlFor="videoUrl">YouTube video saite</Label>
+  <Input
+    id="videoUrl"
+    type="url"
+    value={formData.videoUrl}
+    onChange={(e) => handleInputChange('videoUrl', e.target.value)}
+    placeholder="https://www.youtube.com/embed/..."
+  />
+</div>
+
+
         </div>
 
         {/* Papildu opcijas */}

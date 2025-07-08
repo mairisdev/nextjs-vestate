@@ -1,4 +1,4 @@
-import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForDzivokli, getProjectsForCategory } from "@/lib/queries/properties"
+import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForDzivokli } from "@/lib/queries/properties"
 import PropertyGrid from "../../components/PropertyGrid"
 import PropertyFiltersClientWrapper from "../../components/PropertyFiltersClientWrapper"
 import { notFound } from "next/navigation"

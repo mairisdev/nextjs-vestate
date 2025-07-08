@@ -45,6 +45,7 @@ export async function POST(req: Request) {
       const address = formData.get("address")?.toString() || ""
       const city = formData.get("city")?.toString() || ""
       const district = formData.get("district")?.toString() || null
+      const videoUrl = formData.get("videoUrl")?.toString() || null
       const rooms = formData.get("rooms") ? parseInt(formData.get("rooms")?.toString() || "0") : null
       const area = formData.get("area") ? parseFloat(formData.get("area")?.toString() || "0") : null
       const floor = formData.get("floor") ? parseInt(formData.get("floor")?.toString() || "0") : null
@@ -126,7 +127,8 @@ export async function POST(req: Request) {
           isFeatured,
           mainImage: mainImagePath,
           images: additionalImagePaths,
-          propertyProject
+          propertyProject,
+          videoUrl
         },
         include: {
           category: true

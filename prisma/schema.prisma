@@ -234,6 +234,8 @@ model Property {
   
   mainImage    String?
   images       String[]
+
+  videoUrl     String?
   
   status       PropertyStatus @default(AVAILABLE)
   isActive     Boolean  @default(true)
