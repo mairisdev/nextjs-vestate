@@ -22,8 +22,8 @@ export default async function AgentsSection() {
             >
               {agent.image && (
                 <Image
-                  src={agent.image}
-                  alt={agent.name}
+                  src={agent.image as string}
+                  alt={agent.name || "Aģenta Vārds"}
                   width={400}
                   height={300}
                   className="w-full h-[360px] md:h-[300px] object-cover"
