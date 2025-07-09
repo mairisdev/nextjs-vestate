@@ -36,8 +36,8 @@ export default function DropdownMenu({ label, subItems }: DropdownMenuProps) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <button className="flex items-center space-x-1 hover:text-black transition-colors duration-200">
-        <span>{label}</span>
+      <button className="flex items-center space-x-1 text-[#77D4B4] font-semibold tracking-widest hover:text-black transition-colors duration-200">
+        <span className="font-bold">{label}</span>
         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 

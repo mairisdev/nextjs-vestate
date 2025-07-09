@@ -5,6 +5,10 @@ interface Property {
   title: string
   price: number
   currency: string
+  agent?: {
+    firstName?: string
+    lastName?: string
+  }
 }
 
 interface PropertyContactProps {
@@ -38,7 +42,7 @@ export default function PropertyContact({ property }: PropertyContactProps) {
           </a>
 
           <a
-            href="mailto:info@vestate.lv?subject=Interese par īpašumu&body=Sveiki! Man ir interese par īpašumu: "
+            href={`mailto:info@vestate.lv?subject=Interese par īpašumu: ${property.title}`}
             className="flex items-center justify-center space-x-2 w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors"
           >
             <Mail className="w-5 h-5" />
@@ -49,6 +53,12 @@ export default function PropertyContact({ property }: PropertyContactProps) {
             <MessageSquare className="w-5 h-5" />
             <span>WhatsApp</span>
           </button>
+
+          {property.agent?.firstName && (
+            <div className="mt-4 text-sm text-gray-600">
+              Publicēja: {property.agent.firstName} {property.agent.lastName}
+            </div>
+          )}
         </div>
 
         <div className="pt-4 border-t text-center">

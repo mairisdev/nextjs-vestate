@@ -92,14 +92,18 @@ model ThirdSection {
 
 model Agent {
   id        String         @id @default(cuid())
-  name      String
-  title     String
-  phone     String
-  image     String
+  clerkId   String?   @unique
+  firstName String?
+  lastName  String?
+  name      String?
+  title     String?
+  phone     String?
+  image     String?
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
   reviews   AgentReview[]
+  properties Property[]
 
   @@unique([name, phone], name: "name_phone")
 }
@@ -246,6 +250,9 @@ model Property {
   updatedAt    DateTime @updatedAt
 
   propertyProject String?
+
+  agentId   String?
+  agent     Agent?   @relation(fields: [agentId], references: [id])
 
   @@index([categoryId])
   @@index([status])

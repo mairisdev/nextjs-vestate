@@ -23,7 +23,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const property = await prisma.property.findUnique({
       where: { id },
       include: {
-        category: true
+        category: true,
+        agent: true
       }
     })
 

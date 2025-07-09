@@ -3,6 +3,7 @@ import { Phone } from "lucide-react"
 import { getNavigationSettings } from "@/lib/queries/navigation"
 import MobileMenu from "./MobileMenu"
 import DropdownMenu from "./DropdownMenu"
+import Link from "next/link"
 
 export default async function Navbar() {
   const data = await getNavigationSettings();
@@ -13,18 +14,17 @@ export default async function Navbar() {
     <header className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="max-w-[1600px] mx-auto flex items-center justify-between px-6 py-4">
 
-        {/* Logo */}
-        <div className="flex items-center space-x-2">
-          {data.logoUrl ? (
-            <img
-              src={`/uploads/navigation/${data.logoUrl}`}
-              alt={data.logoAlt || "Vestate logo"}
-              className="w-auto h-12 md:h-20 object-contain"
-            />
-          ) : (
-            <p className="text-gray-500 italic">Nav pievienots logo</p>
-          )}
-        </div>
+      <Link href="/" className="block">
+        {data.logoUrl ? (
+          <img
+            src={`/uploads/navigation/${data.logoUrl}`}
+            alt={data.logoAlt || "Vestate logo"}
+            className="w-auto h-12 md:h-20 object-contain"
+          />
+        ) : (
+          <p className="text-gray-500 italic">Nav pievienots logo</p>
+        )}
+      </Link>
 
         {/* Desktop navigācija */}
         <nav className="hidden md:flex space-x-6 text-md text-gray-700">

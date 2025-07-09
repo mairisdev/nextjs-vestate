@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { writeFile, mkdir } from "fs/promises"
@@ -21,7 +22,8 @@ export async function GET() {
   try {
     const properties = await prisma.property.findMany({
       include: {
-        category: true
+        category: true,
+        agent: true
       },
       orderBy: { createdAt: 'desc' }
     })
@@ -33,11 +35,17 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const session = await auth();
+    const userId = session?.userId;
+    const agent = await prisma.agent.findUnique({
+      where: { clerkId: userId || "" }
+    })
+
     const contentType = req.headers.get("content-type")
 
     if (contentType?.includes("multipart/form-data")) {
       const formData = await req.formData()
-      
+
       const title = formData.get("title")?.toString() || ""
       const description = formData.get("description")?.toString() || ""
       const price = parseFloat(formData.get("price")?.toString() || "0")
@@ -56,41 +64,30 @@ export async function POST(req: Request) {
       const isFeatured = formData.get("isFeatured") === "true"
       const propertyProject = formData.get("propertyProject")?.toString() || null
 
-      // Validācija
       if (!title || !categoryId || !address || !city) {
         return NextResponse.json({ 
           error: "Nepieciešami lauki: nosaukums, kategorija, adrese, pilsēta" 
         }, { status: 400 })
       }
 
-      // Izveidojam mapas nosaukumu no title
       const folderName = createSlug(title)
       const uploadsDir = path.join(process.cwd(), "public/uploads/properties", folderName)
 
-      // Izveidojam mapi, ja tā neeksistē
-      try {
-        await mkdir(uploadsDir, { recursive: true })
-      } catch (error) {
-        console.error("Error creating directory:", error)
-      }
+      await mkdir(uploadsDir, { recursive: true })
 
       let mainImagePath = null
       const additionalImagePaths: string[] = []
 
-      // Apstrādājam galveno attēlu
       const mainImageFile = formData.get("mainImage") as File | null
       if (mainImageFile && mainImageFile.size > 0) {
         const ext = path.extname(mainImageFile.name) || ".jpg"
         const fileName = `main-image${ext}`
         const filePath = path.join(uploadsDir, fileName)
-        
         const buffer = Buffer.from(await mainImageFile.arrayBuffer())
         await writeFile(filePath, buffer)
-        
         mainImagePath = `${folderName}/${fileName}`
       }
 
-      // Apstrādājam papildu attēlus
       let imageIndex = 0
       while (true) {
         const additionalImageFile = formData.get(`additionalImage${imageIndex}`) as File | null
@@ -99,20 +96,17 @@ export async function POST(req: Request) {
         const ext = path.extname(additionalImageFile.name) || ".jpg"
         const fileName = `additional-image-${imageIndex + 1}${ext}`
         const filePath = path.join(uploadsDir, fileName)
-        
         const buffer = Buffer.from(await additionalImageFile.arrayBuffer())
         await writeFile(filePath, buffer)
-        
         additionalImagePaths.push(`${folderName}/${fileName}`)
         imageIndex++
       }
 
-      // Izveidojam īpašumu datubāzē
       const property = await prisma.property.create({
         data: {
           title,
           description,
-          price: Math.round(price * 100), // Convert to cents
+          price: Math.round(price * 100),
           currency,
           address,
           city,
@@ -128,18 +122,19 @@ export async function POST(req: Request) {
           mainImage: mainImagePath,
           images: additionalImagePaths,
           propertyProject,
-          videoUrl
+          videoUrl,
+          agentId: agent?.id || null
         },
         include: {
-          category: true
+          category: true,
+          agent: true
         }
       })
 
       return NextResponse.json(property)
     } else {
-      // JSON formāts (bez attēliem)
       const data = await req.json()
-      
+
       const property = await prisma.property.create({
         data: {
           title: data.title,
@@ -159,10 +154,12 @@ export async function POST(req: Request) {
           isFeatured: data.isFeatured !== undefined ? data.isFeatured : false,
           mainImage: null,
           images: [],
-          propertyProject: data.propertyProject || null
+          propertyProject: data.propertyProject || null,
+          agentId: agent?.id || null
         },
         include: {
-          category: true
+          category: true,
+          agent: true
         }
       })
 

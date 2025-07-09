@@ -1,5 +1,5 @@
 "use client"
-
+console.log("🔄 CreateProperty komponenta render sākās")
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "../../../../components/ui/button"
@@ -21,7 +21,8 @@ export default function CreateProperty() {
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
+  const [agent, setAgent] = useState<{ firstName: string; lastName: string } | null>(null)
+  
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -41,8 +42,24 @@ export default function CreateProperty() {
   })
 
   useEffect(() => {
+    console.log("🧠 useEffect tika palaists")
     loadCategories()
-  }, [])
+    loadAgent()
+  }, [])  
+  
+  const loadAgent = async () => {
+    console.log("fetching agent...")
+    try {
+      const res = await fetch("/api/admin/agent/me", { credentials: "include" })
+      const data = await res.json()
+      console.log("✅ Agent loaded:", data)
+      setAgent({ firstName: data.firstName, lastName: data.lastName })
+      console.log("agent state set:", { firstName: data.firstName, lastName: data.lastName })
+    } catch (error) {
+      console.error("❌ Neizdevās ielādēt aģentu", error)
+    }
+  }
+  
 
   const loadCategories = async () => {
     try {
@@ -153,6 +170,19 @@ export default function CreateProperty() {
         {/* Pamata informācija */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Pamata informācija</h3>
+
+          {agent && (
+  <div className="bg-white p-4 rounded-lg border">
+    <p className="text-sm text-gray-500">Agent component rendered</p>
+    <Label className="block mb-1">Aģents</Label>
+    <Input
+      value={`${agent.firstName} ${agent.lastName}`}
+      disabled
+      className="bg-gray-100"
+    />
+  </div>
+)}
+
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
