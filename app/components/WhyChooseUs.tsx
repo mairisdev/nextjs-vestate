@@ -61,9 +61,15 @@ export default async function WhyChooseUs() {
               )
             )}
           </ul>
-          <button className="mt-8 bg-[#00332D] text-white px-6 py-3 rounded-lg hover:bg-[#00443B] transition transform hover:scale-105">
-            {data.buttonText}
-          </button>
+          {data.buttonUrl ? (
+            <a
+              href={data.buttonUrl}
+              className="inline-block mt-8 bg-[#00332D] text-white px-6 py-3 rounded-lg hover:bg-[#00443B] transition transform hover:scale-105"
+            >
+              {data.buttonText}
+            </a>
+          ) : null}
+
         </div>
 
         {/* Bildes bloks */}

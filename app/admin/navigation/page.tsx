@@ -56,7 +56,12 @@ export default function NavigationSettings() {
               subItems: item.subItems || []
             }))
           ]
-          setMenuItems(combinedItems)
+          const normalizedItems = combinedItems.map((item: any) => ({
+            ...item,
+            isVisible: typeof item.isVisible === "string" ? item.isVisible === "true" : item.isVisible,
+            isDropdown: typeof item.isDropdown === "string" ? item.isDropdown === "true" : item.isDropdown,
+          }))
+          setMenuItems(normalizedItems)
         }
       })
       .catch((err) => {

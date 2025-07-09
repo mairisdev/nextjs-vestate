@@ -41,7 +41,7 @@ export default async function PartnersSection() {
               alt={partner.name}
               width={140}
               height={100}
-              className="object-contain grayscale hover:grayscale-0 transition duration-300 cursor-pointer"
+              className="object-contain transition duration-300 cursor-pointer"
             />
             ) : (
               <span className="text-gray-400 text-sm">Nav logo</span>

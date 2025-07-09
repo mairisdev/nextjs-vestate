@@ -10,6 +10,7 @@ import AlertMessage from "../../components/ui/alert-message"
 export default function WhyChooseUsAdminPage() {
   const [title, setTitle] = useState("")
   const [buttonText, setButtonText] = useState("")
+  const [buttonUrl, setButtonUrl] = useState("")
   const [points, setPoints] = useState<string[]>([])
   const [image, setImage] = useState<File | null>(null)
   const [existingImageUrl, setExistingImageUrl] = useState("")
@@ -22,6 +23,7 @@ export default function WhyChooseUsAdminPage() {
 
       setTitle(data.title || "")
       setButtonText(data.buttonText || "")
+      setButtonUrl(data.buttonUrl || "")
       setPoints(Array.isArray(data.points) ? data.points : [])
       setExistingImageUrl(data.imageUrl || "")
     }
@@ -42,6 +44,7 @@ export default function WhyChooseUsAdminPage() {
     const formData = new FormData()
     formData.append("title", title)
     formData.append("buttonText", buttonText)
+    formData.append("buttonUrl", buttonUrl)
     formData.append("points", JSON.stringify(points))
     formData.append("existingImageUrl", existingImageUrl)
     if (image) formData.append("image", image)
@@ -118,6 +121,15 @@ export default function WhyChooseUsAdminPage() {
       <div className="space-y-2">
         <Label>Pogas teksts</Label>
         <Input value={buttonText} onChange={(e) => setButtonText(e.target.value)} />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Pogas links</Label>
+        <Input
+          value={buttonUrl}
+          onChange={(e) => setButtonUrl(e.target.value)}
+          placeholder="#kontakti"
+        />
       </div>
 
       <Button type="submit" className="mt-4">

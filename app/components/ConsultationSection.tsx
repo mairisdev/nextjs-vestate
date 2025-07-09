@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 export default function FirstSection() {
@@ -34,14 +35,17 @@ return (
     className="first-section relative w-full min-h-[600px] bg-fixed bg-center bg-cover bg-no-repeat flex items-center justify-end px-6 md:px-12"
     style={{ backgroundImage: `url('${backgroundImage}')` }}
   >
-    <div className="first-section-content bg-[#00332D]/90 text-white p-6 md:p-12 w-full md:w-[600px] backdrop-blur-sm rounded-md flex flex-col items-center justify-center text-center">
-      <h2 className="first-section-heading text-xl sm:text-2xl font-semibold mb-6">
+    <div className="bg-[#ffffffcc] text-[#00332D] p-6 md:p-12 w-full md:w-[600px] backdrop-blur-sm rounded-md flex flex-col items-center justify-center text-center">
+      <h2 className="text-xl md:text-1xl font-semibold mb-6 whitespace-pre-line">
         {sectionData.headline}
       </h2>
 
-      <button className="first-section-button bg-white text-[#00332D] font-semibold text-sm sm:text-base px-6 py-4 rounded-md border-2 border-white hover:bg-transparent hover:text-white transition duration-300 ease-in-out">
-        {sectionData.buttonText}
-      </button>
+      <Link
+            href={sectionData.buttonLink || "#"}
+            className="inline-block bg-[#00332D] text-white font-semibold text-sm px-6 py-4 rounded-md border-2 border-white hover:bg-transparent hover:text-[#00332D] hover:border-[#00332D] transition duration-300 ease-in-out"
+          >
+            {sectionData.buttonText}
+          </Link>
     </div>
   </section>
 )

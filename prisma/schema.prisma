@@ -156,6 +156,7 @@ model WhyChooseUs {
   id          String   @id @default(cuid())
   title       String
   buttonText  String
+  buttonUrl   String?
   points      String[]
   imageUrl    String
   createdAt   DateTime @default(now())
@@ -210,6 +211,7 @@ model PropertyCategory {
   name        String     @unique
   slug        String     @unique
   description String?
+  image      String?
   isVisible   Boolean    @default(true)
   order       Int        @default(0)
   createdAt   DateTime   @default(now())

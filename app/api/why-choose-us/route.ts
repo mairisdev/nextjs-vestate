@@ -14,6 +14,7 @@ export async function POST(req: Request) {
 
   const title = formData.get("title") as string
   const buttonText = formData.get("buttonText") as string
+  const buttonUrl = formData.get("buttonUrl") as string
   const points = JSON.parse(formData.get("points") as string)
   const existingImageUrl = formData.get("existingImageUrl") as string
   const file = formData.get("image") as File | null
@@ -32,11 +33,12 @@ export async function POST(req: Request) {
 
   const saved = await prisma.whyChooseUs.upsert({
     where: { id: "why-choose-us-static" },
-    update: { title, buttonText, points, imageUrl },
+    update: { title, buttonText, buttonUrl, points, imageUrl },
     create: {
       id: "why-choose-us-static",
       title,
       buttonText,
+      buttonUrl,
       points,
       imageUrl,
     },

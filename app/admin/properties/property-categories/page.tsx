@@ -1,4 +1,3 @@
-// app/admin/property-categories/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -14,6 +13,7 @@ interface Category {
   name: string
   slug: string
   description: string
+  image: string
   isVisible: boolean
   order: number
 }
@@ -25,13 +25,21 @@ export default function PropertyCategoriesAdmin() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string
+    slug: string
+    description: string
+    image: string | File // ← Šeit izmainīts tips
+    isVisible: boolean
+    order: number
+  }>({
     name: "",
     slug: "",
     description: "",
+    image: "",
     isVisible: true,
     order: 0
-  })
+  })  
 
   useEffect(() => {
     loadCategories()
@@ -49,20 +57,34 @@ export default function PropertyCategoriesAdmin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+  
     try {
-      const url = editingCategory 
+      const url = editingCategory
         ? `/api/admin/property-categories/${editingCategory.id}`
         : "/api/admin/property-categories"
-      
       const method = editingCategory ? "PUT" : "POST"
-      
+  
+      const formDataToSend = new FormData()
+      formDataToSend.append("name", formData.name)
+      formDataToSend.append("slug", formData.slug)
+      formDataToSend.append("description", formData.description)
+      formDataToSend.append("order", formData.order.toString())
+      formDataToSend.append("isVisible", formData.isVisible.toString())
+      if (
+        typeof formData.image === "object" &&
+        formData.image !== null &&
+        "name" in formData.image &&
+        "size" in formData.image &&
+        "type" in formData.image
+      ) {
+        formDataToSend.append("image", formData.image as File)
+      }
+
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: formDataToSend,
       })
-
+  
       if (res.ok) {
         setSuccessMessage(editingCategory ? "Kategorija atjaunināta!" : "Kategorija izveidota!")
         loadCategories()
@@ -73,13 +95,14 @@ export default function PropertyCategoriesAdmin() {
     } catch (error) {
       setErrorMessage("Kļūda saglabājot kategoriju")
     }
-  }
+  }  
 
   const resetForm = () => {
     setFormData({
       name: "",
       slug: "",
       description: "",
+      image: "",
       isVisible: true,
       order: 0
     })
@@ -93,6 +116,7 @@ export default function PropertyCategoriesAdmin() {
       name: category.name,
       slug: category.slug,
       description: category.description,
+      image: category.image,
       isVisible: category.isVisible,
       order: category.order
     })
@@ -167,11 +191,11 @@ export default function PropertyCategoriesAdmin() {
               </div>
               
               <div>
-                <Label>Slug (URL)</Label>
+                <Label>URL</Label>
                 <Input
                   value={formData.slug}
                   onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                  placeholder="dzivokli"
+                  placeholder="ipasumi/kategorijasNosaukums"
                   required
                 />
               </div>
@@ -184,6 +208,32 @@ export default function PropertyCategoriesAdmin() {
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Kategorijas apraksts..."
               />
+            </div>
+
+            <div>
+            <Label>Attēls</Label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                setFormData(prev => ({ ...prev, image: e.target.files?.[0] || "" }))
+              }              
+            />
+              {formData.image && typeof formData.image === "string" && (
+                <img
+                  src={formData.image}
+                  alt="Kategorijas attēls"
+                  className="w-24 h-24 object-cover rounded-md mt-2"
+                />
+              )}
+
+              {formData.image instanceof File && (
+                <img
+                  src={URL.createObjectURL(formData.image)}
+                  alt="Jauns attēls"
+                  className="w-24 h-24 object-cover rounded-md mt-2"
+                />
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

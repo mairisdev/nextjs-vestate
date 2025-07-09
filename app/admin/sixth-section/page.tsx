@@ -51,7 +51,7 @@ export default function SixthSectionSettings() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto py-10">
-      <h2 className="text-2xl font-bold text-[#00332D]">Sestās sadaļas iestatījumi</h2>
+      <h2 className="text-2xl font-bold text-[#00332D]">Ceturtās sadaļas iestatījumi</h2>
 
       {showSuccess && (
         <AlertMessage
