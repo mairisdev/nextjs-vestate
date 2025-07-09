@@ -17,6 +17,8 @@ type Review = {
   content: string
   author: string
   rating: number
+  imageFile?: File | null
+  imageUrl?: string
 }
 
 type Props = {
@@ -30,6 +32,8 @@ export default function ReviewModal({ open, onClose, onSave, initialData }: Prop
   const [content, setContent] = useState("")
   const [author, setAuthor] = useState("")
   const [rating, setRating] = useState(5)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined)
 
   // Kad atver modal, ielādē sākotnējos datus
   useEffect(() => {
@@ -37,19 +41,21 @@ export default function ReviewModal({ open, onClose, onSave, initialData }: Prop
       setContent(initialData.content)
       setAuthor(initialData.author)
       setRating(initialData.rating)
+      setImageUrl(initialData.imageUrl) // ← pievieno šo rindu
     } else {
       setContent("")
       setAuthor("")
       setRating(5)
+      setImageUrl(undefined)
     }
   }, [initialData, open])
 
   const handleSave = () => {
     if (content.trim() && author.trim()) {
-      onSave({ content, author, rating })
+      onSave({ content, author, rating, imageFile, imageUrl }) // ← pievieno imageUrl
       onClose()
     }
-  }
+  }  
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -85,6 +91,18 @@ export default function ReviewModal({ open, onClose, onSave, initialData }: Prop
               max={5}
               value={rating}
               onChange={(e) => setRating(parseInt(e.target.value))}
+            />
+          </div>
+          <div>
+            <Label>Attēls (neobligāts)</Label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null
+                setImageFile(file)
+                if (file) setImageUrl(undefined)
+              }}
             />
           </div>
         </div>

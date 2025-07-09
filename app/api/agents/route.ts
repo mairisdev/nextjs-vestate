@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
     let imageUrl = agent.image
     const matchedFile = files.find((f) => f.name === agent.image)
 
+    // Saglabā aģenta attēlu, ja tika augšupielādēts
     if (matchedFile) {
       const ext = path.extname(matchedFile.name)
       const filename = `${uuidv4()}${ext}`
@@ -59,6 +60,30 @@ export async function POST(req: NextRequest) {
 
       await writeFile(filePath, buffer)
       imageUrl = `/agents/${filename}`
+    }
+
+    // Apstrādā katras atsauksmes attēlu (ja ir)
+    const reviewsToCreate = []
+
+    for (const r of agent.reviews || []) {
+      let finalImageUrl = r.imageUrl
+      const matchedReviewFile = files.find((f) => f.name === r.imageUrl)
+
+      if (matchedReviewFile) {
+        const ext = path.extname(matchedReviewFile.name)
+        const filename = `${uuidv4()}${ext}`
+        const buffer = Buffer.from(await matchedReviewFile.arrayBuffer())
+        const filePath = path.join(uploadDir, filename)
+        await writeFile(filePath, buffer)
+        finalImageUrl = `/agents/${filename}`
+      }
+
+      reviewsToCreate.push({
+        content: r.content,
+        author: r.author,
+        rating: r.rating || 5,
+        imageUrl: finalImageUrl,
+      })
     }
 
     try {
@@ -74,11 +99,7 @@ export async function POST(req: NextRequest) {
           image: imageUrl,
           reviews: {
             deleteMany: {},
-            create: agent.reviews.map((r: any) => ({
-              content: r.content,
-              author: r.author,
-              rating: r.rating || 5,
-            })),
+            create: reviewsToCreate,
           },
         },
         create: {
@@ -87,11 +108,7 @@ export async function POST(req: NextRequest) {
           phone: agent.phone,
           image: imageUrl,
           reviews: {
-            create: agent.reviews.map((r: any) => ({
-              content: r.content,
-              author: r.author,
-              rating: r.rating || 5,
-            })),
+            create: reviewsToCreate,
           },
         },
       })

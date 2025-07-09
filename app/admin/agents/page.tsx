@@ -13,7 +13,13 @@ type Agent = {
   title: string
   phone: string
   image: string | File
-  reviews: { content: string; author: string; rating: number }[]
+  reviews: {
+    content: string
+    author: string
+    rating: number
+    imageFile?: File | null
+    imageUrl?: string
+  }[]
 }
 
 export default function AgentsAdminPage() {
@@ -77,14 +83,25 @@ export default function AgentsAdminPage() {
         typeof agent.image === "string"
           ? agent.image
           : (agent.image as File).name,
-    }))
+      reviews: agent.reviews.map((r) => ({
+        content: r.content,
+        author: r.author,
+        rating: r.rating,
+        imageUrl: r.imageFile ? r.imageFile.name : r.imageUrl || "",
+      })),
+    }))    
 
     formData.append("agents", JSON.stringify(agentsToSend))
     agents.forEach((agent) => {
       if (agent.image instanceof File) {
         formData.append("files", agent.image)
       }
-    })
+      agent.reviews.forEach((r) => {
+        if (r.imageFile instanceof File) {
+          formData.append("files", r.imageFile)
+        }
+      })
+    })    
 
     const res = await fetch("/api/agents", {
       method: "POST",

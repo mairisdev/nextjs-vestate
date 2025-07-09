@@ -113,6 +113,7 @@ model AgentReview {
   content   String
   author    String
   rating    Int      @default(5)
+  imageUrl  String?
   agentId   String
   createdAt DateTime @default(now())
 

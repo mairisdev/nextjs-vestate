@@ -1,9 +1,13 @@
-import Image from "next/image"
-import { ChevronDown } from "lucide-react"
-import { getAgents } from "@/lib/queries/agents"
+"use client"
 
-export default async function AgentsSection() {
-  const agents = await getAgents()
+import { useState } from "react"
+import { ChevronDown } from "lucide-react"
+import Image from "next/image"
+import ImageModal from "./ImageModal"
+
+export default function AgentsSectionClient({ agents }: { agents: any[] }) {
+  const [imageModalOpen, setImageModalOpen] = useState(false)
+  const [selectedImageUrl, setSelectedImageUrl] = useState("")
 
   if (!agents || agents.length === 0) return null
 
@@ -22,8 +26,8 @@ export default async function AgentsSection() {
             >
               {agent.image && (
                 <Image
-                  src={agent.image as string}
-                  alt={agent.name || "Aģenta Vārds"}
+                  src={agent.image}
+                  alt={agent.name || "Aģenta bilde"}
                   width={400}
                   height={300}
                   className="w-full h-[360px] md:h-[300px] object-cover"
@@ -50,13 +54,27 @@ export default async function AgentsSection() {
                       <div className="mt-2 space-y-3 text-gray-700 bg-gray-100 p-3 rounded-md">
                         {agent.reviews.map((review: any, i: number) => (
                           <div key={i} className="text-xs space-y-1">
+                            {review.imageUrl && (
+                            <div className="space-y-1">
+                                <img
+                                src={review.imageUrl}
+                                alt={review.author}
+                                onClick={() => {
+                                    setSelectedImageUrl(review.imageUrl)
+                                    setImageModalOpen(true)
+                                }}
+                                className="w-30 h-30 rounded-md object-contain cursor-pointer hover:scale-105 transition"
+                                />
+                                <p className="text-[12px] text-gray-500 font-semibold mb-4">Spiediet uz attēla, lai to apskatītu</p>
+                            </div>
+                            )}
                             <p className="text-[13px] text-gray-700">{review.content}</p>
-                        <div className="flex justify-between items-center text-[11px] text-gray-500 font-medium">
-                          <span>{review.author}</span>
-                          <span className="text-[#77D4B4] text-sm">
-                            {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
-                          </span>
-                        </div>
+                            <div className="flex justify-between items-center text-[11px] text-gray-500 font-medium">
+                              <span>{review.author}</span>
+                              <span className="text-[#77D4B4] text-sm">
+                                {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
+                              </span>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -72,6 +90,12 @@ export default async function AgentsSection() {
           ))}
         </div>
       </div>
+
+      <ImageModal
+        open={imageModalOpen}
+        imageUrl={selectedImageUrl}
+        onClose={() => setImageModalOpen(false)}
+      />
     </section>
   )
 }
