@@ -34,7 +34,7 @@ const navItems = [
   { href: "/admin/sixth-section", label: "4. sadaļa", icon: <FileText className="w-5 h-5" /> },
   { href: "/admin/agents", label: "Aģenti", icon: <Users className="w-5 h-5" /> },
   { href: "/admin/testimonials", label: "Atsauksmes", icon: <Star className="w-5 h-5" /> },
-  { href: "/admin/sold-properties", label: "Pārdotie īpašumi", icon: <FolderOpen className="w-5 h-5" /> },
+  { href: "/admin/sold-properties", label: "Karstākie piedāvājumi", icon: <FolderOpen className="w-5 h-5" /> },
   { href: "/admin/private-listings", label: "Privātie sludinājumi", icon: <Shield className="w-5 h-5" /> },
   { href: "/admin/why-choose-us", label: "Kāpēc izvēlēties mūs", icon: <Globe className="w-5 h-5" /> },
   { href: "/admin/statistics", label: "Statistika", icon: <BarChart className="w-5 h-5" /> },
@@ -51,7 +51,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     <>
       <SignedIn>
         <div className="flex min-h-screen bg-gray-100">
-          <aside className="w-64 bg-white border-r border-gray-200 p-6">
+          <aside className="w-70 bg-white border-r border-gray-200 p-6">
             <h1 className="text-2xl font-bold text-[#00332D] mb-8">Vestate CMS</h1>
             <nav className="space-y-2">
               {navItems.map((item) => (

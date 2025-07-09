@@ -116,7 +116,7 @@ export default function SoldPropertiesSettings() {
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-10">
-      <h2 className="text-2xl font-bold text-[#00332D]">Pārdoto īpašumu iestatījumi</h2>
+      <h2 className="text-2xl font-bold text-[#00332D]">Karstākie piedāvājumi</h2>
 
       {showSuccess && (
         <AlertMessage type="success" message="Saglabāts veiksmīgi!" onClose={() => setShowSuccess(false)} />
@@ -129,7 +129,7 @@ export default function SoldPropertiesSettings() {
         {properties.map((property, index) => (
           <div key={index} className="border rounded-xl p-6 space-y-6 bg-white shadow-sm">
             <div className="flex justify-between items-center">
-              <h3 className="font-semibold text-lg text-[#00332D]">Īpašums #{index + 1}</h3>
+              <h3 className="font-semibold text-lg text-[#00332D]">Piedāvājums #{index + 1}</h3>
               <Button variant="ghost" size="icon" onClick={() => removeProperty(index)}>
                 <Trash className="w-4 h-4 text-red-500" />
               </Button>

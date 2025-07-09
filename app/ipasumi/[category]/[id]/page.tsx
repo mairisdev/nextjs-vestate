@@ -133,6 +133,11 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
 
             <PropertyImageGallery images={allImages} title={property.title} />
 
+            <PropertyDetails property={{
+              ...property,
+              videoUrl: property.videoUrl ?? undefined
+            }} />
+
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Apraksts</h2>
               <div className="prose max-w-none text-gray-700">
@@ -144,10 +149,6 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
               </div>
             </div>
 
-            <PropertyDetails property={{
-              ...property,
-              videoUrl: property.videoUrl ?? undefined
-            }} />
           </div>
 
           <div className="space-y-6">

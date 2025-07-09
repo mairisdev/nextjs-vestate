@@ -93,7 +93,6 @@ export default function PropertyDetails({ property }: PropertyDetailsProps) {
               src={property.videoUrl}
               title="Īpašuma video"
               className="w-full h-full"
-              frameBorder="0"
               allowFullScreen
             ></iframe>
           </div>
