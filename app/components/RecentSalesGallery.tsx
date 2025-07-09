@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
+import Link from "next/link"
 
 export type Property = {
   id: string
@@ -103,9 +104,14 @@ export default function ClientGallery({ properties }: { properties: Property[] }
           <p className="text-[#00332D] font-semibold text-md mt-2">
             Noskaidrojiet sava dzīvokļa vai mājas pārdošanas termiņu un cenas jau tūlīt!
           </p>
-          <button className="mt-6 bg-[#00332D] text-white px-6 py-3 rounded-md hover:bg-[#00443B]">
-            Nosūtīt pieteikumu
-          </button>
+          <Link
+            href="#kontakti"
+            >
+            <button className="mt-6 bg-[#00332D] text-white px-6 py-3 rounded-md hover:bg-[#00443B] cursor-pointer">
+              Nosūtīt pieteikumu
+            </button>
+          </Link>
+
         </div>
 
         {/* Modal */}

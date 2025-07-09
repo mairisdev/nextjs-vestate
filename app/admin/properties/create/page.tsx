@@ -23,6 +23,7 @@ export default function CreateProperty() {
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [agent, setAgent] = useState<{ firstName: string; lastName: string } | null>(null)
 
   const [formData, setFormData] = useState({
     title: "",
@@ -37,6 +38,9 @@ export default function CreateProperty() {
     area: "",
     floor: "",
     totalFloors: "",
+    series: "",
+    hasElevator: false,
+    amenities: "",
     categoryId: "",
     status: "AVAILABLE",
     isActive: true,
@@ -62,8 +66,8 @@ export default function CreateProperty() {
 
     const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    if (files.length + additionalImages.length > 5) {
-        setErrorMessage("Maksimums 5 papildu attēli")
+    if (files.length + additionalImages.length > 10) {
+        setErrorMessage("Maksimums 10 papildu attēli")
         return
     }
     
@@ -80,8 +84,19 @@ export default function CreateProperty() {
     }
 
     useEffect(() => {
-        loadCategories()
+      loadCategories()
+      loadAgent()
     }, [])
+
+    const loadAgent = async () => {
+      try {
+        const res = await fetch("/api/admin/agent/me")
+        const data = await res.json()
+        setAgent({ firstName: data.firstName, lastName: data.lastName })
+      } catch (error) {
+        console.error("Neizdevās ielādēt aģentu", error)
+      }
+    }
 
     const loadCategories = async () => {
         try {
@@ -126,7 +141,8 @@ export default function CreateProperty() {
     try {
         // Izmantojam FormData attēlu augšupielādei
         const formDataToSend = new FormData()
-        
+        const amenitiesList = formData.amenities.split(",").map(a => a.trim()).filter(Boolean)
+        amenitiesList.forEach(a => formDataToSend.append("amenities", a))
         // Pievienojam visus teksta laukus
         formDataToSend.append("title", formData.title.trim())
         formDataToSend.append("description", formData.description.trim())
@@ -139,6 +155,8 @@ export default function CreateProperty() {
         formDataToSend.append("area", formData.area)
         formDataToSend.append("floor", formData.floor)
         formDataToSend.append("totalFloors", formData.totalFloors)
+        formDataToSend.append("series", formData.series)
+        formDataToSend.append("hasElevator", formData.hasElevator.toString())
         formDataToSend.append("categoryId", formData.categoryId)
         formDataToSend.append("status", formData.status)
         formDataToSend.append("isActive", formData.isActive.toString())
@@ -202,7 +220,17 @@ export default function CreateProperty() {
         {/* Pamata informācija */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Pamata informācija</h3>
-          
+          {agent && (
+            <div className="md:col-span-2">
+              <Label>Aģents</Label>
+              <Input
+                disabled
+                value={`${agent.firstName} ${agent.lastName}`}
+                className="bg-gray-100"
+              />
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <Label>Nosaukums *</Label>
@@ -462,6 +490,34 @@ export default function CreateProperty() {
                 placeholder="5"
               />
             </div>
+            <div>
+              <Label>Sērija</Label>
+              <Input
+                value={formData.series}
+                onChange={(e) => handleInputChange('series', e.target.value)}
+                placeholder="Specprojekts"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2 mt-2">
+              <input
+                type="checkbox"
+                checked={formData.hasElevator}
+                onChange={(e) => handleInputChange('hasElevator', e.target.checked)}
+                id="hasElevator"
+              />
+              <Label htmlFor="hasElevator">Ir lifts</Label>
+            </div>
+
+            <div className="md:col-span-2 mt-2">
+              <Label>Ērtības / ekstras (komats atdala)</Label>
+              <Input
+                value={formData.amenities}
+                onChange={(e) => handleInputChange('amenities', e.target.value)}
+                placeholder="Balkons, Autostāvvieta, Signalizācija"
+              />
+            </div>
+
           </div>
         </div>
 

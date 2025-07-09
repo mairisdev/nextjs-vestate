@@ -35,6 +35,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    
     const session = await auth();
     const userId = session?.userId;
     const agent = await prisma.agent.findUnique({
@@ -58,11 +59,16 @@ export async function POST(req: Request) {
       const area = formData.get("area") ? parseFloat(formData.get("area")?.toString() || "0") : null
       const floor = formData.get("floor") ? parseInt(formData.get("floor")?.toString() || "0") : null
       const totalFloors = formData.get("totalFloors") ? parseInt(formData.get("totalFloors")?.toString() || "0") : null
+      const series = formData.get("series")?.toString() || null
+      const hasElevator = formData.get("hasElevator") === "true"
+      const amenities = formData.getAll("amenities").map(a => a.toString()).filter(Boolean)
       const categoryId = formData.get("categoryId")?.toString() || ""
       const status = formData.get("status")?.toString() || "AVAILABLE"
       const isActive = formData.get("isActive") === "true"
       const isFeatured = formData.get("isFeatured") === "true"
       const propertyProject = formData.get("propertyProject")?.toString() || null
+      console.log("hasElevator:", hasElevator)
+console.log("amenities:", amenities)
 
       if (!title || !categoryId || !address || !city) {
         return NextResponse.json({ 
@@ -115,6 +121,9 @@ export async function POST(req: Request) {
           area,
           floor,
           totalFloors,
+          series,
+          hasElevator,
+          amenities,
           categoryId,
           status: status as PropertyStatus,
           isActive,

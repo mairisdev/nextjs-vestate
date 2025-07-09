@@ -25,6 +25,14 @@ export interface Property {
     name: string
     slug: string
   }
+ 
+  agent?: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+    phone: string | null
+  } | null
 }
 
 export enum PropertyStatus {

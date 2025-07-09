@@ -1,4 +1,4 @@
-import { Home, Ruler, Building, MapPin, Calendar, Dock } from "lucide-react"
+import { Asterisk, Calendar, Dock, MapPin } from "lucide-react"
 
 interface Property {
   id: string
@@ -14,8 +14,10 @@ interface Property {
   category: {
     name: string
   }
-  videoUrl?: string
-
+  videoUrl?: string | null
+  series?: string | null
+  hasElevator?: boolean | null
+  amenities?: string[] | null
 }
 
 interface PropertyDetailsProps {
@@ -25,17 +27,17 @@ interface PropertyDetailsProps {
 export default function PropertyDetails({ property }: PropertyDetailsProps) {
   const details = [
     {
-      icon: Home,
+      icon: Asterisk,
       label: "Istabu skaits",
       value: property.rooms ? `${property.rooms} istabas` : "Nav norādīts"
     },
     {
-      icon: Ruler,
+      icon: Asterisk,
       label: "Platība",
       value: property.area ? `${property.area} m²` : "Nav norādīta"
     },
     {
-      icon: Building,
+      icon: Asterisk,
       label: "Stāvs",
       value: property.floor && property.totalFloors 
         ? `${property.floor}/${property.totalFloors}` 
@@ -43,6 +45,23 @@ export default function PropertyDetails({ property }: PropertyDetailsProps) {
         ? `${property.floor}. stāvs`
         : "Nav norādīts"
     },
+    {
+      icon: Asterisk,
+      label: "Sērija",
+      value: property.series || "Nav norādīta"
+    },
+    {
+      icon: Asterisk,
+      label: "Lifts",
+      value: property.hasElevator ? "Ir" : "Nav"
+    },
+    {
+      icon: Asterisk,
+      label: "Ērtības",
+      value: property.amenities && property.amenities.length > 0 
+        ? property.amenities.join(", ") 
+        : "Nav norādītas"
+    },    
     {
       icon: MapPin,
       label: "Atrašanās vieta",

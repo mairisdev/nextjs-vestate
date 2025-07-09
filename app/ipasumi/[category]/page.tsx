@@ -1,4 +1,4 @@
-import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForDzivokli } from "@/lib/queries/properties"
+import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForCategory } from "@/lib/queries/properties"
 import PropertyGrid from "../../components/PropertyGrid"
 import PropertyFiltersClientWrapper from "../../components/PropertyFiltersClientWrapper"
 import { notFound } from "next/navigation"
@@ -56,13 +56,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     notFound()
   }
 
-  let cities: string[] = []
-  let districts: string[] = []
-  if (resolvedParams.category === 'dzivokli') {
-    const result = await getCitiesAndDistrictsForDzivokli()
-    cities = result.cities.filter((c): c is string => Boolean(c))
-    districts = result.districts.filter((d): d is string => Boolean(d))
-  }
+  const { cities, districts } = await getCitiesAndDistrictsForCategory(resolvedParams.category)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -87,8 +81,8 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             <PropertyFiltersClientWrapper 
               categories={categories}
               currentCategory={resolvedParams.category}
-              cities={cities}
-              districts={districts}
+              cities={cities.filter((city: string | null): city is string => city !== null)}
+              districts={districts.filter((district: string | null): district is string => district !== null)}
             />
           </div>
 

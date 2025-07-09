@@ -19,49 +19,63 @@ export interface PropertyFiltersProps {
 export default function PropertyFilters({ categories, currentCategory, cities, districts }: PropertyFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
+
   const [filters, setFilters] = useState({
-    minPrice: searchParams.get('minPrice') || '',
-    maxPrice: searchParams.get('maxPrice') || '',
-    rooms: searchParams.get('rooms') || '',
-    minArea: searchParams.get('minArea') || '',
-    maxArea: searchParams.get('maxArea') || '',
-    city: searchParams.get('city') || '',
-    district: searchParams.get('district') || '',
+    minPrice: searchParams.get("minPrice") || "",
+    maxPrice: searchParams.get("maxPrice") || "",
+    rooms: searchParams.getAll("rooms") || [],
+    minArea: searchParams.get("minArea") || "",
+    maxArea: searchParams.get("maxArea") || "",
+    city: searchParams.get("city") || "",
+    district: searchParams.get("district") || "",
   })
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }))
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleRoomToggle = (room: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      rooms: prev.rooms.includes(room)
+        ? prev.rooms.filter((r) => r !== room)
+        : [...prev.rooms, room],
+    }))
   }
 
   const applyFilters = () => {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) params.set(key, value)
+      if (Array.isArray(value)) {
+        value.forEach((v) => {
+          if (v) params.append(key, v)
+        })
+      } else if (value) {
+        params.set(key, value)
+      }
     })
-    
     router.push(`/ipasumi/${currentCategory}?${params.toString()}`)
   }
 
   const clearFilters = () => {
     setFilters({
-      minPrice: '',
-      maxPrice: '',
-      rooms: '',
-      minArea: '',
-      maxArea: '',
-      city: '',
-      district: '',
+      minPrice: "",
+      maxPrice: "",
+      rooms: [],
+      minArea: "",
+      maxArea: "",
+      city: "",
+      district: "",
     })
     router.push(`/ipasumi/${currentCategory}`)
   }
 
   return (
     <div className="space-y-6 bg-white p-6 rounded-xl shadow border w-full">
-      {/* Reset filters button */}
+      {/* Reset filters */}
       <div className="flex justify-between items-center mb-2">
         <span className="text-lg font-semibold text-[#00332D]">Filtri</span>
-        <button 
+        <button
           onClick={clearFilters}
           className="text-xs text-[#B91C1C] hover:underline"
         >
@@ -69,6 +83,7 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         </button>
       </div>
 
+      {/* Transaction type placeholder */}
       <div className="mb-4">
         <div className="flex items-center space-x-2 mb-2">
           <span className="font-medium">Darījuma veids</span>
@@ -85,40 +100,41 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         </div>
       </div>
 
-      {cities && cities.length > 0 && (
+      {Array.isArray(cities) && cities.length > 0 && (
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1" htmlFor="city">Pilsēta</label>
+          <label htmlFor="city" className="block text-sm font-medium mb-1">Pilsēta</label>
           <select
             id="city"
             value={filters.city}
-            onChange={e => handleFilterChange('city', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D] bg-white"
+            onChange={(e) => handleFilterChange("city", e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           >
             <option value="">Visas pilsētas</option>
-            {cities.map(city => (
+            {cities.map((city) => (
               <option key={city} value={city}>{city}</option>
             ))}
           </select>
         </div>
       )}
 
-      {districts && districts.length > 0 && (
+      {Array.isArray(districts) && districts.length > 0 && (
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1" htmlFor="district">Rajons</label>
+          <label htmlFor="district" className="block text-sm font-medium mb-1">Rajons</label>
           <select
             id="district"
             value={filters.district}
-            onChange={e => handleFilterChange('district', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D] bg-white"
+            onChange={(e) => handleFilterChange("district", e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           >
             <option value="">Visi rajoni</option>
-            {districts.map(district => (
+            {districts.map((district) => (
               <option key={district} value={district}>{district}</option>
             ))}
           </select>
         </div>
       )}
 
+      {/* Price */}
       <div className="mb-4">
         <h3 className="font-medium mb-2">Cena EUR</h3>
         <div className="grid grid-cols-2 gap-2">
@@ -126,38 +142,44 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
             type="number"
             placeholder="No"
             value={filters.minPrice}
-            onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+            onChange={(e) => handleFilterChange("minPrice", e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           />
           <input
             type="number"
             placeholder="Līdz"
             value={filters.maxPrice}
-            onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+            onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           />
         </div>
       </div>
 
+      {/* Rooms */}
       <div className="mb-4">
         <h3 className="font-medium mb-2">Istabu skaits</h3>
         <div className="grid grid-cols-6 gap-2">
-          {[1, 2, 3, 4, 5, '+'].map((num) => (
-            <button
-              key={num}
-              onClick={() => handleFilterChange('rooms', num.toString())}
-              className={`aspect-square border rounded-md flex items-center justify-center text-sm font-medium transition-colors ${
-                filters.rooms === num.toString()
-                  ? 'bg-[#00332D] text-white border-[#00332D]'
-                  : 'border-gray-300 hover:border-[#00332D] hover:text-[#00332D]'
-              }`}
-            >
-              {num}
-            </button>
-          ))}
+          {[1, 2, 3, 4, 5, '+'].map((num) => {
+            const value = num.toString()
+            const isActive = filters.rooms.includes(value)
+            return (
+              <button
+                key={value}
+                onClick={() => handleRoomToggle(value)}
+                className={`aspect-square border rounded-md flex items-center justify-center text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-[#00332D] text-white border-[#00332D]'
+                    : 'border-gray-300 hover:border-[#00332D] hover:text-[#00332D]'
+                }`}
+              >
+                {value}
+              </button>
+            )
+          })}
         </div>
       </div>
 
+      {/* Area */}
       <div className="mb-4">
         <h3 className="font-medium mb-2">Platība / m²</h3>
         <div className="grid grid-cols-2 gap-2">
@@ -165,19 +187,20 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
             type="number"
             placeholder="No"
             value={filters.minArea}
-            onChange={(e) => handleFilterChange('minArea', e.target.value)}
+            onChange={(e) => handleFilterChange("minArea", e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           />
           <input
             type="number"
             placeholder="Līdz"
             value={filters.maxArea}
-            onChange={(e) => handleFilterChange('maxArea', e.target.value)}
+            onChange={(e) => handleFilterChange("maxArea", e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           />
         </div>
       </div>
 
+      {/* Submit */}
       <button
         onClick={applyFilters}
         className="w-full bg-[#00332D] text-white py-3 rounded-md font-medium hover:bg-[#004940] transition-colors mt-2"

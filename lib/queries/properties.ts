@@ -90,6 +90,15 @@ export async function getPropertiesByCategory(categorySlug: string, page = 1, li
           name: true,
           slug: true,
         }
+      },
+      agent: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true
+        }
       }
     },
     orderBy,
@@ -111,7 +120,16 @@ export async function getFeaturedProperties(limit = 6) {
       isFeatured: true
     },
     include: {
-      category: true
+      category: true,
+      agent: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true
+        }
+      }
     },
     orderBy: { createdAt: 'desc' },
     take: limit
@@ -124,7 +142,16 @@ export async function getAllProperties(page = 1, limit = 12) {
   const properties = await prisma.property.findMany({
     where: { isActive: true },
     include: {
-      category: true
+      category: true,
+      agent: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true
+        }
+      }
     },
     orderBy: { createdAt: 'desc' },
     skip,
@@ -138,10 +165,10 @@ export async function getAllProperties(page = 1, limit = 12) {
   return { properties, total, pages: Math.ceil(total / limit) }
 }
 
-export async function getCitiesAndDistrictsForDzivokli() {
+export async function getCitiesAndDistrictsForCategory(categorySlug: string) {
   const properties = await prisma.property.findMany({
     where: {
-      category: { slug: 'dzivokli' },
+      category: { slug: categorySlug },
       isActive: true,
     },
     select: {

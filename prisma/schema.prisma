@@ -96,6 +96,7 @@ model Agent {
   firstName String?
   lastName  String?
   name      String?
+  email     String?
   title     String?
   phone     String?
   image     String?
@@ -253,6 +254,11 @@ model Property {
   updatedAt    DateTime @updatedAt
 
   propertyProject String?
+
+  series       String?
+  hasElevator  Boolean?
+  amenities    String[]
+
 
   agentId   String?
   agent     Agent?   @relation(fields: [agentId], references: [id])

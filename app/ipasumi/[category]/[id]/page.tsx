@@ -20,7 +20,16 @@ async function getProperty(id: string) {
         isActive: true 
       },
       include: {
-        category: true
+        category: true,
+        agent: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true
+          }
+        }
       }
     })
 
@@ -40,7 +49,6 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
     notFound()
   }
 
-  // Uzskaita unikālu skatījumu
   const uniqueViews = await incrementUniqueView(property.id)
 
   const formatPrice = (price: number, currency: string) => {

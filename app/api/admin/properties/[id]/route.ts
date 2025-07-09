@@ -58,6 +58,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       const area = formData.get("area") ? parseFloat(formData.get("area")?.toString() || "0") : null
       const floor = formData.get("floor") ? parseInt(formData.get("floor")?.toString() || "0") : null
       const totalFloors = formData.get("totalFloors") ? parseInt(formData.get("totalFloors")?.toString() || "0") : null
+      const series = formData.get("series")?.toString() || null
+      const hasElevator = formData.get("hasElevator") === "true"
+      const amenities = formData.getAll("amenities").map(a => a.toString()).filter(Boolean)
       const categoryId = formData.get("categoryId")?.toString() || ""
       const status = formData.get("status")?.toString() || "AVAILABLE"
       const isActive = formData.get("isActive") === "true"
@@ -152,6 +155,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           area,
           floor,
           totalFloors,
+          series,
+          hasElevator,
+          amenities,
           categoryId,
           status: status as PropertyStatus,
           isActive,
@@ -161,8 +167,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           propertyProject
         },
         include: {
-         category: true
-       }
+          category: true,
+          agent: true
+        }
      })
 
      return NextResponse.json(property)
@@ -184,6 +191,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
          area: data.area || null,
          floor: data.floor || null,
          totalFloors: data.totalFloors || null,
+         series: data.series || null,
+         hasElevator: data.hasElevator || false,
+         amenities: data.amenities || [],
          categoryId: data.categoryId,
          status: (data.status as PropertyStatus) || PropertyStatus.AVAILABLE,
          isActive: data.isActive !== undefined ? data.isActive : true,
@@ -191,8 +201,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
          propertyProject: data.propertyProject || null
        },
        include: {
-         category: true
-       }
+        category: true,
+        agent: true
+      }
      })
 
      return NextResponse.json(property)

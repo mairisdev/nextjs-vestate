@@ -16,6 +16,9 @@ interface Category {
 }
 
 interface Property {
+  hasElevator: boolean
+  amenities: any
+  series: string
   id: string
   title: string
   description: string
@@ -64,6 +67,9 @@ export default function EditProperty({ params }: EditPropertyProps) {
     area: "",
     floor: "",
     totalFloors: "",
+    series: "", 
+    hasElevator: false,
+    amenities: "",
     categoryId: "",
     status: "AVAILABLE",
     isActive: true,
@@ -123,7 +129,10 @@ export default function EditProperty({ params }: EditPropertyProps) {
         status: property.status,
         isActive: property.isActive,
         isFeatured: property.isFeatured,
-        propertyProject: property.propertyProject || ""
+        propertyProject: property.propertyProject || "",
+        series: property.series || "",
+        hasElevator: property.hasElevator || false,
+        amenities: property.amenities?.join(", ") || ""
       })
 
       setCurrentMainImage(property.mainImage)
@@ -162,8 +171,8 @@ export default function EditProperty({ params }: EditPropertyProps) {
 
   const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    if (files.length + newAdditionalImages.length + currentAdditionalImages.length > 5) {
-      setErrorMessage("Maksimums 5 papildu attēli")
+    if (files.length + newAdditionalImages.length + currentAdditionalImages.length > 10) {
+      setErrorMessage("Maksimums 10 papildu attēli")
       return
     }
     
@@ -210,7 +219,8 @@ export default function EditProperty({ params }: EditPropertyProps) {
 
     try {
       const formDataToSend = new FormData()
-      
+      const amenitiesList = formData.amenities.split(",").map(a => a.trim()).filter(Boolean)
+      amenitiesList.forEach(a => formDataToSend.append("amenities", a))
       // Pievienojam visus teksta laukus
       formDataToSend.append("title", formData.title.trim())
       formDataToSend.append("description", formData.description.trim())
@@ -223,6 +233,8 @@ export default function EditProperty({ params }: EditPropertyProps) {
       formDataToSend.append("area", formData.area)
       formDataToSend.append("floor", formData.floor)
       formDataToSend.append("totalFloors", formData.totalFloors)
+      formDataToSend.append("series", formData.series)
+      formDataToSend.append("hasElevator", formData.hasElevator.toString())
       formDataToSend.append("categoryId", formData.categoryId)
       formDataToSend.append("status", formData.status)
       formDataToSend.append("isActive", formData.isActive.toString())
@@ -481,6 +493,33 @@ export default function EditProperty({ params }: EditPropertyProps) {
                 placeholder="5"
               />
             </div>
+            <div>
+            <Label>Sērija</Label>
+            <Input
+              value={formData.series}
+              onChange={(e) => handleInputChange("series", e.target.value)}
+              placeholder="Specprojekts"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2 mt-2">
+            <input
+              type="checkbox"
+              checked={formData.hasElevator}
+              onChange={(e) => handleInputChange("hasElevator", e.target.checked)}
+              id="hasElevator"
+            />
+            <Label htmlFor="hasElevator">Ir lifts</Label>
+          </div>
+
+          <div className="md:col-span-2 mt-2">
+            <Label>Ērtības / ekstras (komats atdala)</Label>
+            <Input
+              value={formData.amenities}
+              onChange={(e) => handleInputChange("amenities", e.target.value)}
+              placeholder="Balkons, Autostāvvieta, Signalizācija"
+            />
+          </div>
           </div>
         </div>
 
@@ -568,7 +607,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
 
           {/* Jauni papildu attēli */}
           <div>
-            <Label>Pievienot papildu attēlus</Label>
+            <Label>Pievienot papildu attēlus (max 10)</Label>
             <div className="mt-2">
               <input
                 type="file"
