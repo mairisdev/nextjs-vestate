@@ -43,7 +43,7 @@ export default function HashNavigationHandler() {
     }
 
     // Pārbaudām uzreiz pēc lapas ielādes ar dažādiem timing
-    setTimeout(handleHashNavigation, 500)
+    setTimeout(handleHashNavigation, 1000)
 
     // Klausāmies hash izmaiņas
     window.addEventListener('hashchange', handleHashNavigation)
