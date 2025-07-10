@@ -37,6 +37,7 @@ export async function updateBlogPost(
   title: string,
   date: string,
   excerpt: string,
+  shortDescription: string,
   imageUrl: string
 ) {
   return await prisma.blogPost.update({
