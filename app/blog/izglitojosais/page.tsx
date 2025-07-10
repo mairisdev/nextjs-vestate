@@ -2,7 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import Navbar from "../../components/Navbar"
-import { Calendar, ArrowLeft, GraduationCap, User, Tag } from "lucide-react"
+import { Calendar, ArrowLeft, GraduationCap, User, Tag, Lightbulb } from "lucide-react"
 
 async function getEducationalContent() {
   try {
@@ -84,6 +84,14 @@ export default async function EducationalContentPage() {
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                        {/* Location badge */}
+                        <div className="absolute top-3 left-3">
+                          <div className="flex items-center px-2 py-1 bg-green-600/90 text-white rounded-full text-xs font-medium">
+                            <Lightbulb className="w-3 h-3 mr-1" />
+                            Izglītojošais raksts
+                          </div>
+                        </div>
                       </div>
                     )}
                     
@@ -114,7 +122,7 @@ export default async function EducationalContentPage() {
                           {content.tags.slice(0, 3).map((tag, index) => (
                             <span
                               key={index}
-                              className="inline-flex items-center px-2 py-1 bg-[#77D4B4]/10 text-[#00332D] text-xs rounded-full"
+                              className="inline-flex items-center px-2 py-1 bg-[#77D4B4] text-white text-xs rounded-full"
                             >
                               <Tag className="w-3 h-3 mr-1" />
                               {tag}

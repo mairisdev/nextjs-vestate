@@ -80,7 +80,7 @@ export default async function BlogMainPage() {
         <section className="mb-20">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-[#00332D] rounded-lg">
+              <div className="p-3 bg-[#77D4B4] rounded-lg">
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -188,7 +188,7 @@ export default async function BlogMainPage() {
                       {content.tags.slice(0, 3).map((tag, index) => (
                         <span
                           key={index}
-                          className="px-2 py-1 bg-[#77D4B4]/10 text-[#00332D] text-xs rounded-full"
+                          className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
                         >
                           {tag}
                         </span>
@@ -205,7 +205,7 @@ export default async function BlogMainPage() {
         <section>
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-green-600 rounded-lg">
+              <div className="p-3 bg-[#77D4B4] rounded-lg">
                 <Home className="w-6 h-6 text-white" />
               </div>
               <div>

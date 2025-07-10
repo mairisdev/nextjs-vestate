@@ -44,11 +44,11 @@ export default async function VillagesContentPage() {
       <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center space-x-4 mb-4">
-            <Link href="/blog" className="text-[#00332D] hover:text-green-600 transition-colors">
+            <Link href="/blog" className="text-[#00332D] hover:text-[#77D4B4] transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-green-600 rounded-lg">
+              <div className="p-3 bg-[#77D4B4] rounded-lg">
                 <Home className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -59,7 +59,7 @@ export default async function VillagesContentPage() {
           </div>
           
           <div className="text-sm text-gray-500">
-            Atrasti {villagesContent.length} ciemati
+            Atrasti {villagesContent.length} raksti
           </div>
         </div>
       </section>
@@ -97,18 +97,18 @@ export default async function VillagesContentPage() {
                     
                     <div className="p-6">
                       <div className="flex items-center text-sm text-gray-500 mb-3">
-                        <User className="w-4 h-4 mr-2" />
-                        {content.author || "Vestate"}
-                        {content.publishedAt && (
-                          <>
-                            <span className="mx-2">•</span>
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {new Date(content.publishedAt).toLocaleDateString('lv-LV')}
-                          </>
-                        )}
-                      </div>
+                          <User className="w-4 h-4 mr-2" />
+                          {content.author || "Vestate"}
+                          {content.publishedAt && (
+                            <>
+                              <span className="mx-2">•</span>
+                              <Calendar className="w-4 h-4 mr-1" />
+                              {new Date(content.publishedAt).toLocaleDateString('lv-LV')}
+                            </>
+                          )}
+                        </div>
                       
-                      <h2 className="text-xl font-semibold text-[#00332D] mb-3 group-hover:text-green-600 transition-colors line-clamp-2">
+                      <h2 className="text-xl font-semibold text-[#00332D] mb-3 group-hover:text-[#77D4B4] transition-colors line-clamp-2">
                         {content.title}
                       </h2>
                       
@@ -131,8 +131,8 @@ export default async function VillagesContentPage() {
                         </div>
                       )}
                       
-                      <div className="flex items-center text-[#00332D] group-hover:text-green-600 transition-colors">
-                        <span className="text-sm font-medium">Uzzināt vairāk</span>
+                      <div className="flex items-center text-[#00332D] group-hover:text-[#77D4B4] transition-colors">
+                        <span className="text-sm font-medium">Lasīt vairāk</span>
                         <svg className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
@@ -143,52 +143,41 @@ export default async function VillagesContentPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20">
-              <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Home className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Vēl nav ciematu aprakstu</h3>
-              <p className="text-gray-600 mb-6">Drīzumā šeit būs pieejami interesanti stāsti par Latvijas ciematiem!</p>
-              <Link 
-                href="/blog"
-                className="inline-flex items-center px-4 py-2 bg-[#00332D] text-white rounded-lg hover:bg-[#004940] transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Atpakaļ uz blogu
-              </Link>
+          <div className="text-center py-20">
+            <div className="w-16 h-16 bg-[#77D4B4]/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <Home className="w-8 h-8 text-[#77D4B4]" />
             </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Vēl nav ciematu aprakstu</h3>
+            <p className="text-gray-600 mb-6">Drīzumā šeit būs pieejami interesanti stāsti par Latvijas ciematiem!</p>
+            <Link 
+              href="/blog"
+              className="inline-flex items-center px-4 py-2 bg-[#00332D] text-white rounded-lg hover:bg-[#004940] transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Atpakaļ uz blogu
+            </Link>
+          </div>
           )}
         </div>
       </section>
 
-      {/* Featured section with village-themed CTA */}
+      {/* Featured section */}
       {villagesContent.length > 0 && (
-        <section className="py-16 bg-gradient-to-r from-green-50 to-green-100">
+        <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-600 rounded-lg flex items-center justify-center mx-auto mb-6">
-                <MapPin className="w-8 h-8 text-white" />
-              </div>
               <h2 className="text-2xl font-bold text-[#00332D] mb-4">
                 Meklējat īpašumu kādā no šiem ciematiem?
               </h2>
-              <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+              <p className="text-gray-600 mb-6">
                 Mūsu eksperti pārzina lokālo tirgu un palīdzēs atrast ideālo īpašumu jūsu izvēlētajā vietā
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href="/ipasumu-kategorijas"
-                  className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Skatīt īpašumus
-                </Link>
-                <Link
-                  href="#kontakti"
-                  className="inline-flex items-center px-6 py-3 bg-white text-green-600 border-2 border-green-600 rounded-lg hover:bg-green-50 transition-colors"
-                >
-                  Sazināties ar ekspertu
-                </Link>
-              </div>
+              <Link
+                href="#kontakti"
+                className="inline-flex items-center px-6 py-3 bg-[#77D4B4] text-white rounded-lg hover:bg-[#66C5A8] transition-colors"
+              >
+                Saņemt konsultāciju
+              </Link>
             </div>
           </div>
         </section>

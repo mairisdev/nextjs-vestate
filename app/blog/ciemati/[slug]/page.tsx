@@ -4,33 +4,33 @@ import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Navbar from "../../../components/Navbar"
 import ShareButton from "../../../components/ShareButton"
-import { Calendar, ArrowLeft, GraduationCap, User, Tag, Clock } from "lucide-react"
+import { Calendar, ArrowLeft, Home, User, Tag, Clock, MapPin, GraduationCap } from "lucide-react"
 
-interface EducationalPageProps {
+interface VillagePageProps {
   params: Promise<{ slug: string }>
 }
 
-async function getEducationalContent(slug: string) {
+async function getVillageContent(slug: string) {
   try {
     const content = await prisma.content.findUnique({
       where: { 
         slug,
-        type: "EDUCATIONAL",
+        type: "VILLAGES",
         published: true
       }
     })
     return content
   } catch (error) {
-    console.error("Error fetching educational content:", error)
+    console.error("Error fetching village content:", error)
     return null
   }
 }
 
-async function getRelatedContent(currentId: string) {
+async function getRelatedVillages(currentId: string) {
   try {
     const related = await prisma.content.findMany({
       where: {
-        type: "EDUCATIONAL",
+        type: "VILLAGES",
         published: true,
         id: { not: currentId }
       },
@@ -39,20 +39,20 @@ async function getRelatedContent(currentId: string) {
     })
     return related
   } catch (error) {
-    console.error("Error fetching related content:", error)
+    console.error("Error fetching related villages:", error)
     return []
   }
 }
 
-export default async function EducationalContentPage({ params }: EducationalPageProps) {
+export default async function VillageContentPage({ params }: VillagePageProps) {
   const { slug } = await params
-  const content = await getEducationalContent(slug)
+  const content = await getVillageContent(slug)
   
   if (!content) {
     notFound()
   }
 
-  const relatedContent = await getRelatedContent(content.id)
+  const relatedVillages = await getRelatedVillages(content.id)
 
   // Parse content for reading time estimation
   const wordsCount = content.content.split(' ').length
@@ -70,7 +70,7 @@ export default async function EducationalContentPage({ params }: EducationalPage
             <span>/</span>
             <Link href="/blog" className="hover:text-[#00332D]">Blog</Link>
             <span>/</span>
-            <Link href="/blog/izglitojosais" className="hover:text-[#00332D]">Izglītojošais saturs</Link>
+            <Link href="/blog/izglitojosais" className="hover:text-[#00332D]">Ciemati</Link>
             <span>/</span>
             <span className="text-gray-900">{content.title}</span>
           </div>
@@ -83,11 +83,11 @@ export default async function EducationalContentPage({ params }: EducationalPage
           {/* Back button */}
           <div className="mb-8">
             <Link 
-              href="/blog/izglitojosais" 
-              className="inline-flex items-center text-[#77D4B4] hover:text-[#66C5A8] transition-colors"
+              href="/blog/ciemati" 
+              className="inline-flex items-center text-[#77D4B4] hover:text-green-700 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Atpakaļ uz izglītojošo saturu
+              Atpakaļ uz ciematiem
             </Link>
           </div>
 
@@ -95,7 +95,7 @@ export default async function EducationalContentPage({ params }: EducationalPage
           <div className="flex items-center mb-6">
             <div className="inline-flex items-center px-3 py-1 bg-[#77D4B4]/10 text-[#00332D] rounded-full text-sm font-medium">
               <GraduationCap className="w-4 h-4 mr-2" />
-              Izglītojošais saturs
+              Ciemati
             </div>
           </div>
 
@@ -248,14 +248,14 @@ export default async function EducationalContentPage({ params }: EducationalPage
   )
 }
 
-export async function generateMetadata({ params }: EducationalPageProps) {
+export async function generateMetadata({ params }: VillagePageProps) {
   const { slug } = await params
-  const content = await getEducationalContent(slug)
+  const content = await getVillageContent(slug)
 
   if (!content) {
     return {
-      title: "Raksts nav atrasts | Vestate",
-      description: "Meklētais izglītojošais saturs nav atrasts."
+      title: "Ciemats nav atrasts | Vestate",
+      description: "Meklētais ciemats nav atrasts."
     }
   }
 
