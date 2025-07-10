@@ -20,6 +20,7 @@ import {
   Globe,
   Contact,
   BookOpen,
+  GraduationCap,
 } from "lucide-react"
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/nextjs';
 
@@ -41,6 +42,7 @@ const navItems = [
   { href: "/admin/statistics", label: "Statistika", icon: <BarChart className="w-5 h-5" /> },
   { href: "/admin/partners", label: "Partneri", icon: <Building className="w-5 h-5" /> },
   { href: "/admin/blog", label: "Blogs", icon: <BookOpen className="w-5 h-5" /> },
+  { href: "/admin/content", label: "Saturs (Izglītojošais/Ciemati)", icon: <GraduationCap className="w-5 h-5" /> },
   { href: "/admin/contacts", label: "Kontakti", icon: <Contact className="w-5 h-5" /> },
   { href: "/admin/footer", label: "Kājene", icon: <Settings className="w-5 h-5" /> },
 ]

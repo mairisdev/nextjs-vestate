@@ -290,3 +290,37 @@ model PropertyView {
   @@index([propertyId])
   @@index([ipAddress])
 }
+
+model Content {
+  id              String      @id @default(cuid())
+  title           String
+  slug            String      @unique
+  excerpt         String      @db.Text
+  content         String      @db.Text
+  type            ContentType
+  published       Boolean     @default(false)
+  publishedAt     DateTime?
+
+  featuredImage   String?
+  videoUrl        String?
+  videoFile       String?
+  images          String[]
+  
+  tags            String[]
+  author          String?
+  metaTitle       String?
+  metaDescription String?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([type])
+  @@index([published])
+  @@index([publishedAt])
+  @@index([slug])
+}
+
+enum ContentType {
+  EDUCATIONAL
+  VILLAGES
+}
