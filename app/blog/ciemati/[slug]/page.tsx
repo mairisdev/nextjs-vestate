@@ -94,7 +94,7 @@ export default async function VillageContentPage({ params }: VillagePageProps) {
           {/* Category badge */}
           <div className="flex items-center mb-6">
             <div className="inline-flex items-center px-3 py-1 bg-[#77D4B4]/10 text-[#00332D] rounded-full text-sm font-medium">
-              <GraduationCap className="w-4 h-4 mr-2" />
+              <MapPin className="w-4 h-4 mr-2" />
               Ciemati
             </div>
           </div>

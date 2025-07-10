@@ -2,7 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import Navbar from "../../components/Navbar"
-import { Calendar, ArrowLeft, GraduationCap, User, Tag, Lightbulb } from "lucide-react"
+import { Calendar, ArrowLeft, GraduationCap, User, Tag } from "lucide-react"
 
 async function getEducationalContent() {
   try {
@@ -88,7 +88,7 @@ export default async function EducationalContentPage() {
                         {/* Location badge */}
                         <div className="absolute top-3 left-3">
                           <div className="flex items-center px-2 py-1 bg-green-600/90 text-white rounded-full text-xs font-medium">
-                            <Lightbulb className="w-3 h-3 mr-1" />
+                            <GraduationCap className="w-3 h-3 mr-1" />
                             Izglītojošais raksts
                           </div>
                         </div>
