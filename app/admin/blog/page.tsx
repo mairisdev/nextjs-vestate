@@ -4,9 +4,8 @@ import { useEffect, useState, useRef } from "react"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Button } from "../../components/ui/button"
-import { Plus, Trash } from "lucide-react"
+import { Plus, Edit, Trash } from "lucide-react"
 import AlertMessage from "../../components/ui/alert-message"
-import { Textarea } from "@/app/components/ui/textarea"
 
 type BlogPost = {
   id?: string
@@ -20,7 +19,9 @@ type BlogPost = {
 export default function BlogSettings() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [alert, setAlert] = useState<{ type: "success" | "error"; message: string } | null>(null)
-  const contentRefs = useRef<(HTMLTextAreaElement | null)[]>([])
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
+  const contentRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
     fetch("/api/blog")
@@ -47,56 +48,103 @@ export default function BlogSettings() {
 
   const addPost = () => {
     setPosts([...posts, { title: "", date: "", excerpt: "", shortDescription: "", image: null }])
+    setIsCreating(true)
+    setEditingIndex(posts.length)
   }
 
-  const removePost = (i: number) => {
+  const removePost = async (i: number) => {
+    if (!confirm("Vai tiešām dzēst šo rakstu?")) return
+    
+    const post = posts[i]
+    if (post.id) {
+      try {
+        const res = await fetch(`/api/blog/${post.id}`, {
+          method: "DELETE"
+        })
+        if (res.ok) {
+          setAlert({ type: "success", message: "Raksts dzēsts!" })
+        } else {
+          setAlert({ type: "error", message: "Kļūda dzēšot rakstu!" })
+          return
+        }
+      } catch (error) {
+        setAlert({ type: "error", message: "Kļūda dzēšot rakstu!" })
+        return
+      }
+    }
+    
     setPosts(posts.filter((_, idx) => idx !== i))
+    setEditingIndex(null)
   }
 
-  const handleSave = async () => {
+  const handleSave = async (postIndex: number) => {
     setAlert(null)
+    const post = posts[postIndex]
 
-    for (const post of posts) {
-      const formData = new FormData()
-      formData.append("title", post.title)
-      formData.append("date", post.date)
-      formData.append("excerpt", post.excerpt)
-      formData.append("shortDescription", post.shortDescription)
-      if (post.image instanceof File) {
-        formData.append("image", post.image)
-      } else if (typeof post.image === "string") {
-        formData.append("existingImageUrl", post.image)
-      }
-      if (post.id) {
-        formData.append("id", post.id)
-      }
+    const formData = new FormData()
+    formData.append("title", post.title)
+    formData.append("date", post.date)
+    formData.append("excerpt", post.excerpt)
+    formData.append("shortDescription", post.shortDescription)
+    if (post.image instanceof File) {
+      formData.append("image", post.image)
+    } else if (typeof post.image === "string") {
+      formData.append("existingImageUrl", post.image)
+    }
+    if (post.id) {
+      formData.append("id", post.id)
+    }
 
+    try {
       const res = await fetch("/api/blog", {
         method: "POST",
         body: formData,
       })
 
       if (res.ok) {
-        setAlert({ type: "success", message: "Dati saglabāti veiksmīgi!" })
+        const savedPost = await res.json()
+        if (!post.id) {
+          const copy = [...posts]
+          copy[postIndex] = { ...copy[postIndex], id: savedPost.id }
+          setPosts(copy)
+        }
+        setAlert({ type: "success", message: "Raksts saglabāts!" })
+        setEditingIndex(null)
+        setIsCreating(false)
       } else {
-        setAlert({ type: "error", message: "Kļūda saglabājot datus!" })
+        setAlert({ type: "error", message: "Kļūda saglabājot rakstu!" })
       }
+    } catch (error) {
+      setAlert({ type: "error", message: "Kļūda saglabājot rakstu!" })
     }
   }
 
-  const insertText = (postIndex: number, before: string, after: string = "") => {
-    const textarea = contentRefs.current[postIndex]
-    if (!textarea) return
+  const cancelEdit = (postIndex: number) => {
+    if (isCreating) {
+      setPosts(posts.filter((_, idx) => idx !== postIndex))
+      setIsCreating(false)
+    }
+    setEditingIndex(null)
+  }
+
+  const startEdit = (index: number) => {
+    setEditingIndex(index)
+    setIsCreating(false)
+  }
+
+  const insertText = (before: string, after: string = "") => {
+    const textarea = contentRef.current
+    if (!textarea || editingIndex === null) return
 
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
-    const selectedText = posts[postIndex].excerpt.substring(start, end)
+    const selectedText = posts[editingIndex].excerpt.substring(start, end)
     const newText = 
-      posts[postIndex].excerpt.substring(0, start) + 
+      posts[editingIndex].excerpt.substring(0, start) + 
       before + selectedText + after + 
-      posts[postIndex].excerpt.substring(end)
+      posts[editingIndex].excerpt.substring(end)
     
-    updatePost(postIndex, "excerpt", newText)
+    updatePost(editingIndex, "excerpt", newText)
     
     setTimeout(() => {
       textarea.focus()
@@ -104,164 +152,251 @@ export default function BlogSettings() {
     }, 0)
   }
 
-  const insertLink = (postIndex: number) => {
+  const insertLink = () => {
     const url = prompt("Ievadiet URL:")
     if (url) {
       const text = prompt("Ievadiet saites tekstu:") || url
-      insertText(postIndex, `<a href="${url}" target="_blank">`, `${text}</a>`)
+      insertText(`<a href="${url}" target="_blank">`, `${text}</a>`)
     }
   }
 
-  const insertImage = (postIndex: number) => {
+  const insertImage = () => {
     const url = prompt("Ievadiet attēla URL:")
     if (url) {
       const alt = prompt("Ievadiet attēla aprakstu:") || ""
-      insertText(postIndex, `<img src="${url}" alt="${alt}" class="max-w-full h-auto rounded-lg my-4" />`)
+      insertText(`<img src="${url}" alt="${alt}" class="max-w-full h-auto rounded-lg my-4" />`)
     }
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-10 space-y-8">
-      <h2 className="text-2xl font-bold">Bloga ieraksti</h2>
+    <div className="space-y-6 max-w-7xl mx-auto py-10">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Bloga ieraksti</h2>
+        <Button onClick={addPost} disabled={editingIndex !== null}>
+          <Plus className="w-4 h-4 mr-2" />
+          Pievienot rakstu
+        </Button>
+      </div>
+
       {alert && (
         <AlertMessage type={alert.type} message={alert.message} />
       )}
-      {posts.map((post, i) => (
-        <div key={i} className="border p-4 rounded-lg space-y-4 bg-gray-50">
-          <div className="flex justify-between items-center">
-            <Label>Bloga ieraksts #{i + 1}</Label>
-            <Button variant="ghost" size="icon" onClick={() => removePost(i)}>
-              <Trash className="text-red-500 w-4 h-4" />
-            </Button>
-          </div>
 
-          <Input
-            value={post.title}
-            onChange={(e) => updatePost(i, "title", e.target.value)}
-            placeholder="Virsraksts"
-          />
-          <Input
-            value={post.date}
-            onChange={(e) => updatePost(i, "date", e.target.value)}
-            placeholder="Datums"
-          />
-          
-          <div>
-            <Label className="block text-sm font-semibold mb-2">Īsais apraksts</Label>
-            <Input
-              value={post.shortDescription}
-              onChange={(e) => updatePost(i, "shortDescription", e.target.value)}
-              placeholder="Īsais apraksts (parādīsies kartītēs)"
-            />
-          </div>
-
-          <div>
-            <Label className="block text-sm font-semibold mb-2">Galvenais saturs</Label>
-            
-{/* Formatting toolbar */}
-<div className="flex flex-wrap gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<strong>", "</strong>")}>
-    B
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<i>", "</i>")}>
-    I
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<u>", "</u>")}>
-    U
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<h1>", "</h1>")}>
-    H1
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<h2>", "</h2>")}>
-    H2
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<h3>", "</h3>")}>
-    H3
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<h4>", "</h4>")}>
-    H4
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<h5>", "</h5>")}>
-    H5
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<h6>", "</h6>")}>
-    H6
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<p>", "</p>")}>
-    P
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<br />")}>
-    BR
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertLink(i)}>
-    Link
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertImage(i)}>
-    Img
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<ul><li>", "</li></ul>")}>
-    UL
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<ol><li>", "</li></ol>")}>
-    OL
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<li>", "</li>")}>
-    LI
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<blockquote>", "</blockquote>")}>
-    Quote
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<code>", "</code>")}>
-    Code
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<pre><code>", "</code></pre>")}>
-    Pre
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<hr />")}>
-    HR
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<div>", "</div>")}>
-    DIV
-  </Button>
-  <Button type="button" size="sm" variant="outline" onClick={() => insertText(i, "<span>", "</span>")}>
-    SPAN
-  </Button>
-</div>
-
-            <Textarea
-              ref={(el) => { contentRefs.current[i] = el }}
-              value={post.excerpt}
-              onChange={(e) => updatePost(i, "excerpt", e.target.value)}
-              placeholder="Ieraksta saturs... Vari izmantot HTML tagus vai Markdown."
-              rows={15}
-              className="font-mono text-sm"
-            />
-            
-            <p className="text-sm text-gray-500 mt-2">
-              Atbalsta HTML un Markdown formatējumu. Izmanto toolbar pogas ātrai formatēšanai.
-            </p>
-          </div>
-
-          <label className="block w-full max-w-sm px-4 py-2 border border-dashed border-gray-300 rounded-lg text-center cursor-pointer bg-gray-50">
-            <span>Izvēlieties attēlu no failiem</span>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => updatePost(i, "image", e.target.files?.[0] || null)}
-              className="hidden"
-            />
-            {typeof post.image === "string" && (
-              <img src={post.image} alt="Preview" className="w-full max-w-xs rounded-md mt-2" />
-            )}
-          </label>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Raksts
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Datums
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Īsais apraksts
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Darbības
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {posts.map((post, i) => (
+                <tr key={i} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center">
+                      {typeof post.image === "string" && post.image && (
+                        <img
+                          src={post.image}
+                          alt={post.title}
+                          className="w-16 h-16 object-cover rounded-lg mr-4"
+                        />
+                      )}
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {post.title || "Bez nosaukuma"}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {post.excerpt ? `${post.excerpt.substring(0, 100)}...` : "Nav satura"}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {post.date || "-"}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900 max-w-xs">
+                      {post.shortDescription || "-"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => startEdit(i)}
+                        disabled={editingIndex !== null}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => removePost(i)}
+                        disabled={editingIndex !== null}
+                      >
+                        <Trash className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      ))}
+      </div>
 
-      <Button variant="outline" onClick={addPost}>
-        <Plus className="w-4 h-4 mr-2" /> Pievienot rakstu
-      </Button>
+      {posts.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">Nav pievienoti bloga raksti.</p>
+          <p className="text-gray-400 text-sm mt-2">Pievienojiet jaunu rakstu, lai sāktu.</p>
+        </div>
+      )}
 
-      <Button onClick={handleSave}>Saglabāt izmaiņas</Button>
+      {editingIndex !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">
+                  {isCreating ? "Jauns bloga raksts" : "Rediģēt rakstu"}
+                </h3>
+                <Button variant="ghost" onClick={() => cancelEdit(editingIndex)}>
+                  ✕
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label>Virsraksts</Label>
+                  <Input
+                    value={posts[editingIndex].title}
+                    onChange={(e) => updatePost(editingIndex, "title", e.target.value)}
+                    placeholder="Ievadiet virsrakstu"
+                  />
+                </div>
+
+                <div>
+                  <Label>Datums</Label>
+                  <Input
+                    value={posts[editingIndex].date}
+                    onChange={(e) => updatePost(editingIndex, "date", e.target.value)}
+                    placeholder="YYYY-MM-DD"
+                  />
+                </div>
+
+                <div>
+                  <Label>Īsais apraksts</Label>
+                  <Input
+                    value={posts[editingIndex].shortDescription}
+                    onChange={(e) => updatePost(editingIndex, "shortDescription", e.target.value)}
+                    placeholder="Īsais apraksts (parādīsies kartītēs)"
+                  />
+                </div>
+
+                <div>
+                  <Label>Galvenais saturs</Label>
+                  
+                  <div className="flex flex-wrap gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<strong>", "</strong>")}>
+                      B
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<i>", "</i>")}>
+                      I
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<u>", "</u>")}>
+                      U
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h1>", "</h1>")}>
+                      H1
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h2>", "</h2>")}>
+                      H2
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h3>", "</h3>")}>
+                      H3
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h4>", "</h4>")}>
+                      H4
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h5>", "</h5>")}>
+                      H5
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h6>", "</h6>")}>
+                      H6
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<p>", "</p>")}>
+                      P
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertLink()}>
+                      Link
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertImage()}>
+                      Img
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<li>", "</li>")}>
+                      LI
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<blockquote>", "</blockquote>")}>
+                      Quote
+                    </Button>
+                  </div>
+
+                  <textarea
+                    ref={contentRef}
+                    value={posts[editingIndex].excerpt}
+                    onChange={(e) => updatePost(editingIndex, "excerpt", e.target.value)}
+                    placeholder="Ieraksta saturs... Vari izmantot HTML tagus vai Markdown."
+                    rows={15}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  />
+                  <p className="text-sm text-gray-500 mt-2">
+                    Atbalsta HTML un Markdown formatējumu. Izmanto toolbar pogas ātrai formatēšanai.
+                  </p>
+                </div>
+
+                <div>
+                  <Label>Attēls</Label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => updatePost(editingIndex, "image", e.target.files?.[0] || null)}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {typeof posts[editingIndex].image === "string" && posts[editingIndex].image && (
+                    <img 
+                      src={posts[editingIndex].image as string} 
+                      alt="Preview" 
+                      className="w-32 h-32 object-cover rounded-md mt-2" 
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button variant="outline" onClick={() => cancelEdit(editingIndex)}>
+                  Atcelt
+                </Button>
+                <Button onClick={() => handleSave(editingIndex)}>
+                  Saglabāt
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -8,10 +8,8 @@ import { ArrowLeft, Calendar, Clock, MapPin, User } from "lucide-react"
 import { marked } from 'marked'
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  // Await the params since they're now async in Next.js 15
   const { slug } = await params
   
-  // Fetch the blog post by slug
   const post = await getBlogPostBySlug(slug)
 
   if (!post) return notFound()
@@ -19,15 +17,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const wordsCount = post.excerpt.split(' ').length
   const readingTime = Math.ceil(wordsCount / 200)
 
-  // Markdown to HTML conversion function with custom styling
   const convertMarkdownToHtml = (markdown: string): string => {
-    // Simple marked conversion without custom renderer
     const html = marked(markdown, { 
       breaks: true,
       gfm: true
     }) as string
     
-    // Replace elements with inline styles using regex
     return html
       .replace(/<h1>/g, '<h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; margin-top: 2rem; color: #00332D; line-height: 1.2;">')
       .replace(/<h2>/g, '<h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem; margin-top: 1.5rem; color: #00332D; line-height: 1.3;">')
@@ -44,7 +39,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   <div className="min-h-screen bg-gray-50">
     <Navbar />
 
-      {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -61,7 +55,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       <article className="bg-white">
         <div className="max-w-4xl mx-auto px-6 py-12">
-          {/* Back button */}
           <div className="mb-8">
             <Link 
               href="/blog/raksti" 

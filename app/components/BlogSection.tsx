@@ -52,7 +52,7 @@ export default async function BlogSection() {
                   {post.title}
                 </h3>
                 <p className="text-sm text-gray-700 mb-4">
-                  {post.excerpt.length > 200 ? post.excerpt.slice(0, 200) + "..." : post.excerpt}
+                  {post.shortDescription.length > 200 ? post.shortDescription.slice(0, 200) + "..." : post.shortDescription}
                 </p>
                 <span className="text-[#007B6E] text-sm font-medium hover:underline">
                   Lasīt vairāk →

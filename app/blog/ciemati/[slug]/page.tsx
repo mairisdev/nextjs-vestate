@@ -5,6 +5,7 @@ import { notFound } from "next/navigation"
 import Navbar from "../../../components/Navbar"
 import ShareButton from "../../../components/ShareButton"
 import { Calendar, ArrowLeft, User, Tag, Clock, MapPin} from "lucide-react"
+import { marked } from "marked"
 
 interface VillagePageProps {
   params: Promise<{ slug: string }>
@@ -42,6 +43,24 @@ async function getRelatedVillages(currentId: string) {
     console.error("Error fetching related villages:", error)
     return []
   }
+}
+
+const convertMarkdownToHtml = (markdown: string): string => {
+  const html = marked(markdown, { 
+    breaks: true,
+    gfm: true
+  }) as string
+  
+  return html
+    .replace(/<h1>/g, '<h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; margin-top: 2rem; color: #00332D; line-height: 1.2;">')
+    .replace(/<h2>/g, '<h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem; margin-top: 1.5rem; color: #00332D; line-height: 1.3;">')
+    .replace(/<h3>/g, '<h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.75rem; margin-top: 1.25rem; color: #00332D; line-height: 1.4;">')
+    .replace(/<h4>/g, '<h4 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; margin-top: 1rem; color: #00332D;">')
+    .replace(/<h5>/g, '<h5 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; margin-top: 1rem; color: #00332D;">')
+    .replace(/<h6>/g, '<h6 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; margin-top: 1rem; color: #00332D;">')
+    .replace(/<strong>/g, '<strong style="font-weight: 700; color: #00332D;">')
+    .replace(/<p>/g, '<p style="margin-bottom: 1rem; line-height: 1.75; color: #374151;">')
+    .replace(/<a /g, '<a style="color: #77D4B4; text-decoration: underline; font-weight: 500;" ')
 }
 
 export default async function VillageContentPage({ params }: VillagePageProps) {
@@ -130,9 +149,16 @@ export default async function VillageContentPage({ params }: VillagePageProps) {
             </div>
           )}
 
-          <div className="text-xl text-gray-700 leading-relaxed mb-8 p-6 bg-[#77D4B4]/5 rounded-xl border-l-4 border-[#77D4B4]">
-            {content.excerpt}
-          </div>
+          <section className="bg-white border-t">
+            <div className="max-w-4xl mx-auto px-6 py-12">  
+              <div 
+                className="max-w-none"
+                dangerouslySetInnerHTML={{ 
+                  __html: convertMarkdownToHtml(content.excerpt) 
+                }}
+              />
+            </div>
+          </section>
 
           {content.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-8">

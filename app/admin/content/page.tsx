@@ -128,7 +128,6 @@ export default function ContentAdmin() {
       {successMessage && <AlertMessage type="success" message={successMessage} />}
       {errorMessage && <AlertMessage type="error" message={errorMessage} />}
 
-      {/* Filtri */}
       <div className="flex flex-col md:flex-row gap-4 bg-gray-50 p-4 rounded-lg">
         <div>
           <Label>Tips</Label>
@@ -157,7 +156,6 @@ export default function ContentAdmin() {
         </div>
       </div>
 
-      {/* Satura saraksts */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
