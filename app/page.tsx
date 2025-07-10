@@ -16,10 +16,12 @@ import ContactSection from './components/ContactSection'
 import BlogSection from './components/BlogSection'
 import FooterSection from './components/FooterSection'
 import LegalConsultSection2 from './components/LegalConsultSection2'
+import CookieConsentBanner from './components/CookieConsentBanner'
 
 export default function Home() {
   return (
     <>
+      <CookieConsentBanner />
       <HashNavigationHandler />
       <Navbar />
       <HeroSlider />
