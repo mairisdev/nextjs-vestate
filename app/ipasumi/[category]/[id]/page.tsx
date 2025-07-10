@@ -118,7 +118,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                     <Eye className="w-4 h-4" />
                     <span>{uniqueViews} unikāli skatījumi</span>
                   </div>
-                  <span>#{property.id.slice(-6).toUpperCase()}</span>
+                  <span className="font-semibold">{property.propertyProject}</span>
                 </div>
               </div>
 

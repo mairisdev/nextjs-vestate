@@ -16,7 +16,7 @@ export default async function ServicesZigZag() {
   }
 
   return (
-<section className="bg-white py-8 sm:py-16 px-4 sm:px-12">
+<section id="pakalpojumi" className="bg-white py-8 sm:py-16 px-4 sm:px-12">
   <div className="max-w-6xl mx-auto">
     <p className="text-sm font-semibold uppercase text-[#77D4B4] text-center mb-2">
       {section.subheading || "Pieredzes bagāti nekustamo īpašumu speciālisti"}

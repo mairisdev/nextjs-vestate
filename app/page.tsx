@@ -1,4 +1,5 @@
 import Navbar from './components/Navbar'
+import HashNavigationHandler from './components/HashNavigationHandler'
 import HeroSlider from './components/HeroSlider'
 import ConsultationSection from './components/ConsultationSection'
 import AgentReasons from './components/AgentReasons'
@@ -19,7 +20,8 @@ import LegalConsultSection2 from './components/LegalConsultSection2'
 export default function Home() {
   return (
     <>
-    <Navbar />
+      <HashNavigationHandler />
+      <Navbar />
       <HeroSlider />
       <main className="min-h-screen">
         <ConsultationSection />

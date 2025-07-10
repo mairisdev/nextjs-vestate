@@ -86,6 +86,7 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         </button>
       </div>
 
+      {/*
       <div className="mb-4">
         <div className="flex items-center space-x-2 mb-2">
           <span className="font-medium">Darījuma veids</span>
@@ -101,6 +102,7 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
           </div>
         </div>
       </div>
+      */}
 
       {Array.isArray(cities) && cities.length > 0 && (
         <div className="mb-4">

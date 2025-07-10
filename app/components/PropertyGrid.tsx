@@ -22,6 +22,7 @@ interface Property {
     name: string
     slug: string
   }
+  propertyProject: string
 }
 
 interface PropertyGridProps {
@@ -55,7 +56,12 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
   }
 
   const formatPrice = (price: number, currency: string) => {
-    return `${(price / 100).toLocaleString()} €`
+    return new Intl.NumberFormat('lv-LV', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price / 100)
   }
 
   const getStatusLabel = (status: string) => {
@@ -78,6 +84,11 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
       'UNAVAILABLE': 'bg-gray-600'
     }
     return colorMap[status as keyof typeof colorMap] || 'bg-gray-600'
+  }
+
+  const formatPricePerSquareMeter = (price: number, area: number, currency: string) => {
+    if (!area || area <= 0) return formatPrice(price, currency)
+    return formatPrice(price / area, currency) + ' / m²'
   }
 
   return (
@@ -126,7 +137,7 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
                 
                 {property.rooms && (
                   <div className="absolute top-3 right-3 bg-[#00332D] text-white px-2 py-1 rounded text-xs font-medium">
-                    {property.rooms} istaba{property.rooms !== 1 ? 's' : ''}
+                    {property.propertyProject}
                   </div>
                 )}
               </div>
@@ -143,7 +154,7 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
 
                 <div className="flex items-center space-x-4 text-xs text-gray-500 mb-3">
                   {property.rooms && (
-                    <span>{property.rooms}/{property.totalFloors || '?'} stāvs</span>
+                    <span>{property.rooms} istabas</span>
                   )}
                   {property.area && (
                     <span>{property.area} m²</span>
@@ -154,8 +165,15 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="text-lg font-bold text-[#00332D]">
-                    {formatPrice(property.price, property.currency)}
+                  <div>
+                    <div className="text-lg font-bold text-[#00332D]">
+                      {formatPrice(property.price, property.currency)}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {property.price != null && property.area != null
+                        ? formatPricePerSquareMeter(property.price, property.area, property.currency)
+                        : '-'}
+                    </div>
                   </div>
                 </div>
               </div>

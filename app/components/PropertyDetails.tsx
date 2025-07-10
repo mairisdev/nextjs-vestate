@@ -1,4 +1,4 @@
-import { Asterisk, Calendar, Dock, MapPin } from "lucide-react"
+import { Asterisk, Bed, BedDouble, Calendar, ChevronsUpDown, Dock, Home, MapPin, Ruler, TrendingUp } from "lucide-react"
 
 interface Property {
   id: string
@@ -27,17 +27,17 @@ interface PropertyDetailsProps {
 export default function PropertyDetails({ property }: PropertyDetailsProps) {
   const details = [
     {
-      icon: Asterisk,
+      icon: BedDouble,
       label: "Istabu skaits",
       value: property.rooms ? `${property.rooms} istabas` : "Nav norādīts"
     },
     {
-      icon: Asterisk,
+      icon: Ruler,
       label: "Platība",
       value: property.area ? `${property.area} m²` : "Nav norādīta"
     },
     {
-      icon: Asterisk,
+      icon: TrendingUp,
       label: "Stāvs",
       value: property.floor && property.totalFloors 
         ? `${property.floor}/${property.totalFloors}` 
@@ -46,12 +46,12 @@ export default function PropertyDetails({ property }: PropertyDetailsProps) {
         : "Nav norādīts"
     },
     {
-      icon: Asterisk,
+      icon: Home,
       label: "Sērija",
       value: property.series || "Nav norādīta"
     },
     {
-      icon: Asterisk,
+      icon: ChevronsUpDown,
       label: "Lifts",
       value: property.hasElevator ? "Ir" : "Nav"
     },

@@ -42,22 +42,6 @@ export default async function Navbar() {
               </a>
             )
           ))}
-          
-          {/*
-          {Array.isArray(data.dropdownItems) && data.dropdownItems.map((item: any) => (
-            item.isVisible && item.subItems && (
-              <div 
-                key={item.link}
-                className={item.isHighlighted ? 'px-2 py-1 bg-green-50 border-2 border-green-300 rounded-lg' : ''}
-              >
-                <DropdownMenu 
-                  label={item.label}
-                  subItems={item.subItems}
-                  isHighlighted={item.isHighlighted}
-                />
-              </div>
-            )
-          ))}*/}
         </nav>
 
         {/* Desktop drošība un telefons */}
