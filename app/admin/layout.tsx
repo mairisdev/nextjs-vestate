@@ -33,6 +33,7 @@ const navItems = [
   { href: "/admin/first-section", label: "1. sadaļa", icon: <FileText className="w-5 h-5" /> },
   { href: "/admin/second-section", label: "2. sadaļa", icon: <FileText className="w-5 h-5" /> },
   { href: "/admin/third-section", label: "3. sadaļa", icon: <FileText className="w-5 h-5" /> },
+  { href: "/admin/seven-section", label: "4-2. sadaļa", icon: <FileText className="w-5 h-5" /> },
   { href: "/admin/sixth-section", label: "4. sadaļa", icon: <FileText className="w-5 h-5" /> },
   { href: "/admin/agents", label: "Aģenti", icon: <Users className="w-5 h-5" /> },
   { href: "/admin/testimonials", label: "Atsauksmes", icon: <Star className="w-5 h-5" /> },

@@ -14,6 +14,7 @@ import PartnersSection from './components/PartnersSection'
 import ContactSection from './components/ContactSection'
 import BlogSection from './components/BlogSection'
 import FooterSection from './components/FooterSection'
+import LegalConsultSection2 from './components/LegalConsultSection2'
 
 export default function Home() {
   return (
@@ -23,6 +24,7 @@ export default function Home() {
       <main className="min-h-screen">
         <ConsultationSection />
         <AgentReasons />
+        <LegalConsultSection2 />
         <ServicesSection />
         <AgentsSection />
         <Testimonials />

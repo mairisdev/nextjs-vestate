@@ -14,9 +14,10 @@ export interface PropertyFiltersProps {
   currentCategory: string
   cities?: string[]
   districts?: string[]
+  propertyProjects?: string[]
 }
 
-export default function PropertyFilters({ categories, currentCategory, cities, districts }: PropertyFiltersProps) {
+export default function PropertyFilters({ categories, currentCategory, cities, districts, propertyProjects }: PropertyFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -28,6 +29,7 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
     maxArea: searchParams.get("maxArea") || "",
     city: searchParams.get("city") || "",
     district: searchParams.get("district") || "",
+    propertyProject: searchParams.get("propertyProject") || "",
   })
 
   const handleFilterChange = (key: string, value: string) => {
@@ -66,13 +68,14 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
       maxArea: "",
       city: "",
       district: "",
+      propertyProject: "",
     })
     router.push(`/ipasumi/${currentCategory}`)
   }
 
   return (
     <div className="space-y-6 bg-white p-6 rounded-xl shadow border w-full">
-      {/* Reset filters */}
+
       <div className="flex justify-between items-center mb-2">
         <span className="text-lg font-semibold text-[#00332D]">Filtri</span>
         <button
@@ -83,7 +86,6 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         </button>
       </div>
 
-      {/* Transaction type placeholder */}
       <div className="mb-4">
         <div className="flex items-center space-x-2 mb-2">
           <span className="font-medium">Darījuma veids</span>
@@ -134,7 +136,23 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         </div>
       )}
 
-      {/* Price */}
+      {Array.isArray(propertyProjects) && propertyProjects.length > 0 && (
+        <div className="mb-4">
+          <label htmlFor="propertyProject" className="block text-sm font-medium mb-1">Projekts</label>
+          <select
+            id="propertyProject"
+            value={filters.propertyProject}
+            onChange={(e) => handleFilterChange("propertyProject", e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00332D]"
+          >
+            <option value="">Visi projekti</option>
+            {propertyProjects.map((project) => (
+              <option key={project} value={project}>{project}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="mb-4">
         <h3 className="font-medium mb-2">Cena EUR</h3>
         <div className="grid grid-cols-2 gap-2">
@@ -155,7 +173,6 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         </div>
       </div>
 
-      {/* Rooms */}
       <div className="mb-4">
         <h3 className="font-medium mb-2">Istabu skaits</h3>
         <div className="grid grid-cols-6 gap-2">
@@ -179,7 +196,6 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         </div>
       </div>
 
-      {/* Area */}
       <div className="mb-4">
         <h3 className="font-medium mb-2">Platība / m²</h3>
         <div className="grid grid-cols-2 gap-2">
@@ -200,7 +216,6 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         </div>
       </div>
 
-      {/* Submit */}
       <button
         onClick={applyFilters}
         className="w-full bg-[#00332D] text-white py-3 rounded-md font-medium hover:bg-[#004940] transition-colors mt-2"

@@ -139,6 +139,15 @@ model SixthSection {
   updatedAt   DateTime @updatedAt
 }
 
+model SevenSection {
+  id          String   @id @default(cuid())
+  title       String
+  buttonText  String
+  buttonLink  String
+  imageUrl    String
+  updatedAt   DateTime @updatedAt
+}
+
 model SoldProperty {
   id          String   @id @default(cuid())
   title       String

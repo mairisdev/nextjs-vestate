@@ -33,7 +33,6 @@ export async function getPropertiesByCategory(categorySlug: string, page = 1, li
       orderBy = { createdAt: 'desc' }
   }
 
-  // Build filter conditions
   const where: any = {
     category: { slug: categorySlug },
     isActive: true,
@@ -62,6 +61,9 @@ export async function getPropertiesByCategory(categorySlug: string, page = 1, li
   }
   if (filters.district) {
     where.district = filters.district
+  }
+  if (filters.propertyProject) {
+    where.propertyProject = filters.propertyProject
   }
 
   const properties = await prisma.property.findMany({
@@ -179,4 +181,25 @@ export async function getCitiesAndDistrictsForCategory(categorySlug: string) {
   const cities = Array.from(new Set(properties.map(p => p.city).filter(Boolean)))
   const districts = Array.from(new Set(properties.map(p => p.district).filter(Boolean)))
   return { cities, districts }
+}
+
+export async function getPropertyProjectsForCategory(categorySlug: string) {
+  const properties = await prisma.property.findMany({
+    where: {
+      category: { slug: categorySlug },
+      isActive: true,
+      propertyProject: {
+        not: null
+      }
+    },
+    select: {
+      propertyProject: true,
+    },
+    distinct: ['propertyProject']
+  })
+  
+  return properties
+    .map(p => p.propertyProject)
+    .filter((project): project is string => project !== null)
+    .sort()
 }

@@ -18,6 +18,7 @@ interface MenuItem {
   link: string
   isVisible: boolean
   isDropdown: boolean
+  isHighlighted?: boolean
   subItems?: SubItem[]
 }
 
@@ -95,6 +96,7 @@ export default function NavigationSettings() {
       link: "#", 
       isVisible: true, 
       isDropdown: false,
+      isHighlighted: false,
       subItems: []
     }])
   }
@@ -234,7 +236,7 @@ export default function NavigationSettings() {
         <div className="space-y-4">
           {menuItems.map((item, index) => (
             <div key={index} className="border rounded-lg p-4 bg-gray-50">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
                 <div>
                   <Label>Nosaukums</Label>
                   <Input
@@ -269,6 +271,15 @@ export default function NavigationSettings() {
                     onChange={() => toggleDropdown(index)}
                   />
                   <Label>Dropdown</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={item.isHighlighted || false}
+                    onChange={(e) => updateMenuItem(index, 'isHighlighted', e.target.checked)}
+                  />
+                  <Label>Izcelt</Label>
                 </div>
 
                 <div className="flex space-x-2">

@@ -1,8 +1,9 @@
-import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForCategory } from "@/lib/queries/properties"
+import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForCategory, getPropertyProjectsForCategory } from "@/lib/queries/properties"
 import PropertyGrid from "../../components/PropertyGrid"
 import PropertyFiltersClientWrapper from "../../components/PropertyFiltersClientWrapper"
 import { notFound } from "next/navigation"
 import Navbar from "../../components/Navbar"
+
 
 interface PageProps {
   params: Promise<{ category: string }>
@@ -15,6 +16,7 @@ interface PageProps {
     maxArea?: string
     city?: string
     district?: string
+    propertyProject?: string
     'kartot-pec'?: string
   }>
 }
@@ -39,6 +41,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     maxArea: resolvedSearchParams.maxArea || '',
     city: resolvedSearchParams.city || '',
     district: resolvedSearchParams.district || '',
+    propertyProject: resolvedSearchParams.propertyProject || '',
   }
   const sort = resolvedSearchParams['kartot-pec'] || ""
   const { properties, total, pages } = await getPropertiesByCategory(resolvedParams.category, page, 12, sort, filters)
@@ -57,6 +60,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   }
 
   const { cities, districts } = await getCitiesAndDistrictsForCategory(resolvedParams.category)
+  const propertyProjects = await getPropertyProjectsForCategory(resolvedParams.category) || []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -83,6 +87,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
               currentCategory={resolvedParams.category}
               cities={cities.filter((city: string | null): city is string => city !== null)}
               districts={districts.filter((district: string | null): district is string => district !== null)}
+              propertyProjects={propertyProjects}
             />
           </div>
 
