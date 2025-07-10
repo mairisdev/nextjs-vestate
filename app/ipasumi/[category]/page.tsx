@@ -17,6 +17,7 @@ interface PageProps {
     city?: string
     district?: string
     propertyProject?: string
+    status: string
     'kartot-pec'?: string
   }>
 }
@@ -93,7 +94,10 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
           <div className="flex-1">
             <PropertyGrid 
-              properties={properties}
+              properties={properties.map(p => ({
+                ...p,
+                propertyProject: p.propertyProject ?? ''
+              }))}
               currentPage={page}
               totalPages={pages}
               category={resolvedParams.category}
