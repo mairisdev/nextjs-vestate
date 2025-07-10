@@ -25,9 +25,11 @@ export default async function BlogSection() {
         <p className="text-md uppercase text-[#77D4B4] font-semibold tracking-wide mb-2">
           Jaunākie raksti
         </p>
-        <h2 className="text-3xl md:text-4xl font-bold text-[#00332D] mb-12">
-          Mūsu bloga ieraksti un padomi
-        </h2>
+        <Link href="/blog">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#00332D] mb-12 hover:text-[#77D4B4] transition-colors cursor-pointer">
+            Bloga un izglītojošie raksti
+          </h2>
+        </Link>
 
         <div className="grid md:grid-cols-3 gap-8">
           {blogPosts.map((post: any) => (
