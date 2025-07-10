@@ -18,6 +18,7 @@ export async function POST(req: Request) {
   const title = formData.get("title") as string
   const date = formData.get("date") as string
   const excerpt = formData.get("excerpt") as string
+  const shortDescription = formData.get("shortDescription") as string
   const existingImageUrl = formData.get("existingImageUrl") as string
   const file = formData.get("image") as File | null
   const id = formData.get("id") as string // Get the blog ID from the form data
@@ -41,11 +42,11 @@ export async function POST(req: Request) {
   if (id) {
     post = await prisma.blogPost.update({
       where: { id },
-      data: { title, date, excerpt, slug, imageUrl },
+      data: { title, date, excerpt, shortDescription, slug, imageUrl }
     })
   } else {
     post = await prisma.blogPost.create({
-      data: { title, date, excerpt, slug, imageUrl },
+      data: { title, date, excerpt, shortDescription, slug, imageUrl }
     })
   }
 

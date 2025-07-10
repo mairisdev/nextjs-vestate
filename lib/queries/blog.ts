@@ -16,6 +16,7 @@ export async function createBlogPost(
   title: string,
   date: string,
   excerpt: string,
+  shortDescription: string,
   slug: string,
   imageUrl: string
 ) {
@@ -24,6 +25,7 @@ export async function createBlogPost(
       title,
       date,
       excerpt,
+      shortDescription,
       slug,
       imageUrl,
     },
@@ -43,12 +45,12 @@ export async function updateBlogPost(
       title,
       date,
       excerpt,
+      shortDescription,
       imageUrl,
     },
   })
 }
 
-// ✅ Jaunā funkcija vienam blogam pēc slug
 export async function getBlogPostBySlug(slug: string) {
   return await prisma.blogPost.findUnique({
     where: { slug },

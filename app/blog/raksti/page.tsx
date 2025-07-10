@@ -23,7 +23,6 @@ export default async function BlogPostsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -36,7 +35,6 @@ export default async function BlogPostsPage() {
         </div>
       </div>
 
-      {/* Header */}
       <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center space-x-4 mb-4">
@@ -44,7 +42,7 @@ export default async function BlogPostsPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-[#00332D] rounded-lg">
+              <div className="p-3 bg-[#77D4B4] rounded-lg">
                 <BookOpen className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -60,7 +58,6 @@ export default async function BlogPostsPage() {
         </div>
       </section>
 
-      {/* Content */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-6">
           {blogPosts.length > 0 ? (
@@ -125,7 +122,6 @@ export default async function BlogPostsPage() {
         </div>
       </section>
 
-      {/* Featured section */}
       {blogPosts.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-6">

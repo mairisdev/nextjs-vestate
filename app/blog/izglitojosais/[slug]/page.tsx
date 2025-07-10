@@ -52,17 +52,13 @@ export default async function EducationalContentPage({ params }: EducationalPage
     notFound()
   }
 
-  const relatedContent = await getRelatedContent(content.id)
-
-  // Parse content for reading time estimation
   const wordsCount = content.content.split(' ').length
-  const readingTime = Math.ceil(wordsCount / 200) // ~200 words per minute
+  const readingTime = Math.ceil(wordsCount / 200)
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -77,10 +73,9 @@ export default async function EducationalContentPage({ params }: EducationalPage
         </div>
       </div>
 
-      {/* Article Header */}
       <article className="bg-white">
         <div className="max-w-4xl mx-auto px-6 py-12">
-          {/* Back button */}
+
           <div className="mb-8">
             <Link 
               href="/blog/izglitojosais" 
@@ -91,7 +86,6 @@ export default async function EducationalContentPage({ params }: EducationalPage
             </Link>
           </div>
 
-          {/* Category badge */}
           <div className="flex items-center mb-6">
             <div className="inline-flex items-center px-3 py-1 bg-[#77D4B4]/10 text-[#00332D] rounded-full text-sm font-medium">
               <GraduationCap className="w-4 h-4 mr-2" />
@@ -99,12 +93,10 @@ export default async function EducationalContentPage({ params }: EducationalPage
             </div>
           </div>
 
-          {/* Title */}
           <h1 className="text-4xl md:text-5xl font-bold text-[#00332D] mb-6 leading-tight">
             {content.title}
           </h1>
 
-          {/* Meta information */}
           <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 mb-8">
             <div className="flex items-center">
               <User className="w-4 h-4 mr-2" />
@@ -126,7 +118,6 @@ export default async function EducationalContentPage({ params }: EducationalPage
             </div>
           </div>
 
-          {/* Featured Image */}
           {content.featuredImage && (
             <div className="relative w-full h-96 md:h-[500px] mb-8 rounded-xl overflow-hidden">
               <Image
@@ -139,12 +130,10 @@ export default async function EducationalContentPage({ params }: EducationalPage
             </div>
           )}
 
-          {/* Excerpt */}
           <div className="text-xl text-gray-700 leading-relaxed mb-8 p-6 bg-[#77D4B4]/5 rounded-xl border-l-4 border-[#77D4B4]">
             {content.excerpt}
           </div>
 
-          {/* Tags */}
           {content.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-8">
               {content.tags.map((tag, index) => (
@@ -161,10 +150,9 @@ export default async function EducationalContentPage({ params }: EducationalPage
         </div>
       </article>
 
-      {/* Main Content */}
       <section className="bg-white border-t">
         <div className="max-w-4xl mx-auto px-6 py-12">
-          {/* Video if available */}
+
           {content.videoUrl && (
             <div className="mb-8">
               <div className="aspect-video w-full rounded-xl overflow-hidden">
@@ -178,7 +166,6 @@ export default async function EducationalContentPage({ params }: EducationalPage
             </div>
           )}
 
-          {/* Video file if available */}
           {content.videoFile && (
             <div className="mb-8">
               <video 
@@ -192,13 +179,11 @@ export default async function EducationalContentPage({ params }: EducationalPage
             </div>
           )}
 
-          {/* Content */}
           <div 
             className="prose prose-lg max-w-none prose-headings:text-[#00332D] prose-links:text-[#77D4B4] prose-links:no-underline hover:prose-links:underline prose-strong:text-[#00332D] prose-img:rounded-xl prose-img:shadow-lg"
             dangerouslySetInnerHTML={{ __html: content.content }}
           />
 
-          {/* Additional Images */}
           {content.images.length > 0 && (
             <div className="mt-12">
               <h3 className="text-xl font-semibold text-[#00332D] mb-6">Papildu attēli</h3>
@@ -217,7 +202,6 @@ export default async function EducationalContentPage({ params }: EducationalPage
             </div>
           )}
 
-          {/* Share section - Updated to use Client Component */}
           <div className="mt-12 pt-8 border-t">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-[#00332D]">Dalīties ar citiem</h3>
@@ -227,7 +211,6 @@ export default async function EducationalContentPage({ params }: EducationalPage
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-16 bg-[#77D4B4]/5">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-2xl font-bold text-[#00332D] mb-4">
