@@ -39,11 +39,12 @@ export async function POST(request: NextRequest) {
 
     const translation = await prisma.translation.upsert({
       where: {
-        key_locale: { key, locale }
+        // šeit jālieto precīzs nosaukums, kas atbilst unikālā indeksa vārdam
+        unique_translation: { key, locale }
       },
       update: { value, category },
       create: { key, locale, value, category }
-    });
+    });    
 
     return NextResponse.json(translation);
   } catch (error) {
