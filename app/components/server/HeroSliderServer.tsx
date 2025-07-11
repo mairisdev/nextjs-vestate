@@ -1,19 +1,34 @@
 import { getTranslations } from 'next-intl/server';
 import HeroSliderClient from '../HeroSlider';
+import { headers } from 'next/headers';
 
 async function getSlides() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/slides`, {
-      cache: 'no-store'
+    // Iegūstam host no headers
+    const headersList = await headers();
+    const host = headersList.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    
+    // Veidojam pilnu URL
+    const baseUrl = `${protocol}://${host}`;
+    
+    const response = await fetch(`${baseUrl}/api/slides`, {
+      cache: 'no-store',
+      // Pievienojam timeout un error handling
+      signal: AbortSignal.timeout(5000) // 5 sekunžu timeout
     });
     
     if (!response.ok) {
-      throw new Error('Failed to fetch slides');
+      console.error(`Failed to fetch slides: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch slides: ${response.status}`);
     }
     
-    return await response.json();
+    const slides = await response.json();
+    console.log('Fetched slides:', slides); // Debug log
+    return Array.isArray(slides) ? slides : [];
   } catch (error) {
     console.error('Error fetching slides:', error);
+    // Atgriežam tukšu masīvu vietā null, lai komponente varētu rādīt default saturu
     return [];
   }
 }
