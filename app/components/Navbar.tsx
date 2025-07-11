@@ -4,9 +4,12 @@ import { getNavigationSettings } from "@/lib/queries/navigation"
 import MobileMenu from "./MobileMenu"
 //import DropdownMenu from "./DropdownMenu"
 import Link from "next/link"
+import {getTranslations} from 'next-intl/server';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default async function Navbar() {
   const data = await getNavigationSettings();
+  const t = await getTranslations('Navbar');
   if (!data) return null;
 
   return (
@@ -17,17 +20,15 @@ export default async function Navbar() {
           <img
             src={`/uploads/navigation/${data.logoUrl}`}
             alt={data.logoAlt || "Vestate logo"}
-            className="w-auto h-12 md:h-20 object-contain"
+            className="w-auto h-12 md:h-30 object-contain"
           />
         ) : (
           <p className="text-gray-500 italic">Nav pievienots logo</p>
         )}
       </Link>
 
-        {/* Desktop navigācija */}
         <nav className="hidden md:flex items-center space-x-6 text-md text-[#00332D]">
-          {/* Parastie linki */}
-          {Array.isArray(data.menuItems) && data.menuItems.map((item: any) => (
+          {Array.isArray(data.menuItems) && data.menuItems.map((item: any, index: number) => (
             item.isVisible && (
               <a 
                 key={item.link} 
@@ -38,14 +39,14 @@ export default async function Navbar() {
                     : ''
                 }`}
               >
-                {item.label}
+                {t(`Navlink${index + 1}`)}
               </a>
             )
           ))}
         </nav>
 
-        {/* Desktop drošība un telefons */}
         <div className="hidden md:flex items-center space-x-6">
+        <LanguageSwitcher />
           <div className="flex items-center">
             <Image
               src="/drosiba.webp"
@@ -66,7 +67,6 @@ export default async function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu */}
         <MobileMenu 
           phone={data.phone}
           menuItems={data.menuItems || []}

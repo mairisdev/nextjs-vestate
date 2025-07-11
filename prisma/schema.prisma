@@ -334,3 +334,17 @@ enum ContentType {
   EDUCATIONAL
   VILLAGES
 }
+
+model Translation {
+  id        String   @id @default(cuid())
+  key       String
+  locale    String
+  value     String
+  category  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, locale], name: "unique_translation")
+  @@index([locale])
+  @@index([category])
+}
