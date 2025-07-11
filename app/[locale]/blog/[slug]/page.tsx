@@ -1,8 +1,8 @@
 import { getBlogPostBySlug, getAllBlogPosts } from "@/lib/queries/blog"
 import Image from "next/image"
 import { notFound } from "next/navigation"
-import Navbar from '../../components/Navbar'
-import ShareButton from "../../components/ShareButton"
+import Navbar from '../../../components/Navbar'
+import ShareButton from "../../../components/ShareButton"
 import Link from "next/link"
 import { ArrowLeft, Calendar, Clock, MapPin, User } from "lucide-react"
 import { marked } from 'marked'

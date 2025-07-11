@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
-import PropertyImageGallery from "../../../components/PropertyImageGallery"
-import PropertyDetails from "../../../components/PropertyDetails"
-import PropertyContact from "../../../components/PropertyContact"
+import PropertyImageGallery from "../../../../components/PropertyImageGallery"
+import PropertyDetails from "../../../../components/PropertyDetails"
+import PropertyContact from "../../../../components/PropertyContact"
 import Link from "next/link"
 import { ArrowLeft, MapPin, Eye } from "lucide-react"
 import { incrementUniqueView } from "@/lib/utils/property-views"
-import Navbar from "../../../components/Navbar"
+import Navbar from "../../../../components/Navbar"
 
 interface PropertyPageProps {
   params: Promise<{ category: string; id: string }>

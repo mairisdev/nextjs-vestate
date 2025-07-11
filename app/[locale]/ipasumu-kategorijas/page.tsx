@@ -1,7 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { prisma } from "@/lib/prisma"
-import Navbar from "../components/Navbar"
+import Navbar from "../../components/Navbar"
 
 export default async function PropertyLandingPage() {
   const categories = await prisma.propertyCategory.findMany({

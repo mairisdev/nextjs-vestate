@@ -1,7 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
-import Navbar from "../components/Navbar"
+import Navbar from "../../components/Navbar"
 import { GraduationCap, Home, BookOpen, Calendar, User, ArrowRight } from "lucide-react"
 
 async function getBlogPosts() {

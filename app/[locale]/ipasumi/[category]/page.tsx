@@ -1,8 +1,8 @@
 import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForCategory, getPropertyProjectsForCategory } from "@/lib/queries/properties"
-import PropertyGrid from "../../components/PropertyGrid"
-import PropertyFiltersClientWrapper from "../../components/PropertyFiltersClientWrapper"
+import PropertyGrid from "../../../components/PropertyGrid"
+import PropertyFiltersClientWrapper from "../../../components/PropertyFiltersClientWrapper"
 import { notFound } from "next/navigation"
-import Navbar from "../../components/Navbar"
+import Navbar from "../../../components/Navbar"
 
 
 interface PageProps {

@@ -2,8 +2,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
-import Navbar from "../../../components/Navbar"
-import ShareButton from "../../../components/ShareButton"
+import Navbar from "../../../../components/Navbar"
+import ShareButton from "../../../../components/ShareButton"
 import { Calendar, ArrowLeft, GraduationCap, User, Tag, Clock } from "lucide-react"
 
 interface EducationalPageProps {
