@@ -1,9 +1,9 @@
 import Navbar from '../components/Navbar'
 import HashNavigationHandler from '../components/HashNavigationHandler'
-import FirstSection from '../components/server/FirstSection'
-import AgentReasons from '../components/server/AgentReasons'
+import FirstSection from '../components/server/FirstSectionServer'
+import AgentReasons from '../components/server/AgentReasonsServer'
 import ServicesSection from '../components/ServicesSection'
-import AgentsSection from '../components/server/AgentsSection'
+import AgentsSection from '../components/server/AgentsSectionServer'
 import Testimonials from '../components/Testimonials'
 import LegalConsultSection from '../components/LegalConsultSection'
 import RecentSales from '../components/RecentSales'
@@ -16,7 +16,7 @@ import BlogSection from '../components/BlogSection'
 import FooterSection from '../components/FooterSection'
 import LegalConsultSection2 from '../components/LegalConsultSection2'
 import CookieConsentBanner from '../components/CookieConsentBanner'
-import HeroSliderServer from '../components/server/HeroSliderServer'
+import HeroSlider from '../components/server/HeroSliderServer'
 
 export default function Home() {
   return (
@@ -24,7 +24,7 @@ export default function Home() {
       <CookieConsentBanner />
       <HashNavigationHandler />
       <Navbar />
-      <HeroSliderServer />
+      <HeroSlider />
       <main className="min-h-screen">
         <FirstSection />
         <AgentReasons />
