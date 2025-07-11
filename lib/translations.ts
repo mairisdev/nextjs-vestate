@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 
-// Izveido prisma instance
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
@@ -19,7 +18,6 @@ export async function getTranslations(locale: string, category?: string) {
       where,
     });
 
-    // Pārveido uz objektu formātu
     const result: Record<string, any> = {};
     
     translations.forEach(translation => {

@@ -2,7 +2,7 @@
 import {getRequestConfig} from 'next-intl/server';
 import {hasLocale} from 'next-intl';
 import {routing} from './routing';
-import { getTranslations } from '@/lib/translations';
+import { getTranslations } from '@/lib/translations'; // Izmanto jūsu funkciju
  
 export default getRequestConfig(async ({requestLocale}) => {
   const requested = await requestLocale;
@@ -10,7 +10,7 @@ export default getRequestConfig(async ({requestLocale}) => {
     ? requested
     : routing.defaultLocale;
  
-  // Iegūst tulkojumus no datubāzes
+  // Ielādē visus tulkojumus konkrētajai valodai
   const messages = await getTranslations(locale);
  
   return {
