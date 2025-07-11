@@ -52,7 +52,7 @@ export async function upsertTranslation(
   try {
     return await prisma.translation.upsert({
       where: {
-        key_locale: { key, locale }
+        unique_translation: { key, locale }
       },
       update: { value, category },
       create: { key, locale, value, category }
