@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import AlertMessage from "./ui/alert-message"
 
@@ -104,9 +105,17 @@ export default function ContactSection({ data, translations }: ContactSectionPro
       <div className="max-w-7xl mx-auto grid gap-12 sm:grid-cols-1 md:grid-cols-2 items-start">
 
         <div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#00332D] mb-4 whitespace-pre-line">
-            {heading.includes('28446677') ? heading.replace('28446677', `tel:${data?.phone || '28446677'}`) : heading}
-          </h2>
+          {heading.includes('28446677') || /\d{8}/.test(heading) ? (
+            <Link href={`tel:${data?.phone || '28446677'}`}>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#00332D] mb-4 whitespace-pre-line hover:text-[#77D4B4] transition-colors cursor-pointer">
+                {heading}
+              </h2>
+            </Link>
+          ) : (
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#00332D] mb-4 whitespace-pre-line">
+              {heading}
+            </h2>
+          )}
           <p className="text-gray-600 mb-8 text-lg leading-relaxed">
             {subtext}
           </p>
