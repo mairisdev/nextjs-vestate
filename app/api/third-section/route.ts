@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest, NextResponse } from "next/server"
+import { syncThirdSectionTranslations } from "@/lib/translationSync"
 
 export async function GET() {
   try {
@@ -33,6 +34,8 @@ export async function POST(req: NextRequest) {
         imageUrl,
       },
     })
+
+    await syncThirdSectionTranslations(updatedSection)
 
     return NextResponse.json(updatedSection, { status: 200 })
   } catch (error) {

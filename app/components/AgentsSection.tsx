@@ -6,14 +6,10 @@ import Image from "next/image"
 import ImageModal from "./ImageModal"
 
 type Translations = {
-  sectionTitle: string
   reviewsButton: string
   noReviewsText: string
   imageClickHint: string
   agentImageAlt: string
-  Amats1: string
-  Amats2: string
-  Amats3: string
 }
 
 interface AgentsSectionClientProps {
@@ -31,7 +27,7 @@ export default function AgentsSectionClient({ agents, translations }: AgentsSect
     <section id="musu-komanda" className="py-20 px-4 md:px-12 bg-[#F3F4F6]">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-3xl font-bold text-center text-[#00332D] mb-12">
-          {translations.sectionTitle}
+          Mūsu aģenti
         </h2>
 
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 items-start">
@@ -53,7 +49,7 @@ export default function AgentsSectionClient({ agents, translations }: AgentsSect
               <div className="p-4 text-[#00332D] flex flex-col justify-between flex-grow">
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold">{agent.name}</h3>
-                  <p className="text-sm">{translations.Amats1}</p>
+                  <p className="text-sm">{agent.title}</p>
                   <p className="text-sm text-gray-500 mt-1">{agent.phone}</p>
                 </div>
 

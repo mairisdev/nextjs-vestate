@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest, NextResponse } from "next/server"
+import { syncAgentReasonsTranslations } from "@/lib/translationSync"
 
 export async function GET() {
   try {
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     const updated = await prisma.secondSection.upsert({
-      where: { id: "second-section-static-id" }, // izmantojam statisku ID
+      where: { id: "second-section-static-id" },
       update: { heading, imageUrl, reasons },
       create: {
         id: "second-section-static-id",
@@ -29,6 +30,8 @@ export async function POST(req: NextRequest) {
         reasons,
       },
     })
+
+    await syncAgentReasonsTranslations(updated)
 
     return NextResponse.json(updated, { status: 200 })
   } catch (error) {

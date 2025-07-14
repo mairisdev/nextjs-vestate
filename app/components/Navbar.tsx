@@ -20,7 +20,7 @@ export default async function Navbar() {
           <img
             src={`/uploads/navigation/${data.logoUrl}`}
             alt={data.logoAlt || "Vestate logo"}
-            className="w-auto h-12 md:h-30 object-contain"
+            className="w-auto h-16 md:h-16 lg:h-20 object-contain"
           />
         ) : (
           <p className="text-gray-500 italic">Nav pievienots logo</p>

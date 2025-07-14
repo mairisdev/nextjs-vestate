@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db"
 import { writeFile } from "fs/promises"
 import path from "path"
 import { v4 as uuidv4 } from "uuid"
+import { syncNavigationTranslations } from "@/lib/translationSync"
 
 export async function GET() {
   const settings = await prisma.navigationSettings.findFirst()
@@ -56,6 +57,8 @@ export async function POST(req: Request) {
         logoUrl: logoUrl || null,
       },
     })
+
+    await syncNavigationTranslations(updated)
 
     return NextResponse.json(updated)
   }

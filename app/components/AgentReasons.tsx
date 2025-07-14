@@ -30,29 +30,17 @@ interface AgentReasonsClientProps {
 }
 
 export default function AgentReasonsClient({ data, translations }: AgentReasonsClientProps) {
-  // Ja nav tulkojumu, nerādām sekciju
   if (!translations.defaultHeading) {
     return null;
   }
 
-  // IZMANTOJAM TIKAI TULKOJUMUS
   const heading = translations.defaultHeading;
-  const imageUrl = data?.imageUrl || "/default-agent-image.webp"; // Attēlu varam ņemt no DB
+  const imageUrl = data?.imageUrl || "/default-agent-image.webp";
   
-  // Izmantojam TIKAI tulkojumus kā reasons (NEVIS datus no API)
-  const reasons = [
-    translations.reason1,
-    translations.reason2,
-    translations.reason3,
-    translations.reason4,
-    translations.reason5,
-    translations.reason6,
-    translations.reason7,
-    translations.reason8,
-    translations.reason9,
-    translations.reason10,
-    translations.reason11,
-  ].filter(reason => reason && reason.trim() !== ''); // Filtrējam tukšos
+  const reasonKeys = Array.from({ length: 20 }, (_, i) => `reason${i + 1}`);
+  const reasons = reasonKeys
+    .map(key => translations[key as keyof Translations])
+    .filter(reason => reason && reason.trim() !== '');  
 
   if (reasons.length === 0) return null;
 

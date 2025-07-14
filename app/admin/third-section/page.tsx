@@ -67,7 +67,7 @@ export default function ThirdSectionSettings() {
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto py-10">
-      <h2 className="text-2xl font-bold text-[#00332D]">Trešās sadaļas iestatījumi</h2>
+      <h2 className="text-2xl font-bold text-[#00332D]">Pakalpojumi iestatījumi</h2>
 
       {showSuccess && (
         <AlertMessage

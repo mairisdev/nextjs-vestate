@@ -1,21 +1,33 @@
-import AgentsSectionClient from "../AgentsSection"
-import { getAgents } from "@/lib/queries/agents"
-import { getTranslations } from 'next-intl/server';
+import { getAgents } from "@/lib/queries/agents";
+import { getTranslations } from "next-intl/server";
+import AgentsSectionClient from "../AgentsSection";
 
 export default async function AgentsSectionServer() {
-  const agents = await getAgents()
-  const t = await getTranslations('AgentsSection');
-  
+  const agentsRaw = await getAgents();
+  const t = await getTranslations("AgentsSection");
+
   const translations = {
-    sectionTitle: t('sectionTitle'),
-    reviewsButton: t('reviewsButton'), 
-    noReviewsText: t('noReviewsText'),
-    imageClickHint: t('imageClickHint'),
-    agentImageAlt: t('agentImageAlt'),
-    Amats1: t('Amats1'),
-    Amats2: t('Amats2'),
-    Amats3: t('Amats3'),
+    reviewsButton: t("reviewsButton"),
+    noReviewsText: t("noReviewsText"),
+    imageClickHint: t("imageClickHint"),
+    agentImageAlt: t("agentImageAlt"),
   };
 
-  return <AgentsSectionClient agents={agents} translations={translations} />
+  const localizedAgents = agentsRaw.map((agent, index) => {
+    const fallback = (key: string, defaultValue: string) => {
+      try {
+        return t(key);
+      } catch {
+        return defaultValue;
+      }
+    };
+
+    return {
+      ...agent,
+      name: fallback(`agentName${index + 1}`, agent.name || ""),
+      title: fallback(`agentTitle${index + 1}`, agent.title || ""),
+    };
+  });
+
+  return <AgentsSectionClient agents={localizedAgents} translations={translations} />;
 }

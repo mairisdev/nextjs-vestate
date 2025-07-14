@@ -1,7 +1,9 @@
+// app/api/seven-section/route.ts
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { writeFile } from "fs/promises"
 import path from "path"
+import { syncSevenSectionTranslations } from "@/lib/translationSync"
 
 export async function GET() {
   try {
@@ -21,13 +23,12 @@ export async function POST(req: Request) {
     const buttonText = formData.get("buttonText") as string
     const buttonLink = formData.get("buttonLink") as string
     const file = formData.get("image") as File | null
-
     let imageUrl = formData.get("existingImageUrl") as string || ""
 
     if (file && file.size > 0) {
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
-      const fileName = `section6_${Date.now()}.webp`
+      const fileName = `section7_${Date.now()}.webp`
       const filePath = path.join(process.cwd(), "public/seven-section", fileName)
       await writeFile(filePath, buffer)
       imageUrl = `/seven-section/${fileName}`
@@ -47,6 +48,8 @@ export async function POST(req: Request) {
         data: { title, buttonText, buttonLink, imageUrl },
       })
     }
+
+    await syncSevenSectionTranslations(updated)
 
     return NextResponse.json(updated)
   } catch (error) {

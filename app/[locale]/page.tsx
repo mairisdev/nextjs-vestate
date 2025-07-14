@@ -14,7 +14,7 @@ import PartnersSection from '../components/PartnersSection'
 import ContactSection from '../components/ContactSection'
 import BlogSection from '../components/BlogSection'
 import FooterSection from '../components/FooterSection'
-import LegalConsultSection2 from '../components/LegalConsultSection2'
+import LegalConsultSection2 from '../components/SevenSection'
 import CookieConsentBanner from '../components/CookieConsentBanner'
 import HeroSlider from '../components/server/HeroSliderServer'
 

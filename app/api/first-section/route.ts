@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest, NextResponse } from "next/server"
+import { syncFirstSectionTranslations } from "@/lib/translationSync"
 
 export async function GET() {
   try {
@@ -44,7 +45,10 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    await syncFirstSectionTranslations(updatedSection)
+
     return NextResponse.json(updatedSection, { status: 200 })
+
   } catch (error) {
     console.error("Error updating first section:", error)
     return NextResponse.json({ error: "Server error" }, { status: 500 })

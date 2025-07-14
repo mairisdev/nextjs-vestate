@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid"
 import { NextResponse, NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import fs from "fs"
+import { syncAgentTranslations } from "@/lib/translationSync"
 
 export async function GET() {
   try {
@@ -87,31 +88,39 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const upserted = await prisma.agent.upsert({
-        where: {
-          name_phone: {
+      let upserted
+      if (agent.id) {
+        // Esošs aģents — atjauno datus
+        await prisma.agentReview.deleteMany({ where: { agentId: agent.id } })
+      
+        upserted = await prisma.agent.update({
+          where: { id: agent.id },
+          data: {
             name: agent.name,
+            title: agent.title,
             phone: agent.phone,
+            image: imageUrl,
+            reviews: {
+              create: reviewsToCreate,
+            },
           },
-        },
-        update: {
-          title: agent.title,
-          image: imageUrl,
-          reviews: {
-            deleteMany: {},
-            create: reviewsToCreate,
+        })
+      } else {
+        // Jauns aģents — izveido
+        upserted = await prisma.agent.create({
+          data: {
+            name: agent.name,
+            title: agent.title,
+            phone: agent.phone,
+            image: imageUrl,
+            reviews: {
+              create: reviewsToCreate,
+            },
           },
-        },
-        create: {
-          name: agent.name,
-          title: agent.title,
-          phone: agent.phone,
-          image: imageUrl,
-          reviews: {
-            create: reviewsToCreate,
-          },
-        },
-      })
+        })
+      }
+      
+      await syncAgentTranslations(createdAgents)
 
       createdAgents.push(upserted)
     } catch (err) {

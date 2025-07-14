@@ -26,8 +26,8 @@ export default function FirstSectionClient({ sectionData, translations }: FirstS
   }
 
   // Izmantojam vai nu datus no API, vai tulkojumus kā fallback
-  const headline = translations.defaultHeadline;
-  const buttonText = translations.defaultButtonText;
+  const headline = translations.defaultHeadline || sectionData?.headline || "";
+  const buttonText = translations.defaultButtonText || sectionData?.buttonText || "";  
   const buttonLink = sectionData?.buttonLink || "#";
   const backgroundImage = sectionData?.backgroundImage || "/default-image.webp";
 

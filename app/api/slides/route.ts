@@ -1,11 +1,13 @@
 import { PrismaClient } from "@prisma/client"
+import { syncSlideTranslations } from "@/lib/translationSync"
+
 const prisma = new PrismaClient()
 
 // GET endpoint to fetch all slides
 export async function GET() {
   try {
     const slides = await prisma.slide.findMany({
-      orderBy: { order: "asc" }, // Atgriež slaidus pēc secības
+      orderBy: { order: "asc" },
     })
     return new Response(JSON.stringify(slides), { status: 200 })
   } catch (error) {
@@ -14,14 +16,14 @@ export async function GET() {
   }
 }
 
-// POST endpoint to create or update a slide
 export async function POST(req: Request) {
   try {
     const data = await req.json()
-    
-    // Atjaunojam esošo slaidu vai pievienojam jaunu
+
+    let slide
+
     if (data.id) {
-      const updatedSlide = await prisma.slide.update({
+      slide = await prisma.slide.update({
         where: { id: data.id },
         data: {
           title: data.title,
@@ -29,27 +31,29 @@ export async function POST(req: Request) {
           description: data.description,
           buttonText: data.buttonText,
           buttonLink: data.buttonLink,
-          imageUrl: data.imageUrl || '',
-          order: data.order || 0, // Saglabājam secību
+          imageUrl: data.imageUrl,
+          order: data.order,
         },
       })
-      return new Response(JSON.stringify(updatedSlide), { status: 200 })
     } else {
-      const newSlide = await prisma.slide.create({
+      slide = await prisma.slide.create({
         data: {
           title: data.title,
           subtitle: data.subtitle,
           description: data.description,
           buttonText: data.buttonText,
           buttonLink: data.buttonLink,
-          imageUrl: data.imageUrl || '',
-          order: data.order || 0, // Saglabājam secību
+          imageUrl: data.imageUrl,
+          order: data.order,
         },
       })
-      return new Response(JSON.stringify(newSlide), { status: 201 })
     }
+
+    await syncSlideTranslations(slide)
+
+    return new Response(JSON.stringify(slide), { status: 200 })
   } catch (error) {
-    console.error("Error creating or updating slide", error)
-    return new Response("Server error", { status: 500 })
+    console.error("Error saving slide", error)
+    return new Response("Error saving slide", { status: 500 })
   }
 }
