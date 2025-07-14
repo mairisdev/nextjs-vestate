@@ -52,6 +52,7 @@ export default function TranslationManager() {
     'Navbar': 'Navigācijas josla',
     'PartnersSection': 'Partneru sekcija',
     'PrivateOffers': 'Privātie piedāvājumi',
+    'PropertyCategories': 'Īpašumu kategorijas',
     'PropertyContact': 'Īpašuma kontakti',
     'PropertyDetails': 'Īpašuma detaļas',
     'PropertyFilters': 'Īpašuma filtri',

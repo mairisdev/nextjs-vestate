@@ -62,9 +62,9 @@ export default function FooterSection({ data, translations }: FooterSectionProps
           <h3 className="font-semibold mb-4 text-white">{translations.sitemapTitle}</h3>
           <ul className="space-y-2 text-sm text-gray-300">
             <li><Link href="/">{translations.homeLink}</Link></li>
-            <li><Link href="/par-mums">{translations.aboutLink}</Link></li>
-            <li><Link href="/ipasumi">{translations.propertiesLink}</Link></li>
-            <li><Link href="/kontakti">{translations.contactLink}</Link></li>
+            <li><Link href="pakalpojumi">{translations.aboutLink}</Link></li>
+            <li><Link href="/ipasumu-kategorijas">{translations.propertiesLink}</Link></li>
+            <li><Link href="kontakti">{translations.contactLink}</Link></li>
           </ul>
         </div>
 

@@ -479,7 +479,7 @@ export async function POST(request: NextRequest) {
           data: { developerName: value }
         })
       }
-      // Citas atslēgas (sitemapTitle, homeLink, utt.) ir tikai tulkojumi
+
     }
   }
     
