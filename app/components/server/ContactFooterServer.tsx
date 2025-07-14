@@ -42,7 +42,7 @@ export async function ContactSectionServer() {
   const t = await getTranslations("ContactSection")
 
   // Sagatavo ContactSection tulkojumus
-  const contactTranslations: { [key: string]: string } = {
+  const contactTranslations = {
     defaultHeading: (() => {
       try {
         return t('defaultHeading');
@@ -220,7 +220,7 @@ export async function FooterSectionServer() {
   const t = await getTranslations("FooterSection")
 
   // Sagatavo FooterSection tulkojumus
-  const footerTranslations: { [key: string]: string } = {
+  const footerTranslations = {
     defaultCompanyName: (() => {
       try {
         return t('defaultCompanyName');
