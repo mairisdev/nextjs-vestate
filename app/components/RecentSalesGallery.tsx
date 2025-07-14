@@ -18,7 +18,21 @@ export type Property = {
   images: string[]
 }
 
-export default function ClientGallery({ properties }: { properties: Property[] }) {
+interface ClientGalleryProps {
+  properties: Property[]
+  translations: {
+    defaultHeading: string
+    defaultSubheading: string
+    statusSold: string
+    statusActive: string
+    viewMoreButton: string
+    modalCloseButton: string
+    noPropertiesText: string
+    [key: string]: string
+  }
+}
+
+export default function ClientGallery({ properties, translations }: ClientGalleryProps) {
   const [selected, setSelected] = useState<Property | null>(null)
   const [currentImage, setCurrentImage] = useState(0)
 
@@ -37,18 +51,33 @@ export default function ClientGallery({ properties }: { properties: Property[] }
     setCurrentImage((prev) => (prev === 0 ? selected.images.length - 1 : prev - 1))
   }
 
+  if (!properties || properties.length === 0) {
+    return (
+      <section id="musu-darbi" className="py-20 px-4 md:px-12 bg-[#F3F4F6]">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-[#00332D] mb-2">
+            {translations.defaultHeading}
+          </h2>
+          <p className="text-sm text-gray-600 mb-12">
+            {translations.noPropertiesText}
+          </p>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section id="musu-darbi" className="py-20 px-4 md:px-12 bg-[#F3F4F6]">
       <div className="max-w-7xl mx-auto text-center">
         <h2 className="text-3xl font-bold text-[#00332D] mb-2">
-          Karstākie piedāvājumi
+          {translations.defaultHeading}
         </h2>
         <p className="text-sm text-gray-600 mb-12">
-          Atrodi savu sapņu īpašumu jau šodien!
+          {translations.defaultSubheading}
         </p>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {properties.map((property) => (
+          {properties.map((property, idx) => (
             <div
               key={property.id}
               className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl hover:shadow-[#77dDB4]/20 transition-all duration-500 flex flex-col transform hover:-translate-y-2 border border-gray-100 hover:border-[#77dDB4]/50"
@@ -56,7 +85,7 @@ export default function ClientGallery({ properties }: { properties: Property[] }
               <div className="relative overflow-hidden">
                 <Image
                   src={property.images[0]}
-                  alt={property.title}
+                  alt={translations[`property${idx + 1}Title`] || property.title}
                   width={600}
                   height={400}
                   className="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-105"
@@ -67,13 +96,13 @@ export default function ClientGallery({ properties }: { properties: Property[] }
                     ? "bg-red-500/90 border-red-300/50" 
                     : "bg-[#77dDB4]/90 border-[#77dDB4]/50"
                 }`}>
-                  {property.status === "sold" ? "PĀRDOTS" : "PĀRDOŠANĀ"}
+                  {property.status === "sold" ? translations.statusSold : translations.statusActive}
                 </span>
                 
                 {/* Cenas badge */}
                 <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg border border-[#77dDB4]/30">
                   <p className="text-lg font-bold text-[#00332D]">
-                    {property.price} €
+                    {translations[`property${idx + 1}Price`] || property.price} €
                   </p>
                 </div>
               </div>
@@ -81,11 +110,15 @@ export default function ClientGallery({ properties }: { properties: Property[] }
               <div className="p-6 flex-1 flex flex-col justify-between text-left">
                 <div>
                   <h3 className="text-xl font-bold text-[#00332D] mb-4 group-hover:text-[#00443B] transition-colors">
-                    {property.title}
+                    {translations[`property${idx + 1}Title`] || property.title}
                   </h3>
                   
                   <div className="space-y-3 mb-6">
-                    {[property.size, property.type, property.floor].map((text, i) => (
+                    {[
+                      translations[`property${idx + 1}Size`] || property.size,
+                      translations[`property${idx + 1}Type`] || property.type,
+                      translations[`property${idx + 1}Floor`] || property.floor
+                    ].map((text, i) => (
                       <div key={i} className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#77dDB4] to-[#00332D] flex-shrink-0"></div>
                         <span className="text-base text-gray-700 font-medium">{text}</span>
@@ -99,106 +132,110 @@ export default function ClientGallery({ properties }: { properties: Property[] }
                   className="group/btn relative bg-gradient-to-r from-[#00332D] to-[#00443B] text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-[#00332D]/20 hover:shadow-xl hover:shadow-[#00332D]/30 transition-all duration-300 transform hover:scale-105 border-2 border-transparent hover:border-[#77dDB4] overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center justify-center">
-                    Apskatīt vairāk
+                    {translations.viewMoreButton}
                     <svg className="ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#77dDB4]/20 to-[#77dDB4]/10 transform scale-x-0 group-hover/btn:scale-x-100 transition-transform duration-300 origin-left"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#77dDB4] to-[#5BC9A8] opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
                 </button>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-16 text-center">
-          <div className="relative bg-gradient-to-br from-[#77dDB4]/10 via-white to-[#77dDB4]/5 border-2 border-[#77dDB4]/30 rounded-2xl p-8 shadow-2xl shadow-[#77dDB4]/20 backdrop-blur-sm">
-
-            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
-              <div className="bg-gradient-to-r from-[#77dDB4] to-[#00332D] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-2xl font-bold text-white">?</span>
-              </div>
-            </div>
-            
-            <div className="pt-4">
-              <h3 className="text-[#00332D] font-bold text-xl mb-4 leading-tight">
-                Jums nepieciešams pārdot nekustamo īpašumu?
-              </h3>
-              
-              <p className="text-[#00332D]/80 font-medium text-lg mb-6 leading-relaxed">
-                Noskaidrojiet sava dzīvokļa vai mājas pārdošanas termiņu un cenas jau tūlīt!
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Link href="#kontakti">
-                  <button className="group relative bg-gradient-to-r from-[#00332D] to-[#00443B] text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-[#00332D]/30 hover:shadow-xl hover:shadow-[#00332D]/40 transform hover:scale-105 transition-all duration-300 border-2 border-transparent hover:border-[#77dDB4] overflow-hidden">
-                    <span className="relative z-10 flex items-center">
-                      Nosūtīt pieteikumu
-                      <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#77dDB4]/20 to-[#77dDB4]/10 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                  </button>
-                </Link>
-                
-                <div className="flex items-center text-[#00332D]/70 font-medium">
-                  <div className="flex items-center bg-[#77dDB4]/20 px-4 py-2 rounded-lg">
-                    <span className="text-[#77dDB4] mr-2">✓</span>
-                    Bezmaksas konsultācija
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Modal */}
         {selected && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-3xl rounded-xl overflow-hidden shadow-xl relative">
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
               <button
                 onClick={closeModal}
-                className="absolute top-4 right-4 text-gray-500 hover:text-black z-50"
+                className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 hover:bg-white transition-colors shadow-lg"
               >
-                <X size={24} />
+                <X className="w-6 h-6 text-gray-600" />
               </button>
-              <div className="grid md:grid-cols-2">
-                <div className="w-full h-[300px] md:h-full relative flex items-center justify-center">
-                  <Image
-                    src={selected.images[currentImage]}
-                    alt={selected.title}
-                    fill
-                    className="object-cover rounded-l-xl"
-                  />
-                  <button
-                    onClick={prevImage}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 p-1 rounded-full hover:bg-white"
-                  >
-                    <ChevronLeft size={24} />
-                  </button>
-                  <button
-                    onClick={nextImage}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 p-1 rounded-full hover:bg-white"
-                  >
-                    <ChevronRight size={24} />
-                  </button>
+
+              <div className="relative">
+                <Image
+                  src={selected.images[currentImage]}
+                  alt={selected.title}
+                  width={800}
+                  height={600}
+                  className="w-full h-96 object-cover rounded-t-2xl"
+                />
+                
+                {selected.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm rounded-full p-3 hover:bg-white transition-colors shadow-lg"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-gray-600" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm rounded-full p-3 hover:bg-white transition-colors shadow-lg"
+                    >
+                      <ChevronRight className="w-6 h-6 text-gray-600" />
+                    </button>
+                  </>
+                )}
+                
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  {selected.images.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        idx === currentImage ? "bg-white" : "bg-white/50"
+                      }`}
+                    />
+                  ))}
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-[#00332D] mb-2">
-                    {selected.title}
-                  </h3>
-                  <p className="text-lg font-bold text-[#00332D] mb-2">
-                    {selected.price} EUR
-                  </p>
-                  <p className="text-sm text-gray-600 mb-4">
-                    <span className="font-semibold">{selected.size}</span> · <span className="font-semibold">{selected.type}</span> · <span className="font-semibold">{selected.floor}</span>
-                  </p>
-                  <p className="text-sm text-gray-800 mb-6">
-                    {selected.description}
-                  </p>
-                  <button className="bg-[#00332D] text-white px-4 py-2 rounded-md hover:bg-[#00443B]">
-                    Sazināties ar mūsu aģentu
+              </div>
+
+              <div className="p-8">
+                <h3 className="text-3xl font-bold text-[#00332D] mb-4">
+                  {selected.title}
+                </h3>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-600 mb-1">Cena</p>
+                    <p className="text-lg font-bold text-[#00332D]">{selected.price} €</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-600 mb-1">Platība</p>
+                    <p className="text-lg font-bold text-[#00332D]">{selected.size}</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-600 mb-1">Tips</p>
+                    <p className="text-lg font-bold text-[#00332D]">{selected.type}</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-sm text-gray-600 mb-1">Stāvs</p>
+                    <p className="text-lg font-bold text-[#00332D]">{selected.floor}</p>
+                  </div>
+                </div>
+
+                {selected.description && (
+                  <div className="mb-6">
+                    <h4 className="text-xl font-semibold text-[#00332D] mb-3">Apraksts</h4>
+                    <p className="text-gray-700 leading-relaxed">{selected.description}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-4">
+                  <Link
+                    href={selected.link}
+                    className="flex-1 bg-gradient-to-r from-[#00332D] to-[#00443B] text-white text-center font-semibold py-4 px-6 rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  >
+                    Apskatīt pilnu informāciju
+                  </Link>
+                  <button
+                    onClick={closeModal}
+                    className="px-6 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-[#77dDB4] hover:text-[#00332D] transition-colors"
+                  >
+                    {translations.modalCloseButton}
                   </button>
                 </div>
               </div>

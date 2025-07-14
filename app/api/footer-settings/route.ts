@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { syncFooterSectionTranslations } from "@/lib/translationSync"
 
 export async function GET() {
   try {
@@ -66,6 +67,14 @@ export async function POST(req: Request) {
         },
       })
     }
+
+    // Automātiska tulkojumu sinhronizācija
+    await syncFooterSectionTranslations({
+      companyName: result.companyName,
+      description: result.description,
+      copyrightText: result.copyrightText,
+      developerName: result.developerName,
+    })
 
     return NextResponse.json(result)
   } catch (error) {

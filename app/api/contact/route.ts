@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import nodemailer from "nodemailer"
+import { syncContactSectionTranslations } from "@/lib/translationSync"
 
 export async function GET() {
   try {
@@ -34,6 +35,9 @@ export async function POST(req: Request) {
           data: { heading, subtext, address, phone, email, hours },
         })
       }
+
+      // Automātiska tulkojumu sinhronizācija
+      await syncContactSectionTranslations(result)
 
       return NextResponse.json(result)
     }

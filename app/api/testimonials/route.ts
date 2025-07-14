@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { syncTestimonialsTranslations } from "@/lib/translationSync"
 
 export async function GET() {
   try {
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     await prisma.testimonial.deleteMany()
 
     // Saglabāt jaunos
-    await prisma.testimonial.createMany({
+    const createdTestimonials = await prisma.testimonial.createMany({
       data: testimonials.map((t) => ({
         name: t.name,
         message: t.message,
@@ -33,8 +34,12 @@ export async function POST(req: NextRequest) {
       }))
     })
 
+    // Automātiska tulkojumu sinhronizācija
+    await syncTestimonialsTranslations(testimonials)
+
     return NextResponse.json({ success: true, message: "Saved successfully" })
   } catch (error) {
+    console.error("Error saving testimonials:", error)
     return NextResponse.json({ success: false, message: "Error saving", error }, { status: 500 })
   }
 }

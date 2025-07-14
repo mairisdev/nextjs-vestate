@@ -17,5 +17,13 @@ export default async function RecentSales() {
     images: p.imageUrls,
   }))
 
-  return <ClientGallery properties={properties} />
+  return <ClientGallery properties={properties} translations={{
+    defaultHeading: "",
+    defaultSubheading: "",
+    statusSold: "",
+    statusActive: "",
+    viewMoreButton: "",
+    modalCloseButton: "",
+    noPropertiesText: ""
+  }} />
 }

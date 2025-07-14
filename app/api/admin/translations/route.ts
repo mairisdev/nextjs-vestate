@@ -229,7 +229,259 @@ export async function POST(request: NextRequest) {
         })
       }
     }
-  }  
+  }
+  
+  if (key.startsWith('Testimonials.')) {
+    // Ja mēs atjauninām statiskās atslēgas 
+    if (locale === "lv") {
+      if (key === "Testimonials.defaultHeading" || key === "Testimonials.defaultSubheading") {
+        // Šīs ir statiskās atslēgas, tās nerada izmaiņas datu bāzē
+        // Bet mēs varam pievienot loģiku, ja nepieciešams
+      }
+      
+      // Ja atjauninām konkrētās atsauksmes
+      if (key.includes('testimonial') && (key.includes('Name') || key.includes('Message'))) {
+        // Izvēlamies testimonials no datu bāzes
+        const testimonials = await prisma.testimonial.findMany({
+          orderBy: { createdAt: "desc" }
+        })
+        
+        // Atrodam, kuru atsauksmi mēs rediģējam
+        const match = key.match(/testimonial(\d+)(Name|Message)/)
+        if (match) {
+          const index = parseInt(match[1], 10) - 1
+          const field = match[2].toLowerCase() // 'name' vai 'message'
+          
+          if (index >= 0 && index < testimonials.length) {
+            await prisma.testimonial.update({
+              where: { id: testimonials[index].id },
+              data: { [field]: value }
+            })
+          }
+        }
+      }
+    }
+  }
+
+  if (key.startsWith('RecentSales.')) {
+    // Ja mēs atjauninām statiskās atslēgas 
+    if (locale === "lv") {
+      if (key === "RecentSales.defaultHeading" || 
+          key === "RecentSales.defaultSubheading" ||
+          key === "RecentSales.statusSold" ||
+          key === "RecentSales.statusActive" ||
+          key === "RecentSales.viewMoreButton" ||
+          key === "RecentSales.modalCloseButton" ||
+          key === "RecentSales.noPropertiesText") {
+        // Šīs ir statiskās atslēgas, tās nerada izmaiņas datu bāzē
+        // Bet mēs varam pievienot loģiku, ja nepieciešams
+      }
+      
+      // Ja atjauninām konkrētus īpašumus
+      if (key.includes('property') && (
+          key.includes('Title') || 
+          key.includes('Price') || 
+          key.includes('Size') || 
+          key.includes('Type') || 
+          key.includes('Floor') || 
+          key.includes('Description')
+        )) {
+        // Izvēlamies soldProperties no datu bāzes
+        const properties = await prisma.soldProperty.findMany({
+          orderBy: { createdAt: "desc" }
+        })
+        
+        // Atrodam, kuru īpašumu mēs rediģējam
+        const match = key.match(/property(\d+)(Title|Price|Size|Type|Floor|Description)/)
+        if (match) {
+          const index = parseInt(match[1], 10) - 1
+          const field = match[2].toLowerCase()
+          
+          // Mapping uz datu bāzes laukiem
+          const fieldMap: Record<string, string> = {
+            'title': 'title',
+            'price': 'price', 
+            'size': 'size',
+            'type': 'series',
+            'floor': 'floor',
+            'description': 'description'
+          }
+          
+          const dbField = fieldMap[field]
+          
+          if (index >= 0 && index < properties.length && dbField) {
+            await prisma.soldProperty.update({
+              where: { id: properties[index].id },
+              data: { [dbField]: value }
+            })
+          }
+        }
+      }
+    }
+  }
+
+  if (key.startsWith('StatsSection.')) {
+    // Ja mēs atjauninām statiskās atslēgas 
+    if (locale === "lv") {
+      if (key === "StatsSection.defaultSubheading" || 
+          key === "StatsSection.defaultHeading" ||
+          key === "StatsSection.noStatsText") {
+        // Šīs ir statiskās atslēgas, tās nerada izmaiņas datu bāzē
+        // Bet mēs varam pievienot loģiku, ja nepieciešams
+      }
+      
+      // Ja atjauninām konkrētās statistikas
+      if (key.includes('stat') && (
+          key.includes('Value') || 
+          key.includes('Description') || 
+          key.includes('Icon')
+        )) {
+        // Izvēlamies statistics no datu bāzes
+        const statistics = await prisma.statistic.findMany({
+          orderBy: { order: "asc" }
+        })
+        
+        // Atrodam, kuru statistiku mēs rediģējam
+        const match = key.match(/stat(\d+)(Value|Description|Icon)/)
+        if (match) {
+          const index = parseInt(match[1], 10) - 1
+          const field = match[2].toLowerCase()
+          
+          // Mapping uz datu bāzes laukiem
+          const fieldMap: Record<string, string> = {
+            'value': 'value',
+            'description': 'description', 
+            'icon': 'icon'
+          }
+          
+          const dbField = fieldMap[field]
+          
+          if (index >= 0 && index < statistics.length && dbField) {
+            await prisma.statistic.update({
+              where: { id: statistics[index].id },
+              data: { [dbField]: value }
+            })
+          }
+        }
+      }
+    }
+  }
+
+  if (key.startsWith('WhyChooseUs.')) {
+    // Ja mēs atjauninām statiskās atslēgas vai punktus
+    if (locale === "lv") {
+      const whyChooseUsData = await prisma.whyChooseUs.findFirst()
+      
+      if (!whyChooseUsData) return NextResponse.json({ error: 'WhyChooseUs data not found' }, { status: 404 })
+      
+      if (key === "WhyChooseUs.defaultTitle") {
+        await prisma.whyChooseUs.update({
+          where: { id: whyChooseUsData.id },
+          data: { title: value }
+        })
+      } else if (key === "WhyChooseUs.defaultButtonText") {
+        await prisma.whyChooseUs.update({
+          where: { id: whyChooseUsData.id },
+          data: { buttonText: value }
+        })
+      } else if (key.startsWith("WhyChooseUs.point")) {
+        // Atjaunojam konkrētu punktu
+        const match = key.match(/point(\d+)/)
+        if (match) {
+          const index = parseInt(match[1], 10) - 1
+          const points = Array.isArray(whyChooseUsData.points) ? [...whyChooseUsData.points] : []
+          
+          // Paplašinām masīvu, ja nepieciešams
+          while (points.length <= index) {
+            points.push("")
+          }
+          
+          points[index] = value
+          
+          await prisma.whyChooseUs.update({
+            where: { id: whyChooseUsData.id },
+            data: { points }
+          })
+        }
+      }
+    }
+  }
+
+  if (key.startsWith('PartnersSection.')) {
+    if (locale === "lv") {
+      const partnersData = await prisma.partnersSection.findUnique({
+        where: { id: "partners-section" }
+      })
+      
+      if (!partnersData) return NextResponse.json({ error: 'PartnersSection data not found' }, { status: 404 })
+      
+      if (key === "PartnersSection.defaultTitle") {
+        await prisma.partnersSection.update({
+          where: { id: "partners-section" },
+          data: { title: value }
+        })
+      } else if (key === "PartnersSection.defaultSubtitle") {
+        await prisma.partnersSection.update({
+          where: { id: "partners-section" },
+          data: { subtitle: value }
+        })
+      }
+    }
+  }
+
+  if (key.startsWith('ContactSection.')) {
+    if (locale === "lv") {
+      const contactData = await prisma.contactSettings.findFirst()
+      
+      if (!contactData) return NextResponse.json({ error: 'ContactSettings data not found' }, { status: 404 })
+      
+      if (key === "ContactSection.defaultHeading") {
+        await prisma.contactSettings.update({
+          where: { id: contactData.id },
+          data: { heading: value }
+        })
+      } else if (key === "ContactSection.defaultSubtext") {
+        await prisma.contactSettings.update({
+          where: { id: contactData.id },
+          data: { subtext: value }
+        })
+      }
+      // Citas atslēgas (formNamePlaceholder, quiz1, utt.) ir tikai tulkojumi,
+      // tās nerada izmaiņas datu bāzē
+    }
+  }
+  
+  // ========== FooterSection tulkojumi ==========
+  if (key.startsWith('FooterSection.')) {
+    if (locale === "lv") {
+      const footerData = await prisma.footerSettings.findFirst()
+      
+      if (!footerData) return NextResponse.json({ error: 'FooterSettings data not found' }, { status: 404 })
+      
+      if (key === "FooterSection.defaultCompanyName") {
+        await prisma.footerSettings.update({
+          where: { id: footerData.id },
+          data: { companyName: value }
+        })
+      } else if (key === "FooterSection.defaultDescription") {
+        await prisma.footerSettings.update({
+          where: { id: footerData.id },
+          data: { description: value }
+        })
+      } else if (key === "FooterSection.copyrightText") {
+        await prisma.footerSettings.update({
+          where: { id: footerData.id },
+          data: { copyrightText: value }
+        })
+      } else if (key === "FooterSection.defaultDeveloperName") {
+        await prisma.footerSettings.update({
+          where: { id: footerData.id },
+          data: { developerName: value }
+        })
+      }
+      // Citas atslēgas (sitemapTitle, homeLink, utt.) ir tikai tulkojumi
+    }
+  }
     
     return NextResponse.json(translation);
   } catch (error) {

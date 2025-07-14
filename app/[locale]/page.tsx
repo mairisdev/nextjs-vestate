@@ -4,19 +4,20 @@ import FirstSection from '../components/server/FirstSectionServer'
 import AgentReasons from '../components/server/AgentReasonsServer'
 import ServicesSection from '../components/ServicesSection'
 import AgentsSection from '../components/server/AgentsSectionServer'
-import Testimonials from '../components/Testimonials'
+import TestimonialsSection from '../components/server/TestimonialsServer'
 import LegalConsultSection from '../components/LegalConsultSection'
-import RecentSales from '../components/RecentSales'
+import RecentSales from '../components/server/RecentSalesServer'
 import PrivateOffers from '../components/PrivateOffers'
-import WhyChooseUs from '../components/WhyChooseUs'
-import StatsSection from '../components/StatsSection'
-import PartnersSection from '../components/PartnersSection'
+import WhyChooseUs from '../components/server/WhyChooseUsServer'
+import StatsSection from '../components/server/StatsSectionServer'
+import PartnersSection from '../components/server/PartnersSectionServer'
 import ContactSection from '../components/ContactSection'
 import BlogSection from '../components/BlogSection'
 import FooterSection from '../components/FooterSection'
 import LegalConsultSection2 from '../components/SevenSection'
 import CookieConsentBanner from '../components/CookieConsentBanner'
 import HeroSlider from '../components/server/HeroSliderServer'
+import { ContactSectionServer, FooterSectionServer } from '../components/server/ContactFooterServer'
 
 export default function Home() {
   return (
@@ -31,7 +32,7 @@ export default function Home() {
         <LegalConsultSection2 />
         <ServicesSection />
         <AgentsSection />
-        <Testimonials />
+        <TestimonialsSection />
         <LegalConsultSection />
         <RecentSales />
         <PrivateOffers />
@@ -39,8 +40,8 @@ export default function Home() {
         <StatsSection />
         <PartnersSection />
         <BlogSection />
-        <ContactSection />
-        <FooterSection />
+        <ContactSectionServer />
+        <FooterSectionServer />
       </main>
     </>
   )

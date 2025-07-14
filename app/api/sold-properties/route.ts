@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { writeFile } from "fs/promises"
 import path from "path"
+import { syncRecentSalesTranslations } from "@/lib/translationSync"
 
 export async function GET() {
   try {
@@ -43,12 +44,15 @@ export async function POST(req: Request) {
 
     await prisma.soldProperty.deleteMany()
 
-    await prisma.soldProperty.createMany({
+    const createdProperties = await prisma.soldProperty.createMany({
       data: parsed.map((item: any, i: number) => ({
         ...item,
         imageUrls: uploads[i],
       })),
     })
+
+    // Automātiska tulkojumu sinhronizācija
+    await syncRecentSalesTranslations(parsed)
 
     return NextResponse.json({ success: true })
   } catch (error) {
