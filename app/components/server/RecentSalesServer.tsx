@@ -1,111 +1,58 @@
+// app/components/server/RecentSalesServer.tsx
 import { getSoldProperties } from "@/lib/queries/soldProperties"
-import { getTranslations } from "next-intl/server"
+import { getSafeTranslations } from "@/lib/safeTranslations"
 import ClientGallery from "../RecentSalesGallery"
 
 export default async function RecentSalesServer() {
   const dbProperties = await getSoldProperties()
-  const t = await getTranslations("RecentSales")
+  const { safe } = await getSafeTranslations('RecentSalesGallery');
 
-  // Sagatavo tulkojumus
-  const translations: { [key: string]: string } = {
-    defaultHeading: (() => {
-      try {
-        return t('defaultHeading');
-      } catch {
-        return "Karstākie piedāvājumi";
-      }
-    })(),
-    defaultSubheading: (() => {
-      try {
-        return t('defaultSubheading');
-      } catch {
-        return "Atrodi savu sapņu īpašumu jau šodien!";
-      }
-    })(),
-    statusSold: (() => {
-      try {
-        return t('statusSold');
-      } catch {
-        return "PĀRDOTS";
-      }
-    })(),
-    statusActive: (() => {
-      try {
-        return t('statusActive');
-      } catch {
-        return "PĀRDOŠANĀ";
-      }
-    })(),
-    viewMoreButton: (() => {
-      try {
-        return t('viewMoreButton');
-      } catch {
-        return "Apskatīt vairāk";
-      }
-    })(),
-    modalCloseButton: (() => {
-      try {
-        return t('modalCloseButton');
-      } catch {
-        return "Aizvērt";
-      }
-    })(),
-    noPropertiesText: (() => {
-      try {
-        return t('noPropertiesText');
-      } catch {
-        return "Pašlaik nav pieejamu piedāvājumu";
-      }
-    })(),
+  console.log('🏠 RecentSales: Found', dbProperties.length, 'properties');
+
+  // Sakārtojam tulkojumus ar pareizajiem tipiem
+  const translations = {
+    defaultHeading: safe('defaultHeading', 'Mūsu darbi'),
+    defaultSubheading: safe('defaultSubheading', 'Apskatieties mūsu veiksmīgi pārdotos īpašumus'),
+    statusSold: safe('statusSold', 'Pārdots'),
+    statusActive: safe('statusActive', 'Pārdošanā'),
+    viewMoreButton: safe('viewMoreButton', 'Skatīt vairāk'),
+    modalCloseButton: safe('modalCloseButton', 'Aizvērt'),
+    noPropertiesText: safe('noPropertiesText', 'Pagaidām nav pārdoto īpašumu'),
+    // Papildus tulkojumi katram īpašumam
+    property1Title: safe('property1Title', ''),
+    property2Title: safe('property2Title', ''),
+    property3Title: safe('property3Title', ''),
+    property4Title: safe('property4Title', ''),
+    property5Title: safe('property5Title', ''),
+    property6Title: safe('property6Title', '')
   };
 
-  // Pievienojam katras īpašuma tulkojumus
-  dbProperties.forEach((_, index) => {
-    const keys = [
-      `property${index + 1}Title`,
-      `property${index + 1}Price`, 
-      `property${index + 1}Size`,
-      `property${index + 1}Type`,
-      `property${index + 1}Floor`,
-      `property${index + 1}Description`
-    ];
-    
-    keys.forEach(key => {
-      try {
-        translations[key] = t(key);
-      } catch {
-        // Ja nav tulkojuma, nekas nemainās
-      }
+  // Drošas pārbaudes īpašumiem
+  const safeProperties = Array.isArray(dbProperties) ? dbProperties : []
+
+  const properties = safeProperties.map((p, index) => {
+    console.log(`🏠 Property ${index + 1}:`, {
+      id: p.id,
+      title: p.title,
+      price: p.price,
+      images: p.imageUrls?.length || 0
     });
-  });
+    
+    return {
+      id: p.id || '',
+      title: p.title || 'Īpašums',
+      price: p.price || 'Cena pēc pieprasījuma',
+      size: p.size || 'Nav norādīts',
+      type: p.series || 'Nav norādīts',
+      floor: p.floor || 'Nav norādīts',
+      description: p.description || '',
+      link: p.link || '#',
+      status: (p.status === "pārdots" ? "sold" : "active") as "sold" | "active",
+      images: Array.isArray(p.imageUrls) ? p.imageUrls.filter(url => url && url.trim() !== '') : []
+    }
+  })
 
-  // Transformējam datus
-  const properties = dbProperties.map((p) => ({
-    id: p.id,
-    title: p.title,
-    price: p.price,
-    size: p.size,
-    type: p.series,
-    floor: p.floor,
-    description: p.description || "",
-    link: p.link,
-    status: p.status === "pārdots" ? "sold" as const : "active" as const,
-    images: p.imageUrls,
-  }))
+  console.log('🌐 RecentSales translations:', translations);
 
-  return (
-    <ClientGallery 
-      properties={properties}
-      translations={{
-        defaultHeading: translations.defaultHeading,
-        defaultSubheading: translations.defaultSubheading,
-        statusSold: translations.statusSold,
-        statusActive: translations.statusActive,
-        viewMoreButton: translations.viewMoreButton,
-        modalCloseButton: translations.modalCloseButton,
-        noPropertiesText: translations.noPropertiesText,
-        ...translations
-      }} 
-    />
-  )
+  return <ClientGallery properties={properties} translations={translations} />
 }

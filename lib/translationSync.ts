@@ -5,12 +5,15 @@ export async function syncSlideTranslations(slide: Slide) {
   const locales = ["lv", "en", "ru"]
   const category = "HeroSlider"
 
+  // PAREIZĀS atslēgas, kas atbilst mūsu komponentam
   const keysAndValues = {
-    defaultHeadline: slide.title,
+    defaultTitle: slide.title,
     defaultSubtitle: slide.subtitle,
+    defaultDescription: slide.description,
     defaultButtonText: slide.buttonText,
   }
 
+  // Sinhronizējam pamata slaida datus
   for (const [key, value] of Object.entries(keysAndValues)) {
     for (const locale of locales) {
       await upsertTranslation(
@@ -21,6 +24,31 @@ export async function syncSlideTranslations(slide: Slide) {
       )
     }
   }
+
+  // Pievienojam fiksētus benefit tulkojumus, ja tie vēl neeksistē
+  const defaultBenefits = {
+    benefit1: "Profesionāla pieredze",
+    benefit2: "Individuāla pieeja", 
+    benefit3: "Tirgus analīze",
+    benefit4: "Juridiskā palīdzība",
+    benefit5: "Komunikācija un atbalsts",
+    benefit6: "Mārketinga stratēģijas"
+  }
+
+  for (const [key, value] of Object.entries(defaultBenefits)) {
+    for (const locale of locales) {
+      // Pievienojam benefit tulkojumus tikai latviešu valodai
+      // Citām valodām atstājam tukšus, lai admin var tos aizpildīt
+      await upsertTranslation(
+        `${category}.${key}`,
+        locale,
+        locale === "lv" ? value : "",
+        category
+      )
+    }
+  }
+
+  console.log(`✅ Sinhronizēti slider tulkojumi: ${slide.title}`)
 }
 
 export async function syncFirstSectionTranslations(section: FirstSection) {
@@ -248,25 +276,26 @@ export async function syncTestimonialsTranslations(testimonials: any[]) {
 
 export async function syncRecentSalesTranslations(properties: any[]) {
   const locales = ["lv", "en", "ru"]
-  const category = "RecentSales"
+  const category = "RecentSalesGallery" // SVARĪGI: izmantojam RecentSalesGallery, nevis RecentSales
 
   // Statiskās atslēgas sekcijas virsrakstiem un elementiem
   const staticKeys = {
-    defaultHeading: "Karstākie piedāvājumi",
-    defaultSubheading: "Atrodi savu sapņu īpašumu jau šodien!",
-    statusSold: "PĀRDOTS",
-    statusActive: "PĀRDOŠANĀ", 
-    viewMoreButton: "Apskatīt vairāk",
+    defaultHeading: "Mūsu darbi",
+    defaultSubheading: "Apskatieties mūsu veiksmīgi pārdotos īpašumus",
+    statusSold: "Pārdots",
+    statusActive: "Pārdošanā", 
+    viewMoreButton: "Skatīt vairāk",
     modalCloseButton: "Aizvērt",
-    noPropertiesText: "Pašlaik nav pieejamu piedāvājumu",
+    noPropertiesText: "Pagaidām nav pārdoto īpašumu",
     sectionId: "musu-darbi",
     priceLabel: "Cena",
     sizeLabel: "Platība", 
     typeLabel: "Tips",
     floorLabel: "Stāvs",
     descriptionLabel: "Apraksts",
-    fullInfoButton: "Apskatīt pilnu informāciju",
   }
+
+  console.log(`🔄 Sinhronizē RecentSalesGallery: ${properties.length} īpašumi`);
 
   // Sinhronizējam statiskās atslēgas
   for (const [key, value] of Object.entries(staticKeys)) {
@@ -293,6 +322,8 @@ export async function syncRecentSalesTranslations(properties: any[]) {
       [`property${i + 1}Description`]: property.description || `Apraksts ${i + 1}`,
     }
 
+    console.log(`📝 Property ${i + 1}: ${property.title}`);
+
     for (const [key, value] of Object.entries(keysAndValues)) {
       for (const locale of locales) {
         await upsertTranslation(
@@ -304,6 +335,8 @@ export async function syncRecentSalesTranslations(properties: any[]) {
       }
     }
   }
+
+  console.log(`✅ RecentSalesGallery tulkojumi sinhronizēti: ${properties.length} īpašumi`);
 }
 
 export async function syncStatsSectionTranslations(statistics: any[]) {

@@ -1,31 +1,27 @@
+// app/components/server/AgentsSectionServer.tsx
 import { getAgents } from "@/lib/queries/agents";
-import { getTranslations } from "next-intl/server";
+import { getSafeTranslations } from "@/lib/safeTranslations";
 import AgentsSectionClient from "../AgentsSection";
 
 export default async function AgentsSectionServer() {
   const agentsRaw = await getAgents();
-  const t = await getTranslations("AgentsSection");
-
+  
+  // Drošie tulkojumi
+  const { safe } = await getSafeTranslations("AgentsSection");
+  
+  // Sakārtojam tulkojumus ar pareizajiem tipiem
   const translations = {
-    reviewsButton: t("reviewsButton"),
-    noReviewsText: t("noReviewsText"),
-    imageClickHint: t("imageClickHint"),
-    agentImageAlt: t("agentImageAlt"),
+    reviewsButton: safe("reviewsButton", "Skatīt atsauksmes"),
+    noReviewsText: safe("noReviewsText", "Nav atsauksmju"),
+    imageClickHint: safe("imageClickHint", "Klikšķiniet, lai redzētu atsauksmes"),
+    agentImageAlt: safe("agentImageAlt", "Aģenta foto")
   };
-
+  
   const localizedAgents = agentsRaw.map((agent, index) => {
-    const fallback = (key: string, defaultValue: string) => {
-      try {
-        return t(key);
-      } catch {
-        return defaultValue;
-      }
-    };
-
     return {
       ...agent,
-      name: fallback(`agentName${index + 1}`, agent.name || ""),
-      title: fallback(`agentTitle${index + 1}`, agent.title || ""),
+      name: safe(`agentName${index + 1}`, agent.name || `Aģents ${index + 1}`),
+      title: safe(`agentTitle${index + 1}`, agent.title || "Nekustamo īpašumu aģents"),
     };
   });
 

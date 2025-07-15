@@ -1,4 +1,5 @@
-import { getTranslations } from 'next-intl/server';
+// app/components/server/AgentReasonsServer.tsx
+import { getSafeTranslations } from '@/lib/safeTranslations';
 import AgentReasonsClient from '../AgentReasons';
 
 async function getAgentReasonsData() {
@@ -20,24 +21,23 @@ async function getAgentReasonsData() {
 
 export default async function AgentReasonsServer() {
   const data = await getAgentReasonsData();
-  const t = await getTranslations('AgentReasons');
+  const { safe } = await getSafeTranslations('AgentReasons');
   
-  // Sagatavo tulkojumus
+  // Sakārtojam tulkojumus ar pareizajiem tipiem
   const translations = {
-    defaultHeading: t('defaultHeading'),
-    defaultImageAlt: t('defaultImageAlt'),
-    // Iespējami reasons tulkojumi (ja vēlaties tos arī tulkot)
-    reason1: t('reason1'),
-    reason2: t('reason2'),
-    reason3: t('reason3'),
-    reason4: t('reason4'),
-    reason5: t('reason5'),
-    reason6: t('reason6'),
-    reason7: t('reason7'),
-    reason8: t('reason8'),
-    reason9: t('reason9'),
-    reason10: t('reason10'),
-    reason11: t('reason11'),
+    defaultHeading: safe('defaultHeading', 'Kāpēc izvēlēties mūsu mākleri?'),
+    defaultImageAlt: safe('defaultImageAlt', 'Mākleris pie darba'),
+    reason1: safe('reason1', 'Profesionāla pieredze'),
+    reason2: safe('reason2', 'Individuāla pieeja'),
+    reason3: safe('reason3', 'Tirgus analīze'),
+    reason4: safe('reason4', 'Juridiskā palīdzība'),
+    reason5: safe('reason5', 'Komunikācija un atbalsts'),
+    reason6: safe('reason6', 'Mārketinga stratēģijas'),
+    reason7: safe('reason7', 'Sarunu vadīšana'),
+    reason8: safe('reason8', 'Dokumentu kārtošana'),
+    reason9: safe('reason9', 'Finansiāla konsultēšana'),
+    reason10: safe('reason10', 'Pēcpārdošanas atbalsts'),
+    reason11: safe('reason11', 'Ilgtermiņa sadarbība')
   };
 
   return (

@@ -7,7 +7,6 @@ import AgentsSection from '../components/server/AgentsSectionServer'
 import TestimonialsSection from '../components/server/TestimonialsServer'
 import LegalConsultSection from '../components/LegalConsultSection'
 import RecentSales from '../components/server/RecentSalesServer'
-import PrivateOffers from '../components/PrivateOffers'
 import WhyChooseUs from '../components/server/WhyChooseUsServer'
 import StatsSection from '../components/server/StatsSectionServer'
 import PartnersSection from '../components/server/PartnersSectionServer'
@@ -33,7 +32,6 @@ export default function Home() {
         <TestimonialsSection />
         <LegalConsultSection />
         <RecentSales />
-        <PrivateOffers />
         <WhyChooseUs />
         <StatsSection />
         <PartnersSection />

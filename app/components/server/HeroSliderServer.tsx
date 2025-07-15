@@ -1,43 +1,60 @@
-import { getTranslations } from 'next-intl/server';
+// app/components/server/HeroSliderServer.tsx
+import { getSafeTranslations } from '@/lib/safeTranslations';
 import HeroSliderClient from '../HeroSlider';
 
 async function getSlides() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/slides`, {
+    // Lokālajā izstrādē izmantojam localhost, produkcijai NEXT_PUBLIC_BASE_URL
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                   (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '');
+    
+    const url = `${baseUrl}/api/slides`;
+    console.log('Fetching slides from:', url);
+    
+    const response = await fetch(url, {
       cache: 'no-store'
     });
     
     if (!response.ok) {
-      throw new Error('Failed to fetch slides');
+      console.error('Slides API response not ok:', response.status, response.statusText);
+      throw new Error(`Failed to fetch slides: ${response.status}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log('Slides data fetched successfully:', data.length, 'slides');
+    return data;
   } catch (error) {
     console.error('Error fetching slides:', error);
+    // Atgriežam tukšu masīvu, lai komponents varētu rādīt fallback
     return [];
   }
 }
 
 export default async function HeroSliderServer() {
-    const slides = await getSlides();
-    const t = await getTranslations('HeroSlider');
-    
-    const translations = {
-      defaultSubtitle: t('defaultSubtitle'),
-      defaultTitle: t('defaultTitle'), 
-      defaultButtonText: t('defaultButtonText'),
-      benefit1: t('benefit1'),
-      benefit2: t('benefit2'),
-      benefit3: t('benefit3'),
-      benefit4: t('benefit4'),
-      benefit5: t('benefit5'),
-      benefit6: t('benefit6')
-    };
+  const slides = await getSlides();
+  const { safe } = await getSafeTranslations('HeroSlider');
   
-    return (
-      <HeroSliderClient 
-        slides={slides}
-        translations={translations}
-      />
-    );
-  }
+  // Sakārtojam pareizo tulkojumu objektu - katrs benefit kā atsevišķa vērtība
+  const translations = {
+    defaultTitle: safe('defaultTitle', 'Jūsu sapņu māja'),
+    defaultSubtitle: safe('defaultSubtitle', 'Atrodiet ideālo īpašumu'),
+    defaultDescription: safe('defaultDescription', 'Mēs palīdzēsim atrast jūsu sapņu māju'),
+    defaultButtonText: safe('defaultButtonText', 'Apskatīt piedāvājumus'),
+    // Katrs benefit kā atsevišķa vērtība, nevis masīvs
+    benefit1: safe('benefit1', 'Profesionāla pieredze'),
+    benefit2: safe('benefit2', 'Individuāla pieeja'),
+    benefit3: safe('benefit3', 'Tirgus analīze'),
+    benefit4: safe('benefit4', 'Juridiskā palīdzība'),
+    benefit5: safe('benefit5', 'Komunikācija un atbalsts'),
+    benefit6: safe('benefit6', 'Mārketinga stratēģijas')
+  };
+
+  console.log('HeroSlider slides count:', slides.length);
+  
+  return (
+    <HeroSliderClient 
+      slides={slides}
+      translations={translations}
+    />
+  );
+}
