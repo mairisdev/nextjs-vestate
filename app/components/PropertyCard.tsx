@@ -13,9 +13,24 @@ interface PropertyCardProps {
 
 export default function PropertyCard({ property, hasAccess = false }: PropertyCardProps) {
   const [showModal, setShowModal] = useState(false)
+  const [imageError, setImageError] = useState(false)
   
   const isPrivate = property.visibility === 'private'
   const canView = !isPrivate || hasAccess
+
+  // Funkcija, kas nodrošina pareizu attēla ceļu
+  const getImageSrc = (imagePath: string | null) => {
+    if (!imagePath || imageError) return "/placeholder-property.jpg"
+    
+    // Ja jau ir absolūts URL (http/https), izmantojam to
+    if (imagePath.startsWith('http')) return imagePath
+    
+    // Ja sākas ar /, izmantojam to
+    if (imagePath.startsWith('/')) return imagePath
+    
+    // Ja ir relatīvs ceļš, pievienojam /uploads/properties/
+    return `/uploads/properties/${imagePath}`
+  }
 
   const formatPrice = (price: number, currency: string) => {
     return `${(price / 100).toLocaleString()} ${currency}`
@@ -42,12 +57,13 @@ export default function PropertyCard({ property, hasAccess = false }: PropertyCa
         {/* Attēls */}
         <div className="relative h-48 overflow-hidden">
           <Image
-            src={property.mainImage || "/placeholder-property.jpg"}
+            src={getImageSrc(property.mainImage)}
             alt={property.title}
             fill
             className={`object-cover group-hover:scale-105 transition-transform duration-300 ${
               isPrivate && !hasAccess ? 'filter blur-sm' : ''
             }`}
+            onError={() => setImageError(true)}
           />
           
           {/* Privāta sludinājuma badge */}

@@ -13,7 +13,7 @@ export default async function LegalConsultSection2() {
     <section className="relative w-full min-h-[600px] flex items-center justify-end px-6 md:px-12">
       <Image
         src={data.imageUrl || "/placeholder.jpg"}
-        alt={t('imageAlt') || "Jurista konsultācija"}
+        alt={t('Jurista konsultācija') || "Jurista konsultācija"}
         fill
         className="object-cover"
         priority

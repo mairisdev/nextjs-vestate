@@ -14,8 +14,9 @@ type Slide = {
   description: string;
   buttonText: string;
   buttonLink: string;
-  image: File | null | undefined;  // Allow undefined
+  image: File | null | undefined;
   imageUrl?: string;
+  order?: number;
 };
 
 export default function SliderSettings() {
@@ -34,96 +35,97 @@ export default function SliderSettings() {
     imageUrl: "",
   });
 
-  const addSlide = () => {
-    setEditingSlide({
-      title: "",
-      subtitle: "",
-      description: "",
-      buttonText: "",
-      buttonLink: "",
-      image: null,
-      imageUrl: "",
-    });
-    setShowForm(true);
-  };
+const addSlide = () => {
+  setEditingSlide({
+    title: "",
+    subtitle: "",
+    description: "",
+    buttonText: "",
+    buttonLink: "",
+    image: null,
+    imageUrl: "",
+    order: slides.length + 1,
+  });
+  setShowForm(true);
+};
 
   const removeSlide = (index: number) => {
     setSlides(slides.filter((_, i) => i !== index));
   };
 
-  const editSlide = (index: number) => {
-    setEditingSlide(slides[index]);
-    setShowForm(true);
+const editSlide = (index: number) => {
+  const slide = slides[index];
+  setEditingSlide({
+    ...slide,
+    image: undefined,
+    order: slide.order || index + 1,
+  });
+  setShowForm(true);
+};
+
+const handleSave = async () => {
+  setLoading(true);
+  setSuccessMessage(null);
+  setErrorMessage(null);
+
+  const formData: { [key: string]: any } = {
+    title: editingSlide?.title || "",
+    subtitle: editingSlide?.subtitle || "",
+    description: editingSlide?.description || "",
+    buttonText: editingSlide?.buttonText || "",
+    buttonLink: editingSlide?.buttonLink || "",
+    id: editingSlide?.id || null, // Ja rediģējam esošo slaidu
+    order: editingSlide?.order || (slides.length + 1), // Pievienojam order
   };
 
-  const handleSave = async () => {
-    setLoading(true);
-    setSuccessMessage(null);
-    setErrorMessage(null);
+  if (editingSlide?.image) {
+    const form = new FormData();
+    form.append("image", editingSlide.image);
+    form.append("title", editingSlide.title);
+    form.append("type", "slider"); // Norādām, ka attēls ir slaideram
 
-    const formData: { [key: string]: string } = {
-      title: editingSlide?.title || "",
-      subtitle: editingSlide?.subtitle || "",
-      description: editingSlide?.description || "",
-      buttonText: editingSlide?.buttonText || "",
-      buttonLink: editingSlide?.buttonLink || "",
-    };
-
-    if (editingSlide?.image) {
-      const form = new FormData();
-      form.append("image", editingSlide.image);
-      form.append("title", editingSlide.title);
-
-      const response = await fetch("/api/upload-image", {
-        method: "POST",
-        body: form,
-      });
-
-      if (!response.ok) {
-        setErrorMessage("❌ Kļūda augšupielādējot attēlu");
-        setLoading(false);
-        return;
-      }
-
-      const data = await response.json();
-      formData.imageUrl = data.imageUrl || "";
-    }
-
-    const updatedSlide = {
-      ...editingSlide,
-      imageUrl: formData.imageUrl || "",
-      title: editingSlide?.title || "",
-      subtitle: editingSlide?.subtitle || "",
-      description: editingSlide?.description || "",
-      buttonText: editingSlide?.buttonText || "",
-      buttonLink: editingSlide?.buttonLink || "",
-      image: editingSlide?.image || null,  // This now handles undefined correctly
-    };
-
-    setEditingSlide(updatedSlide);
-
-    const response = await fetch("/api/slides", {
+    const response = await fetch("/api/upload-image", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ...formData, id: editingSlide?.id }),
+      body: form,
     });
 
     if (!response.ok) {
-      setErrorMessage("Failed to save slide.");
+      setErrorMessage("❌ Kļūda augšupielādējot attēlu");
       setLoading(false);
       return;
     }
 
-    const res = await fetch("/api/slides");
-    const data = await res.json();
-    setSlides(data);
+    const data = await response.json();
+    formData.imageUrl = data.imageUrl || "";
+  } else {
+    // Ja attēls nav mainīts, izmantojam esošo
+    formData.imageUrl = editingSlide?.imageUrl || "";
+  }
 
-    setSuccessMessage("Veiksmīgi izmainīts!");
+  const response = await fetch("/api/slides", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(formData),
+  });
+
+  if (!response.ok) {
+    setErrorMessage("Failed to save slide.");
     setLoading(false);
-    setShowForm(false);
-  };
+    return;
+  }
+
+  // Pārlādējam slaidus
+  const res = await fetch("/api/slides");
+  const data = await res.json();
+  setSlides(data);
+
+  setSuccessMessage("Veiksmīgi izmainīts!");
+  setLoading(false);
+  setShowForm(false);
+  setEditingSlide(null);
+};
 
   const handleDelete = async (id: string) => {
     try {

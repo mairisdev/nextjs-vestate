@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma"
-import { PropertyVisibility } from "@prisma/client"
 
 // PropertyCategories funkcija
 export async function getPropertyCategories() {
@@ -10,8 +9,8 @@ export async function getPropertyCategories() {
         select: {
           properties: {
             where: {
-              isActive: true,
-              visibility: 'public'
+              isActive: true
+              // Iekļaujam gan publiskos, gan privātos īpašumus
             }
           }
         }
@@ -33,7 +32,7 @@ export async function getPropertiesByCategory(
   
   const where: any = { 
     isActive: true,
-    visibility: 'public'
+    // Noņemam visibility filtru - rādām gan publiskos, gan privātos
   }
 
   // Kategorijas filtrs
@@ -170,7 +169,7 @@ export async function getCitiesAndDistrictsForCategory(categorySlug: string) {
     where: {
       category: { slug: categorySlug },
       isActive: true,
-      visibility: 'public'
+      // Iekļaujam gan publiskos, gan privātos īpašumus
     },
     select: {
       city: true,
@@ -187,7 +186,7 @@ export async function getPropertyProjectsForCategory(categorySlug: string) {
     where: {
       category: { slug: categorySlug },
       isActive: true,
-      visibility: 'public',
+      // Iekļaujam gan publiskos, gan privātos īpašumus
       propertyProject: {
         not: null
       }
@@ -334,7 +333,7 @@ export async function getPrivateProperties(userEmail: string, page = 1, limit = 
   
   const where = { 
     isActive: true,
-    visibility: 'private' as PropertyVisibility
+    visibility: 'private' as const
   }
 
   const properties = await prisma.property.findMany({
@@ -365,7 +364,7 @@ export async function getPrivatePropertiesPreview(categorySlug?: string, page = 
   
   const where: any = { 
     isActive: true,
-    visibility: 'private' as PropertyVisibility
+    visibility: 'private' as const
   }
 
   if (categorySlug && categorySlug !== 'all') {
@@ -507,7 +506,7 @@ export async function searchProperties(query: string, page = 1, limit = 12) {
   
   const where = {
     isActive: true,
-    visibility: 'public' as PropertyVisibility,
+    visibility: 'public' as const,
     OR: [
       { title: { contains: query, mode: 'insensitive' as const } },
       { description: { contains: query, mode: 'insensitive' as const } },

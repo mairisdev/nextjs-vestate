@@ -23,6 +23,7 @@ export async function POST(req: Request) {
     let slide
 
     if (data.id) {
+      // Update existing slide
       slide = await prisma.slide.update({
         where: { id: data.id },
         data: {
@@ -32,28 +33,40 @@ export async function POST(req: Request) {
           buttonText: data.buttonText,
           buttonLink: data.buttonLink,
           imageUrl: data.imageUrl,
-          order: data.order,
+          order: data.order ?? 0, // Pārbaudām vai ir order, ja nav - 0
         },
       })
     } else {
+      // Create new slide
+      // Automātiski iestatām order kā nākamo lielāko numuru
+      const maxOrder = await prisma.slide.findFirst({
+        orderBy: { order: 'desc' },
+        select: { order: true }
+      })
+      
+      const nextOrder = (maxOrder?.order ?? 0) + 1
+
       slide = await prisma.slide.create({
         data: {
-          title: data.title,
-          subtitle: data.subtitle,
-          description: data.description,
-          buttonText: data.buttonText,
-          buttonLink: data.buttonLink,
-          imageUrl: data.imageUrl,
-          order: data.order,
+          title: data.title || "Jauns slaids",
+          subtitle: data.subtitle || "Apakšvirsraksts",
+          description: data.description || "Apraksts",
+          buttonText: data.buttonText || "Pogas teksts",
+          buttonLink: data.buttonLink || "",
+          imageUrl: data.imageUrl || "/placeholder.jpg",
+          order: data.order ?? nextOrder, // Izmantojam nākamo secību
         },
       })
     }
 
-    await syncSlideTranslations(slide)
+    // Sync translations if function exists
+    if (typeof syncSlideTranslations === 'function') {
+      await syncSlideTranslations(slide)
+    }
 
     return new Response(JSON.stringify(slide), { status: 200 })
   } catch (error) {
     console.error("Error saving slide", error)
-    return new Response("Error saving slide", { status: 500 })
+    return new Response(`Error saving slide: ${error}`, { status: 500 })
   }
 }
