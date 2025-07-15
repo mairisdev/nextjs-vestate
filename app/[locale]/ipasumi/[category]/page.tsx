@@ -2,8 +2,8 @@ import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsFo
 import PropertyGrid from "../../../components/PropertyGrid"
 import PropertyFiltersClientWrapper from "../../../components/PropertyFiltersClientWrapper"
 import { notFound } from "next/navigation"
+import { Suspense } from "react"
 import Navbar from "../../../components/Navbar"
-
 
 interface PageProps {
   params: Promise<{ category: string }>
@@ -17,19 +17,16 @@ interface PageProps {
     city?: string
     district?: string
     propertyProject?: string
-    status: string
+    status?: string
     'kartot-pec'?: string
   }>
 }
 
-export async function generateStaticParams() {
-  const categories = await getPropertyCategories()
-  return categories.map((category) => ({
-    category: category.slug,
-  }))
-}
-
-export default async function CategoryPage({ params, searchParams }: PageProps) {
+// Izveidojam separātu komponentu saturam
+async function CategoryPageContent({ 
+  params, 
+  searchParams 
+}: PageProps) {
   const resolvedParams = await params
   const resolvedSearchParams = await searchParams
   
@@ -45,7 +42,14 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     propertyProject: resolvedSearchParams.propertyProject || '',
   }
   const sort = resolvedSearchParams['kartot-pec'] || ""
-  const { properties, total, pages } = await getPropertiesByCategory(resolvedParams.category, page, 12, sort, filters)
+  
+  const { properties, total, pages } = await getPropertiesByCategory(
+    resolvedParams.category, 
+    page, 
+    12, 
+    sort, 
+    filters
+  )
   
   // Only call notFound if no properties and no filters are applied
   const filtersApplied = Object.values(filters).some(v => v)
@@ -64,8 +68,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const propertyProjects = await getPropertyProjectsForCategory(resolvedParams.category) || []
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <>
       <div className="bg-white border-b">
         <div className="max-w-[1600px] mx-auto px-6 py-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -103,6 +106,31 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           </div>
         </div>
       </div>
+    </>
+  )
+}
+
+export async function generateStaticParams() {
+  const categories = await getPropertyCategories()
+  return categories.map((category) => ({
+    category: category.slug,
+  }))
+}
+
+export default function CategoryPage({ params, searchParams }: PageProps) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <Suspense fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00332D] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Ielādē īpašumus...</p>
+          </div>
+        </div>
+      }>
+        <CategoryPageContent params={params} searchParams={searchParams} />
+      </Suspense>
     </div>
   )
 }
