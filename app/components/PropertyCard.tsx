@@ -1,33 +1,14 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
 import { useState } from "react"
 import { Eye, MapPin, Home, Maximize, User, Lock } from "lucide-react"
 import PrivateAccessModal from "./PrivateAccessModal"
+import { Property } from "@/types/property"
 
 interface PropertyCardProps {
-  property: {
-    id: string
-    title: string
-    price: number
-    currency: string
-    address: string
-    city: string
-    rooms: number | null
-    area: number | null
-    mainImage: string | null
-    visibility: 'public' | 'private'
-    category: {
-      name: string
-      slug: string
-    }
-    agent?: {
-      firstName: string
-      lastName: string
-    } | null
-  }
-  hasAccess?: boolean // Vai lietotājam ir piekļuve privātajiem
+  property: Property
+  hasAccess?: boolean
 }
 
 export default function PropertyCard({ property, hasAccess = false }: PropertyCardProps) {
@@ -118,7 +99,7 @@ export default function PropertyCard({ property, hasAccess = false }: PropertyCa
                 <span className="text-xs">
                   {isPrivate && !hasAccess 
                     ? "***" 
-                    : `${property.agent.firstName} ${property.agent.lastName}`
+                    : `${property.agent.firstName || ''} ${property.agent.lastName || ''}`.trim() || 'Aģents'
                   }
                 </span>
               </div>

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { PropertyStatus, PropertyVisibility } from "@prisma/client"
+import { PropertyVisibility } from "@prisma/client"
 
 // PropertyCategories funkcija
 export async function getPropertyCategories() {

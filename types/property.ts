@@ -1,3 +1,5 @@
+import { PropertyStatus, PropertyVisibility } from "@prisma/client"
+
 export interface Property {
   id: string
   title: string
@@ -12,13 +14,13 @@ export interface Property {
   floor: number | null
   totalFloors: number | null
   categoryId: string
-  status: PropertyStatus
-  visibility: PropertyVisibility // Pievienojam
+  status: PropertyStatus // Izmantojam Prisma enum
+  visibility: PropertyVisibility // Izmantojam Prisma enum
   isActive: boolean
   isFeatured: boolean
   mainImage: string | null
   images: string[]
-  views: number
+  propertyProject: string | null
   createdAt: Date
   updatedAt: Date
   category: {
@@ -32,7 +34,6 @@ export interface Property {
     createdAt: Date
     updatedAt: Date
   }
- 
   agent?: {
     id: string
     firstName: string | null
@@ -42,20 +43,9 @@ export interface Property {
   } | null
 }
 
-export enum PropertyStatus {
-  AVAILABLE = "AVAILABLE",
-  RESERVED = "RESERVED", 
-  SOLD = "SOLD",
-  RENTED = "RENTED",
-  UNAVAILABLE = "UNAVAILABLE"
-}
+// Eksportējam Prisma enum tipus arī šeit, ja vajag
+export { PropertyStatus, PropertyVisibility }
 
-export enum PropertyVisibility {
-  PUBLIC = "public",
-  PRIVATE = "private"
-}
-
-// Jauns tips AccessRequest
 export interface AccessRequest {
   id: string
   email: string
