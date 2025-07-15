@@ -16,6 +16,9 @@ model AccessRequest {
   validUntil  DateTime?
   createdAt   DateTime @default(now())
 
+  property    Property? @relation(fields: [propertyId], references: [id])
+  propertyId  String?
+
   @@index([email])
 }
 
@@ -273,6 +276,10 @@ model Property {
   agentId   String?
   agent     Agent?   @relation(fields: [agentId], references: [id])
 
+  visibility PropertyVisibility @default(public)
+
+  accessRequests AccessRequest[]
+
   @@index([categoryId])
   @@index([status])
   @@index([isActive])
@@ -285,6 +292,11 @@ enum PropertyStatus {
   SOLD
   RENTED
   UNAVAILABLE
+}
+
+enum PropertyVisibility {
+  public
+  private
 }
 
 model PropertyView {
