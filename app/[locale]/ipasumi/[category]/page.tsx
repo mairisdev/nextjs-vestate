@@ -94,13 +94,11 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
           <div className="flex-1">
             <PropertyGrid 
-              properties={properties.map(p => ({
-                ...p,
-                propertyProject: p.propertyProject ?? ''
-              }))}
+              properties={properties}
               currentPage={page}
               totalPages={pages}
               category={resolvedParams.category}
+              total={total}
             />
           </div>
         </div>
