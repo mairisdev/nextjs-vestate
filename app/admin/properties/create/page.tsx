@@ -1,4 +1,3 @@
-// app/admin/properties/create/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -16,7 +15,7 @@ interface Category {
   name: string
 }
 
-// PĀRBAUDI VAI ŠĪ RINDA IR FAILA BEIGĀS!
+
 export default function CreateProperty() {
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
@@ -45,16 +44,14 @@ export default function CreateProperty() {
     status: "AVAILABLE",
     isActive: true,
     isFeatured: false,
-    propertyProject: ""
+    propertyProject: "",
+    visibility: 'public'
   })
 
-    // Pievienojam attēlu stāvokļus
     const [mainImage, setMainImage] = useState<File | null>(null)
     const [additionalImages, setAdditionalImages] = useState<File[]>([])
     const [mainImagePreview, setMainImagePreview] = useState<string | null>(null)
     const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([])
-
-    // Attēlu apstrādes funkcijas
     const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -73,7 +70,6 @@ export default function CreateProperty() {
     
     setAdditionalImages(prev => [...prev, ...files])
     
-    // Izveidojam preview
     const newPreviews = files.map(file => URL.createObjectURL(file))
     setAdditionalImagePreviews(prev => [...prev, ...newPreviews])
     }
@@ -113,7 +109,6 @@ export default function CreateProperty() {
     setLoading(true)
     setErrorMessage(null)
 
-    // Validācija
     if (!formData.title.trim()) {
         setErrorMessage("Nosaukums ir obligāts")
         setLoading(false)
@@ -139,11 +134,10 @@ export default function CreateProperty() {
     }
 
     try {
-        // Izmantojam FormData attēlu augšupielādei
         const formDataToSend = new FormData()
         const amenitiesList = formData.amenities.split(",").map(a => a.trim()).filter(Boolean)
         amenitiesList.forEach(a => formDataToSend.append("amenities", a))
-        // Pievienojam visus teksta laukus
+
         formDataToSend.append("title", formData.title.trim())
         formDataToSend.append("description", formData.description.trim())
         formDataToSend.append("price", formData.price)
@@ -162,8 +156,9 @@ export default function CreateProperty() {
         formDataToSend.append("isActive", formData.isActive.toString())
         formDataToSend.append("isFeatured", formData.isFeatured.toString())
         formDataToSend.append("propertyProject", formData.propertyProject)
+        formDataToSend.append("visibility", formData.visibility)
+        formDataToSend.append("isActive", formData.isActive.toString())
 
-        // Pievienojam attēlus
         if (mainImage) {
         formDataToSend.append("mainImage", mainImage)
         }
@@ -174,7 +169,7 @@ export default function CreateProperty() {
 
         const res = await fetch("/api/admin/properties", {
         method: "POST",
-        body: formDataToSend // Nevis JSON!
+        body: formDataToSend
         })
 
         const responseData = await res.json()
@@ -217,7 +212,6 @@ export default function CreateProperty() {
       {errorMessage && <AlertMessage type="error" message={errorMessage} />}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Pamata informācija */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Pamata informācija</h3>
           {agent && (
@@ -409,7 +403,6 @@ export default function CreateProperty() {
           </div>
         </div>
 
-        {/* Atrašanās vieta */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Atrašanās vieta</h3>
           
@@ -445,7 +438,6 @@ export default function CreateProperty() {
           </div>
         </div>
 
-        {/* Tehniskie parametri */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Tehniskie parametri</h3>
           
@@ -521,34 +513,51 @@ export default function CreateProperty() {
           </div>
         </div>
 
-        {/* Papildu opcijas */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Papildu opcijas</h3>
           
           <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.isActive}
-                onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                id="isActive"
-              />
-              <Label htmlFor="isActive">Aktīvs (redzams publiskajā lapā)</Label>
-            </div>
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold mb-4">Redzamības iestatījumi</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <div>
+                <Label>Sludinājuma veids *</Label>
+                <select
+                  value={formData.visibility}
+                  onChange={(e) => handleInputChange('visibility', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="public">Publisks</option>
+                  <option value="private">Privāts</option>
+                </select>
+                <p className="text-sm text-gray-500 mt-1">
+                  Privātie sludinājumi būs redzami tikai ar piekļuves kodu
+                </p>
+              </div>
 
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.isFeatured}
-                onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
-                id="isFeatured"
-              />
-              <Label htmlFor="isFeatured">Izcelts (parādīt izcelto īpašumu sadaļā)</Label>
+              <div>
+                <Label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.isActive}
+                    onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>Rādīt sludinājumu</span>
+                </Label>
+                <p className="text-sm text-gray-500 mt-1">
+                  Neaktīvie sludinājumi netiks rādīti lietotājiem
+                </p>
+              </div>
+
             </div>
+          </div>
+
           </div>
         </div>
 
-        {/* Saglabāšanas pogas */}
         <div className="flex space-x-4">
           <Button type="submit" disabled={loading}>
             {loading ? "Saglabā..." : "Izveidot īpašumu"}

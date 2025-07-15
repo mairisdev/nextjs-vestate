@@ -1,5 +1,5 @@
-import { ClerkProvider } from '@clerk/nextjs';
 import { ReactNode } from "react";
+import { ClerkProvider } from '@clerk/nextjs';
 import AdminSidebar from '../components/admin/AdminSidebar';
 import { Montserrat } from "next/font/google";
 import "../globals.css"
@@ -16,7 +16,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
       <html lang="lv" className={montserrat.className}>
         <body>
-      <AdminSidebar>{children}</AdminSidebar>
+          <AdminSidebar>{children}</AdminSidebar>
         </body>
       </html>
     </ClerkProvider>

@@ -1,7 +1,8 @@
 "use client"
 
-import Link from "next/link"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useEffect, useState } from "react"
+import PropertyCard from "./PropertyCard"
+import Pagination from "./Pagination"
 import { useRouter, useSearchParams } from "next/navigation"
 
 interface Property {
@@ -17,12 +18,16 @@ interface Property {
   floor: number | null
   totalFloors: number | null
   status: string
+  visibility: 'public' | 'private'
   mainImage: string | null
   category: {
     name: string
     slug: string
   }
-  propertyProject: string
+  agent?: {
+    firstName: string
+    lastName: string
+  } | null
 }
 
 interface PropertyGridProps {
@@ -30,19 +35,48 @@ interface PropertyGridProps {
   currentPage: number
   totalPages: number
   category: string
+  total?: number
 }
 
-export default function PropertyGrid({ properties, currentPage, totalPages, category }: PropertyGridProps) {
+export default function PropertyGrid({ 
+  properties, 
+  currentPage, 
+  totalPages, 
+  category,
+  total 
+}: PropertyGridProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [hasPrivateAccess, setHasPrivateAccess] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+
+  // Pārbaudam localStorage piekļuvi
+  useEffect(() => {
+    const storedEmail = localStorage.getItem("private_access_email")
+    const storedValidUntil = localStorage.getItem("private_access_valid_until")
+    
+    if (storedEmail && storedValidUntil) {
+      const validUntil = parseInt(storedValidUntil)
+      if (validUntil > Date.now()) {
+        setUserEmail(storedEmail)
+        setHasPrivateAccess(true)
+      } else {
+        // Piekļuve beigusies
+        localStorage.removeItem("private_access_email")
+        localStorage.removeItem("private_access_valid_until")
+      }
+    }
+  }, [])
 
   const currentSort = searchParams.get('kartot-pec') || ''
 
   const sortOptions = [
-    { label: 'datuma', value: 'date_desc' },
-    { label: 'lētākajiem', value: 'price_asc' },
-    { label: 'dārgākājiem', value: 'price_desc' },
-    { label: 'platības', value: 'area_desc' },
+    { label: 'Pēc datuma (jaunākie)', value: 'newest' },
+    { label: 'Pēc datuma (vecākie)', value: 'oldest' },
+    { label: 'Pēc cenas (lētākie)', value: 'price_asc' },
+    { label: 'Pēc cenas (dārgākie)', value: 'price_desc' },
+    { label: 'Pēc platības (mazākie)', value: 'area_asc' },
+    { label: 'Pēc platības (lielākie)', value: 'area_desc' },
   ]
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -52,180 +86,137 @@ export default function PropertyGrid({ properties, currentPage, totalPages, cate
     } else {
       params.delete('kartot-pec')
     }
+    params.delete('page') // Reset to page 1 when sorting
     router.push(`/ipasumi/${category}?${params.toString()}`)
   }
 
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('lv-LV', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price / 100)
-  }
-
-  const getStatusLabel = (status: string) => {
-    const statusMap = {
-      'AVAILABLE': 'Pieejams',
-      'RESERVED': 'Rezervēts', 
-      'SOLD': 'Pārdots',
-      'RENTED': 'Izīrēts',
-      'UNAVAILABLE': 'Nav pieejams'
-    }
-    return statusMap[status as keyof typeof statusMap] || status
-  }
-
-  const getStatusColor = (status: string) => {
-    const colorMap = {
-      'AVAILABLE': 'bg-green-600',
-      'RESERVED': 'bg-yellow-600',
-      'SOLD': 'bg-red-600', 
-      'RENTED': 'bg-blue-600',
-      'UNAVAILABLE': 'bg-gray-600'
-    }
-    return colorMap[status as keyof typeof colorMap] || 'bg-gray-600'
-  }
-
-  const formatPricePerSquareMeter = (price: number, area: number, currency: string) => {
-    if (!area || area <= 0) return formatPrice(price, currency)
-    return formatPrice(price / area, currency) + ' / m²'
-  }
+  // Sadalam īpašumus pēc tipa
+  const publicProperties = properties.filter(p => p.visibility === 'public')
+  const privateProperties = properties.filter(p => p.visibility === 'private')
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-4 text-sm text-gray-600">
-          <span>Kārtot pēc:</span>
-          <select
-            className="border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-[#00332D]"
-            value={currentSort}
-            onChange={handleSortChange}
-          >
-            <option value="">Noklusējuma</option>
-            {sortOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-        
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {properties.map((property) => (
-          <Link 
-            key={property.id} 
-            href={`/ipasumi/${category}/${property.id}`}
-            className="group"
-          >
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 group-hover:-translate-y-1">
-              <div className="relative h-48 bg-gray-200">
-                {property.mainImage ? (
-                <img
-                    src={`/uploads/properties/${property.mainImage}`}
-                    alt={property.title}
-                    className="w-full h-full object-cover"
-                />
+    <div className="space-y-8">
+      
+      {/* Piekļuves statuss un info */}
+      {privateProperties.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
+                {hasPrivateAccess ? (
+                  <>
+                    <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                    Jums ir piekļuve privātajiem sludinājumiem
+                  </>
                 ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    Nav attēla
-                </div>
+                  <>
+                    <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                    Privātie sludinājumi
+                  </>
                 )}
-                
-                <div className={`absolute top-3 left-3 px-2 py-1 rounded text-white text-xs font-medium ${getStatusColor(property.status)}`}>
-                  {getStatusLabel(property.status)}
-                </div>
-                
-                {property.rooms && (
-                  <div className="absolute top-3 right-3 bg-[#00332D] text-white px-2 py-1 rounded text-xs font-medium">
-                    {property.propertyProject}
-                  </div>
-                )}
-              </div>
-
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-[#00332D] transition-colors">
-                  {property.title}
-                </h3>
-                
-                <p className="text-sm text-gray-600 mb-2">
-                  {property.address}, {property.city}
-                  {property.district && `, ${property.district}`}
-                </p>
-
-                <div className="flex items-center space-x-4 text-xs text-gray-500 mb-3">
-                  {property.rooms && (
-                    <span>{property.rooms} istabas</span>
-                  )}
-                  {property.area && (
-                    <span>{property.area} m²</span>
-                  )}
-                  {property.floor && property.totalFloors && (
-                    <span>{property.floor}/{property.totalFloors} stāvs</span>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-lg font-bold text-[#00332D]">
-                      {formatPrice(property.price, property.currency)}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {property.price != null && property.area != null
-                        ? formatPricePerSquareMeter(property.price, property.area, property.currency)
-                        : '-'}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              </h3>
+              <p className="text-sm text-blue-700">
+                {hasPrivateAccess 
+                  ? `Piekļuve aktīva līdz: ${new Date(parseInt(localStorage.getItem("private_access_valid_until") || "0")).toLocaleString('lv-LV')}`
+                  : `Atrasti ${privateProperties.length} privāti sludinājumi. Nospiediet uz sludinājuma, lai pieprasītu piekļuvi.`
+                }
+              </p>
             </div>
-          </Link>
-        ))}
-      </div>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-2 pt-8">
-          {currentPage > 1 && (
-            <Link 
-              href={`/ipasumi/${category}?page=${currentPage - 1}`}
-              className="flex items-center px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Iepriekšējā
-            </Link>
-          )}
-
-          <div className="flex space-x-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Link
-                key={page}
-                href={`/ipasumi/${category}?page=${page}`}
-                className={`px-3 py-2 rounded-md transition-colors ${
-                  page === currentPage
-                    ? 'bg-[#00332D] text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+            {hasPrivateAccess && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem("private_access_email")
+                  localStorage.removeItem("private_access_valid_until")
+                  setHasPrivateAccess(false)
+                  setUserEmail(null)
+                  window.location.reload()
+                }}
+                className="text-red-600 hover:text-red-800 text-sm underline whitespace-nowrap ml-4"
               >
-                {page}
-              </Link>
-            ))}
+                Atcelt piekļuvi
+              </button>
+            )}
           </div>
-
-          {currentPage < totalPages && (
-            <Link 
-              href={`/ipasumi/${category}?page=${currentPage + 1}`}
-              className="flex items-center px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Nākamā
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Link>
-          )}
         </div>
       )}
 
-      {properties.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">Nav atrasti īpašumi pēc norādītajiem kritērijiem.</p>
-          <p className="text-gray-400 text-sm mt-2">Izmēģiniet mainīt filtrus vai meklēšanas parametrus.</p>
+      {/* Sortēšanas izvēlne */}
+      {properties.length > 0 && (
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            {total !== undefined ? (
+              <>Atrasti <span className="font-semibold">{total}</span> īpašumi</>
+            ) : (
+              <>Rādīti <span className="font-semibold">{properties.length}</span> īpašumi</>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <label htmlFor="sort" className="text-sm text-gray-600">
+              Kārtot:
+            </label>
+            <select
+              id="sort"
+              value={currentSort}
+              onChange={handleSortChange}
+              className="text-sm border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-[#00332D] bg-white"
+            >
+              <option value="">Pēc noklusējuma</option>
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Īpašumu grid */}
+      {properties.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {properties.map((property) => (
+              <PropertyCard 
+                key={property.id} 
+                property={property} 
+                hasAccess={hasPrivateAccess || property.visibility === 'public'}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            categorySlug={category}
+            className="pt-4"
+          />
+        </>
+      ) : (
+        <div className="text-center py-16">
+          <div className="max-w-md mx-auto">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Nav atrasti īpašumi
+            </h3>
+            <p className="text-gray-500 mb-4">
+              Nav atrasti īpašumi ar norādītajiem filtriem.
+            </p>
+            <button
+              onClick={() => {
+                const params = new URLSearchParams()
+                router.push(`/ipasumi/${category}?${params.toString()}`)
+              }}
+              className="text-[#00332D] hover:text-[#004d42] font-medium underline"
+            >
+              Notīrīt visus filtrus
+            </button>
+          </div>
         </div>
       )}
     </div>

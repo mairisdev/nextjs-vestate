@@ -3,29 +3,9 @@ import { prisma } from "@/lib/prisma"
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const email = searchParams.get("email")
   const category = searchParams.get("category")
   const page = parseInt(searchParams.get("page") || "1")
   const limit = 12
-
-  if (!email) {
-    return NextResponse.json({ error: "Nav norādīts e-pasts" }, { status: 400 })
-  }
-
-  // Pārbaudam vai lietotājam ir derīga piekļuve
-  const access = await prisma.accessRequest.findFirst({
-    where: {
-      email,
-      verified: true,
-      validUntil: {
-        gt: new Date(),
-      },
-    },
-  })
-
-  if (!access) {
-    return NextResponse.json({ error: "Nav piekļuves vai beidzies termiņš" }, { status: 401 })
-  }
 
   const skip = (page - 1) * limit
   
@@ -39,17 +19,30 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Iegūstam privātos īpašumus, bet ar ierobežotu informāciju
     const properties = await prisma.property.findMany({
       where,
-      include: {
-        category: true,
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        currency: true,
+        address: true,
+        city: true,
+        rooms: true,
+        area: true,
+        mainImage: true,
+        visibility: true,
+        category: {
+          select: {
+            name: true,
+            slug: true
+          }
+        },
         agent: {
           select: {
-            id: true,
             firstName: true,
-            lastName: true,
-            email: true,
-            phone: true
+            lastName: true
           }
         }
       },
@@ -63,11 +56,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       properties,
       total,
-      pages: Math.ceil(total / limit),
-      validUntil: access.validUntil?.toISOString() ?? null,
+      pages: Math.ceil(total / limit)
     })
   } catch (error) {
-    console.error("Error fetching private properties:", error)
+    console.error("Error fetching private properties preview:", error)
     return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }

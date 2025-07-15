@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
-import { PropertyStatus } from "@prisma/client"
+import { PropertyStatus, PropertyVisibility } from "@prisma/client"
 
 // Helper funkcija slug izveidošanai
 function createSlug(title: string): string {
@@ -66,6 +66,7 @@ export async function POST(req: Request) {
       const status = formData.get("status")?.toString() || "AVAILABLE"
       const isActive = formData.get("isActive") === "true"
       const isFeatured = formData.get("isFeatured") === "true"
+      const visibility = formData.get("visibility") as string || "public"
       const propertyProject = formData.get("propertyProject")?.toString() || null
       console.log("hasElevator:", hasElevator)
 console.log("amenities:", amenities)
@@ -126,6 +127,7 @@ console.log("amenities:", amenities)
           amenities,
           categoryId,
           status: status as PropertyStatus,
+          visibility: visibility as PropertyVisibility,
           isActive,
           isFeatured,
           mainImage: mainImagePath,
