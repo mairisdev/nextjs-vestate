@@ -33,11 +33,11 @@ section {
 @media (max-width: 768px) {
 
   html {
-    scroll-padding-top: 80px;
+    scroll-padding-top: 81px;
   }
   
   section {
-    scroll-margin-top: 80px;
+    scroll-margin-top: 81px;
   }
 
   .mobile-menu-enter {
