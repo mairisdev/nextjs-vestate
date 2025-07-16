@@ -5,6 +5,7 @@ import { useState } from "react"
 import { Eye, MapPin, Home, Maximize, User, Lock } from "lucide-react"
 import PrivateAccessModal from "./PrivateAccessModal"
 import { Property } from "@/types/property"
+import { getImageUrl } from "@/lib/imageUtils"
 
 interface PropertyCardProps {
   property: Property
@@ -18,18 +19,12 @@ export default function PropertyCard({ property, hasAccess = false }: PropertyCa
   const isPrivate = property.visibility === 'private'
   const canView = !isPrivate || hasAccess
 
-  // Funkcija, kas nodrošina pareizu attēla ceļu
+  // Funkcija, kas nodrošina pareizu attēla ceļu ar imageUtils
   const getImageSrc = (imagePath: string | null) => {
     if (!imagePath || imageError) return "/placeholder-property.jpg"
     
-    // Ja jau ir absolūts URL (http/https), izmantojam to
-    if (imagePath.startsWith('http')) return imagePath
-    
-    // Ja sākas ar /, izmantojam to
-    if (imagePath.startsWith('/')) return imagePath
-    
-    // Ja ir relatīvs ceļš, pievienojam /uploads/properties/
-    return `/uploads/properties/${imagePath}`
+    // Izmantojam mūsu helper funkciju
+    return getImageUrl(imagePath) || "/placeholder-property.jpg"
   }
 
   const formatPrice = (price: number, currency: string) => {
