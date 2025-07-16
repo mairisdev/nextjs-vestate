@@ -40,6 +40,7 @@ interface Property {
   images: string[]
   propertyProject?: string
   videoUrl: string
+  visibility?: string
 }
 
 interface EditPropertyProps {
@@ -75,7 +76,8 @@ export default function EditProperty({ params }: EditPropertyProps) {
     status: "AVAILABLE",
     isActive: true,
     isFeatured: false,
-    propertyProject: ""
+    propertyProject: "",
+    visibility: "public"
   })
 
   const [currentMainImage, setCurrentMainImage] = useState<string | null>(null)
@@ -86,18 +88,21 @@ export default function EditProperty({ params }: EditPropertyProps) {
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([])
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([])
 
+  // LABOTS useEffect - tikai viens!
   useEffect(() => {
-    const loadData = async () => {
-      const resolvedParams = await params
-      setPropertyId(resolvedParams.id)
-      
     const loadData = async () => {
       try {
         const resolvedParams = await params
-        setPropertyId(resolvedParams.id)
+        const id = resolvedParams.id
+        setPropertyId(id)
         
-        await loadProperty(resolvedParams.id)
-        await loadCategories()
+        console.log('Loading property with ID:', id)
+        
+        // Ielādējam īpašumu un kategorijas paralēli
+        await Promise.all([
+          loadProperty(id),
+          loadCategories()
+        ])
         
         setLoading(false)
       } catch (error) {
@@ -106,22 +111,24 @@ export default function EditProperty({ params }: EditPropertyProps) {
         setLoading(false)
       }
     }
-      
-      setLoading(false)
-    }
     
     loadData()
   }, [params])
 
   const loadProperty = async (id: string) => {
     try {
+      console.log('Fetching property:', `/api/admin/properties/${id}`)
       const res = await fetch(`/api/admin/properties/${id}`)
+      
       if (!res.ok) {
+        const errorText = await res.text()
+        console.error('Failed to load property:', res.status, errorText)
         setErrorMessage("Īpašums nav atrasts")
         return
       }
       
       const property: Property = await res.json()
+      console.log('Property loaded:', property)
       
       setFormData({
         title: property.title,
@@ -143,12 +150,20 @@ export default function EditProperty({ params }: EditPropertyProps) {
         propertyProject: property.propertyProject || "",
         series: property.series || "",
         hasElevator: property.hasElevator || false,
-        amenities: property.amenities?.join(", ") || ""
+        amenities: Array.isArray(property.amenities) ? property.amenities.join(", ") : "",
+        visibility: property.visibility || "public"
       })
 
       setCurrentMainImage(property.mainImage)
       setCurrentAdditionalImages(property.images)
+      
+      console.log('Form data set:', {
+        title: property.title,
+        mainImage: property.mainImage,
+        images: property.images
+      })
     } catch (error) {
+      console.error('Error loading property:', error)
       setErrorMessage("Neizdevās ielādēt īpašumu")
     }
   }
@@ -162,7 +177,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
       }
       
       const data = await res.json()
-
+      console.log('Categories loaded:', data.length)
       setCategories(data)
       
     } catch (error) {
@@ -258,6 +273,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
       formDataToSend.append("isFeatured", formData.isFeatured.toString())
       formDataToSend.append("propertyProject", formData.propertyProject)
       formDataToSend.append("videoUrl", formData.videoUrl || "")
+      formDataToSend.append("visibility", formData.visibility)
 
       if (newMainImage) {
         formDataToSend.append("mainImage", newMainImage)
@@ -269,14 +285,10 @@ export default function EditProperty({ params }: EditPropertyProps) {
       })
 
       formDataToSend.append("imagesToDelete", JSON.stringify(imagesToDelete))
-      
       formDataToSend.append("currentMainImage", currentMainImage || "")
       formDataToSend.append("currentAdditionalImages", JSON.stringify(currentAdditionalImages))
 
-      console.log("FormData to be sent:")
-      for (const [key, value] of formDataToSend.entries()) {
-        console.log(`${key}:`, value)
-      }
+      console.log("Sending update request for property:", propertyId)
 
       const res = await fetch(`/api/admin/properties/${propertyId}`, {
         method: "PUT",
@@ -300,6 +312,24 @@ export default function EditProperty({ params }: EditPropertyProps) {
     } finally {
       setSaving(false)
     }
+  }
+
+  // Helper funkcija attēlu URL parādīšanai
+  const getImageUrl = (imagePath: string | null) => {
+    if (!imagePath) return null
+    
+    // Ja jau ir pilns URL (Cloudinary), atgriežam tā kā ir
+    if (imagePath.startsWith('http')) {
+      return imagePath
+    }
+    
+    // Ja ir relatīvs ceļš, pievienojam uploads prefix
+    if (imagePath.startsWith('/uploads/')) {
+      return imagePath
+    }
+    
+    // Cits gadījums - pievienojam uploads/properties/
+    return `/uploads/properties/${imagePath}`
   }
 
   if (loading) {
@@ -374,6 +404,18 @@ export default function EditProperty({ params }: EditPropertyProps) {
                 <option value="SOLD">Pārdots</option>
                 <option value="RENTED">Izīrēts</option>
                 <option value="UNAVAILABLE">Nav pieejams</option>
+              </select>
+            </div>
+
+            <div>
+              <Label>Redzamība</Label>
+              <select
+                value={formData.visibility}
+                onChange={(e) => handleInputChange('visibility', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="public">Publisks</option>
+                <option value="private">Privāts</option>
               </select>
             </div>
 
@@ -509,33 +551,34 @@ export default function EditProperty({ params }: EditPropertyProps) {
                 placeholder="5"
               />
             </div>
+            
             <div>
-            <Label>Sērija</Label>
-            <Input
-              value={formData.series}
-              onChange={(e) => handleInputChange("series", e.target.value)}
-              placeholder="Specprojekts"
-            />
-          </div>
+              <Label>Sērija</Label>
+              <Input
+                value={formData.series}
+                onChange={(e) => handleInputChange("series", e.target.value)}
+                placeholder="Specprojekts"
+              />
+            </div>
 
-          <div className="flex items-center space-x-2 mt-2">
-            <input
-              type="checkbox"
-              checked={formData.hasElevator}
-              onChange={(e) => handleInputChange("hasElevator", e.target.checked)}
-              id="hasElevator"
-            />
-            <Label htmlFor="hasElevator">Ir lifts</Label>
-          </div>
+            <div className="flex items-center space-x-2 mt-2">
+              <input
+                type="checkbox"
+                checked={formData.hasElevator}
+                onChange={(e) => handleInputChange("hasElevator", e.target.checked)}
+                id="hasElevator"
+              />
+              <Label htmlFor="hasElevator">Ir lifts</Label>
+            </div>
 
-          <div className="md:col-span-2 mt-2">
-            <Label>Ērtības / ekstras (komats atdala)</Label>
-            <Input
-              value={formData.amenities}
-              onChange={(e) => handleInputChange("amenities", e.target.value)}
-              placeholder="Balkons, Autostāvvieta, Signalizācija"
-            />
-          </div>
+            <div className="md:col-span-2 mt-2">
+              <Label>Ērtības / ekstras (komats atdala)</Label>
+              <Input
+                value={formData.amenities}
+                onChange={(e) => handleInputChange("amenities", e.target.value)}
+                placeholder="Balkons, Autostāvvieta, Signalizācija"
+              />
+            </div>
           </div>
         </div>
 
@@ -547,7 +590,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
               <Label>Pašreizējais galvenais attēls</Label>
               <div className="mt-2 flex items-center space-x-4">
                 <img
-                  src={`/uploads/properties/${currentMainImage}`}
+                  src={getImageUrl(currentMainImage) || ''}
                   alt="Galvenais attēls"
                   className="w-32 h-32 object-cover rounded-lg border"
                 />
@@ -600,7 +643,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
                 {currentAdditionalImages.map((imagePath, index) => (
                   <div key={index} className="relative">
                     <img
-                      src={`/uploads/properties/${imagePath}`}
+                      src={getImageUrl(imagePath) || ''}
                       alt={`Papildu attēls ${index + 1}`}
                       className="w-20 h-20 object-cover rounded-lg border"
                     />
@@ -650,7 +693,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 mt-4">
             <Label htmlFor="videoUrl">YouTube video saite</Label>
             <Input
               id="videoUrl"
@@ -660,7 +703,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
               placeholder="https://www.youtube.com/embed/..."
             />
           </div>
-
         </div>
 
         <div className="bg-white p-6 rounded-lg border">
