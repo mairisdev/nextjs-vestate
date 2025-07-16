@@ -91,10 +91,21 @@ export default function EditProperty({ params }: EditPropertyProps) {
       const resolvedParams = await params
       setPropertyId(resolvedParams.id)
       
-      await Promise.all([
-        loadProperty(resolvedParams.id),
-        loadCategories()
-      ])
+    const loadData = async () => {
+      try {
+        const resolvedParams = await params
+        setPropertyId(resolvedParams.id)
+        
+        await loadProperty(resolvedParams.id)
+        await loadCategories()
+        
+        setLoading(false)
+      } catch (error) {
+        console.error('Error loading data:', error)
+        setErrorMessage("Neizdevās ielādēt datus")
+        setLoading(false)
+      }
+    }
       
       setLoading(false)
     }
