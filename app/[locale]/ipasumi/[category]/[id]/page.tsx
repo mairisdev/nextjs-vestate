@@ -1,12 +1,16 @@
+'use client'
+
 import { prisma } from "@/lib/db"
 import { notFound } from "next/navigation"
-import PropertyImageGallery from "../../../../components/PropertyImageGallery"
-import PropertyDetails from "../../../../components/PropertyDetails"
-import PropertyContact from "../../../../components/PropertyContact"
+import PropertyImageGallery from "@/app/components/PropertyImageGallery"
+import PropertyDetails from "@/app/components/PropertyDetails"
+import PropertyContact from "@/app/components/PropertyContact"
 import Link from "next/link"
 import { ArrowLeft, MapPin, Eye } from "lucide-react"
-import { incrementUniqueView } from "@/lib/utils/property-views"
-import Navbar from "../../../../components/Navbar"
+import { useTrackView } from "@/app/hooks/useTrackView"
+import { TrackPropertyView } from '@/app/components/TrackPropertyView'
+import Navbar from "@/app/components/Navbar"
+import { ViewCounter } from "@/app/components/ViewCounter"
 
 interface PropertyPageProps {
   params: Promise<{ category: string; id: string }>
@@ -49,11 +53,9 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
     notFound()
   }
 
-  const uniqueViews = await incrementUniqueView(property.id)
+  <TrackPropertyView propertyId={property.id} />
 
-  const formatPrice = (price: number, currency: string) => {
-    return `${(price / 100).toLocaleString()} ${currency}`
-  }
+  useTrackView(property.id)
 
   const getStatusLabel = (status: string) => {
     const statusMap = {
@@ -116,7 +118,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                 <div className="flex items-center space-x-4 text-sm text-gray-500">
                   <div className="flex items-center space-x-1">
                     <Eye className="w-4 h-4" />
-                    <span>{uniqueViews} unikāli skatījumi</span>
+                    <ViewCounter propertyId={property.id} />
                   </div>
                   <span className="font-semibold">{property.propertyProject}</span>
                 </div>
