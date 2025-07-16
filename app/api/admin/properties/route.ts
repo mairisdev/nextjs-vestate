@@ -18,8 +18,20 @@ function createSlug(title: string): string {
     .replace(/^-|-$/g, '')
 }
 
+// ERROR LOGGING HELPER
+function logError(stage: string, error: any, context?: any) {
+  console.error(`❌ PROPERTIES API ERROR [${stage}]:`, error)
+  if (context) {
+    console.error(`📋 Context:`, context)
+  }
+  console.error(`📝 Error message:`, error?.message)
+  console.error(`🔍 Error stack:`, error?.stack)
+}
+
 export async function GET() {
   try {
+    console.log('🔍 GET /api/admin/properties - Starting...')
+    
     const properties = await prisma.property.findMany({
       include: {
         category: true,
@@ -27,90 +39,227 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' }
     })
+    
+    console.log('✅ GET Properties loaded successfully:', properties.length)
     return NextResponse.json(properties)
   } catch (error) {
+    logError('GET', error)
     return NextResponse.json({ error: "Kļūda ielādējot īpašumus" }, { status: 500 })
   }
 }
 
 export async function POST(req: Request) {
+  console.log('🚀 POST /api/admin/properties - Starting...')
+  
   try {
-    
-    const session = await auth();
-    const userId = session?.userId;
-    const agent = await prisma.agent.findUnique({
-      where: { clerkId: userId || "" }
-    })
+    // 1. AUTHENTICATION CHECK
+    let session, userId, agent
+    try {
+      console.log('🔐 Checking authentication...')
+      session = await auth()
+      userId = session?.userId
+      
+      if (!userId) {
+        console.error('❌ No user ID found in session')
+        return NextResponse.json({ error: "Nav autentifikācijas" }, { status: 401 })
+      }
+      
+      console.log('✅ User authenticated:', userId)
+      
+      agent = await prisma.agent.findUnique({
+        where: { clerkId: userId }
+      })
+      
+      console.log('👤 Agent found:', agent ? `${agent.firstName} ${agent.lastName}` : 'None')
+      
+    } catch (error) {
+      logError('AUTHENTICATION', error)
+      return NextResponse.json({ error: "Autentifikācijas kļūda" }, { status: 401 })
+    }
 
+    // 2. CONTENT TYPE CHECK
     const contentType = req.headers.get("content-type")
+    console.log('📋 Content type:', contentType)
 
     if (contentType?.includes("multipart/form-data")) {
-      const formData = await req.formData()
-
-      const title = formData.get("title")?.toString() || ""
-      const description = formData.get("description")?.toString() || ""
-      const price = parseFloat(formData.get("price")?.toString() || "0")
-      const currency = formData.get("currency")?.toString() || "EUR"
-      const address = formData.get("address")?.toString() || ""
-      const city = formData.get("city")?.toString() || ""
-      const district = formData.get("district")?.toString() || null
-      const videoUrl = formData.get("videoUrl")?.toString() || null
-      const rooms = formData.get("rooms") ? parseInt(formData.get("rooms")?.toString() || "0") : null
-      const area = formData.get("area") ? parseFloat(formData.get("area")?.toString() || "0") : null
-      const floor = formData.get("floor") ? parseInt(formData.get("floor")?.toString() || "0") : null
-      const totalFloors = formData.get("totalFloors") ? parseInt(formData.get("totalFloors")?.toString() || "0") : null
-      const series = formData.get("series")?.toString() || null
-      const hasElevator = formData.get("hasElevator") === "true"
-      const amenities = formData.getAll("amenities").map(a => a.toString()).filter(Boolean)
-      const categoryId = formData.get("categoryId")?.toString() || ""
-      const status = formData.get("status")?.toString() || "AVAILABLE"
-      const isActive = formData.get("isActive") === "true"
-      const isFeatured = formData.get("isFeatured") === "true"
-      const visibility = formData.get("visibility") as string || "public"
-      const propertyProject = formData.get("propertyProject")?.toString() || null
-      console.log("hasElevator:", hasElevator)
-console.log("amenities:", amenities)
-
-      if (!title || !categoryId || !address || !city) {
-        return NextResponse.json({ 
-          error: "Nepieciešami lauki: nosaukums, kategorija, adrese, pilsēta" 
-        }, { status: 400 })
+      console.log('📁 Processing multipart form data...')
+      
+      // 3. FORM DATA PARSING
+      let formData
+      try {
+        console.log('📊 Parsing form data...')
+        formData = await req.formData()
+        console.log('✅ Form data parsed successfully')
+        
+        // Log all form fields (bez file content)
+        const formFields: Record<string, any> = {}
+        for (const [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            formFields[key] = `FILE: ${value.name} (${value.size} bytes)`
+          } else {
+            formFields[key] = value
+          }
+        }
+        console.log('📝 Form fields:', formFields)
+        
+      } catch (error) {
+        logError('FORM_DATA_PARSING', error)
+        return NextResponse.json({ error: "Nevar nolasīt form datus" }, { status: 400 })
       }
 
-      const folderName = createSlug(title)
-      const uploadsDir = path.join(process.cwd(), "public/uploads/properties", folderName)
+      // 4. EXTRACT FORM VALUES
+      let title, description, price, currency, address, city, district, videoUrl, rooms, area, floor, totalFloors, series, hasElevator, amenities, categoryId, status, isActive, isFeatured, visibility, propertyProject
 
-      await mkdir(uploadsDir, { recursive: true })
+      try {
+        console.log('🔍 Extracting form values...')
+        
+        title = formData.get("title")?.toString() || ""
+        description = formData.get("description")?.toString() || ""
+        price = parseFloat(formData.get("price")?.toString() || "0")
+        currency = formData.get("currency")?.toString() || "EUR"
+        address = formData.get("address")?.toString() || ""
+        city = formData.get("city")?.toString() || ""
+        district = formData.get("district")?.toString() || null
+        videoUrl = formData.get("videoUrl")?.toString() || null
+        rooms = formData.get("rooms") ? parseInt(formData.get("rooms")?.toString() || "0") : null
+        area = formData.get("area") ? parseFloat(formData.get("area")?.toString() || "0") : null
+        floor = formData.get("floor") ? parseInt(formData.get("floor")?.toString() || "0") : null
+        totalFloors = formData.get("totalFloors") ? parseInt(formData.get("totalFloors")?.toString() || "0") : null
+        series = formData.get("series")?.toString() || null
+        hasElevator = formData.get("hasElevator") === "true"
+        amenities = formData.getAll("amenities").map(a => a.toString()).filter(Boolean)
+        categoryId = formData.get("categoryId")?.toString() || ""
+        status = formData.get("status")?.toString() || "AVAILABLE"
+        isActive = formData.get("isActive") === "true"
+        isFeatured = formData.get("isFeatured") === "true"
+        visibility = formData.get("visibility") as string || "public"
+        propertyProject = formData.get("propertyProject")?.toString() || null
 
+        console.log('✅ Form values extracted:', {
+          title, price, currency, address, city, categoryId, status, visibility,
+          hasImages: formData.get("mainImage") ? 'Yes' : 'No'
+        })
+
+      } catch (error) {
+        logError('FORM_VALUES_EXTRACTION', error)
+        return NextResponse.json({ error: "Kļūda apstrādājot form datus" }, { status: 400 })
+      }
+
+      // 5. VALIDATION
+      try {
+        console.log('✅ Validating required fields...')
+        
+        if (!title || !categoryId || !address || !city) {
+          const missing = []
+          if (!title) missing.push('nosaukums')
+          if (!categoryId) missing.push('kategorija')
+          if (!address) missing.push('adrese')
+          if (!city) missing.push('pilsēta')
+          
+          console.error('❌ Missing required fields:', missing)
+          return NextResponse.json({ 
+            error: `Nepieciešami lauki: ${missing.join(', ')}` 
+          }, { status: 400 })
+        }
+
+        // Validate category exists
+        const categoryExists = await prisma.propertyCategory.findUnique({
+          where: { id: categoryId }
+        })
+        
+        if (!categoryExists) {
+          console.error('❌ Category not found:', categoryId)
+          return NextResponse.json({ error: "Kategorija neeksistē" }, { status: 400 })
+        }
+        
+        console.log('✅ Category validation passed:', categoryExists.name)
+
+      } catch (error) {
+        logError('VALIDATION', error, { title, categoryId, address, city })
+        return NextResponse.json({ error: "Validācijas kļūda" }, { status: 400 })
+      }
+
+      // 6. FILE UPLOAD PROCESSING
       let mainImagePath = null
       const additionalImagePaths: string[] = []
 
-      const mainImageFile = formData.get("mainImage") as File | null
-      if (mainImageFile && mainImageFile.size > 0) {
-        const ext = path.extname(mainImageFile.name) || ".jpg"
-        const fileName = `main-image${ext}`
-        const filePath = path.join(uploadsDir, fileName)
-        const buffer = Buffer.from(await mainImageFile.arrayBuffer())
-        await writeFile(filePath, buffer)
-        mainImagePath = `${folderName}/${fileName}`
+      try {
+        console.log('📁 Processing file uploads...')
+        
+        const folderName = createSlug(title)
+        const uploadsDir = path.join(process.cwd(), "public/uploads/properties", folderName)
+        console.log('📂 Upload directory:', uploadsDir)
+
+        await mkdir(uploadsDir, { recursive: true })
+        console.log('✅ Upload directory created')
+
+        // Main image
+        const mainImageFile = formData.get("mainImage") as File | null
+        if (mainImageFile && mainImageFile.size > 0) {
+          console.log('🖼️ Processing main image:', {
+            name: mainImageFile.name,
+            size: mainImageFile.size,
+            type: mainImageFile.type
+          })
+          
+          // Check file size (10MB limit)
+          if (mainImageFile.size > 10 * 1024 * 1024) {
+            console.error('❌ Main image too large:', mainImageFile.size)
+            return NextResponse.json({ 
+              error: "Galvenais attēls pārāk liels (max 10MB)" 
+            }, { status: 413 })
+          }
+          
+          const ext = path.extname(mainImageFile.name) || ".jpg"
+          const fileName = `main-image${ext}`
+          const filePath = path.join(uploadsDir, fileName)
+          const buffer = Buffer.from(await mainImageFile.arrayBuffer())
+          await writeFile(filePath, buffer)
+          mainImagePath = `${folderName}/${fileName}`
+          console.log('✅ Main image saved:', mainImagePath)
+        }
+
+        // Additional images
+        let imageIndex = 0
+        while (true) {
+          const additionalImageFile = formData.get(`additionalImage${imageIndex}`) as File | null
+          if (!additionalImageFile || additionalImageFile.size === 0) break
+
+          console.log(`🖼️ Processing additional image ${imageIndex + 1}:`, {
+            name: additionalImageFile.name,
+            size: additionalImageFile.size
+          })
+          
+          // Check file size
+          if (additionalImageFile.size > 10 * 1024 * 1024) {
+            console.error(`❌ Additional image ${imageIndex + 1} too large:`, additionalImageFile.size)
+            return NextResponse.json({ 
+              error: `Attēls ${imageIndex + 1} pārāk liels (max 10MB)` 
+            }, { status: 413 })
+          }
+
+          const ext = path.extname(additionalImageFile.name) || ".jpg"
+          const fileName = `additional-image-${imageIndex + 1}${ext}`
+          const filePath = path.join(uploadsDir, fileName)
+          const buffer = Buffer.from(await additionalImageFile.arrayBuffer())
+          await writeFile(filePath, buffer)
+          additionalImagePaths.push(`${folderName}/${fileName}`)
+          console.log(`✅ Additional image ${imageIndex + 1} saved`)
+          imageIndex++
+        }
+
+        console.log('✅ All files processed successfully')
+
+      } catch (error) {
+        logError('FILE_UPLOAD', error, { title, folderName: createSlug(title) })
+        return NextResponse.json({ error: "Kļūda augšupielādējot failus" }, { status: 500 })
       }
 
-      let imageIndex = 0
-      while (true) {
-        const additionalImageFile = formData.get(`additionalImage${imageIndex}`) as File | null
-        if (!additionalImageFile || additionalImageFile.size === 0) break
-
-        const ext = path.extname(additionalImageFile.name) || ".jpg"
-        const fileName = `additional-image-${imageIndex + 1}${ext}`
-        const filePath = path.join(uploadsDir, fileName)
-        const buffer = Buffer.from(await additionalImageFile.arrayBuffer())
-        await writeFile(filePath, buffer)
-        additionalImagePaths.push(`${folderName}/${fileName}`)
-        imageIndex++
-      }
-
-      const property = await prisma.property.create({
-        data: {
+      // 7. DATABASE SAVE
+      try {
+        console.log('💾 Saving to database...')
+        
+        const propertyData = {
           title,
           description,
           price: Math.round(price * 100),
@@ -135,49 +284,110 @@ console.log("amenities:", amenities)
           propertyProject,
           videoUrl,
           agentId: agent?.id || null
-        },
-        include: {
-          category: true,
-          agent: true
         }
-      })
+        
+        console.log('📝 Property data to save:', {
+          ...propertyData,
+          price: propertyData.price / 100, // Show in EUR for readability
+          amenities: propertyData.amenities.length,
+          images: propertyData.images.length
+        })
 
-      return NextResponse.json(property)
+        const property = await prisma.property.create({
+          data: propertyData,
+          include: {
+            category: true,
+            agent: true
+          }
+        })
+
+        console.log('✅ Property saved successfully with ID:', property.id)
+        console.log('🎉 POST /api/admin/properties - SUCCESS!')
+
+        return NextResponse.json(property)
+
+      } catch (error) {
+        logError('DATABASE_SAVE', error, { title, categoryId })
+        
+        // Specific Prisma errors
+        if (error instanceof Error) {
+          if (error.message.includes('Foreign key constraint')) {
+            return NextResponse.json({ error: "Kategorija neeksistē" }, { status: 400 })
+          }
+          if (error.message.includes('Unique constraint')) {
+            return NextResponse.json({ error: "Īpašums ar šādu nosaukumu jau eksistē" }, { status: 400 })
+          }
+        }
+        
+        return NextResponse.json({ error: "Kļūda saglabājot īpašumu datubāzē" }, { status: 500 })
+      }
+
     } else {
-      const data = await req.json()
+      // JSON REQUEST HANDLING
+      console.log('📋 Processing JSON request...')
+      
+      try {
+        const data = await req.json()
+        console.log('📝 JSON data received:', data)
 
-      const property = await prisma.property.create({
-        data: {
-          title: data.title,
-          description: data.description,
-          price: Math.round((data.price || 0) * 100),
-          currency: data.currency || "EUR",
-          address: data.address,
-          city: data.city,
-          district: data.district || null,
-          rooms: data.rooms || null,
-          area: data.area || null,
-          floor: data.floor || null,
-          totalFloors: data.totalFloors || null,
-          categoryId: data.categoryId,
-          status: (data.status as PropertyStatus) || PropertyStatus.AVAILABLE,
-          isActive: data.isActive !== undefined ? data.isActive : true,
-          isFeatured: data.isFeatured !== undefined ? data.isFeatured : false,
-          mainImage: null,
-          images: [],
-          propertyProject: data.propertyProject || null,
-          agentId: agent?.id || null
-        },
-        include: {
-          category: true,
-          agent: true
-        }
-      })
+        const property = await prisma.property.create({
+          data: {
+            title: data.title,
+            description: data.description,
+            price: Math.round((data.price || 0) * 100),
+            currency: data.currency || "EUR",
+            address: data.address,
+            city: data.city,
+            district: data.district || null,
+            rooms: data.rooms || null,
+            area: data.area || null,
+            floor: data.floor || null,
+            totalFloors: data.totalFloors || null,
+            categoryId: data.categoryId,
+            status: (data.status as PropertyStatus) || PropertyStatus.AVAILABLE,
+            isActive: data.isActive !== undefined ? data.isActive : true,
+            isFeatured: data.isFeatured !== undefined ? data.isFeatured : false,
+            mainImage: null,
+            images: [],
+            propertyProject: data.propertyProject || null,
+            agentId: agent?.id || null
+          },
+          include: {
+            category: true,
+            agent: true
+          }
+        })
 
-      return NextResponse.json(property)
+        console.log('✅ JSON property saved:', property.id)
+        return NextResponse.json(property)
+
+      } catch (error) {
+        logError('JSON_PROCESSING', error)
+        return NextResponse.json({ error: "Kļūda apstrādājot JSON datus" }, { status: 500 })
+      }
     }
   } catch (error) {
-    console.error("Error creating property:", error)
-    return NextResponse.json({ error: "Kļūda izveidojot īpašumu" }, { status: 500 })
+    logError('GENERAL', error)
+    
+    // Check for specific error types
+    if (error instanceof Error) {
+      if (error.message.includes('PayloadTooLargeError') || error.message.includes('413')) {
+        return NextResponse.json({ 
+          error: "Augšupielādētie faili pārāk lieli (max 50MB)" 
+        }, { status: 413 })
+      }
+      
+      if (error.message.includes('timeout')) {
+        return NextResponse.json({ 
+          error: "Pieprasījums beidzies ar timeout" 
+        }, { status: 408 })
+      }
+    }
+    
+    console.error('💥 PROPERTIES API CRITICAL ERROR:', error)
+    return NextResponse.json({ 
+      error: "Serveris kļūda izveidojot īpašumu", 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 })
   }
 }

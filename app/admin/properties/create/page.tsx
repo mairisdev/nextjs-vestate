@@ -11,19 +11,21 @@ import Link from "next/link"
 import AlertMessage from "../../../components/ui/alert-message"
 
 interface Category {
-  isVisible: any
+  isVisible: boolean
   id: string
   name: string
+  slug: string
 }
-
 
 export default function CreateProperty() {
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [agent, setAgent] = useState<{ firstName: string; lastName: string } | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const [formData, setFormData] = useState({
     title: "",
@@ -49,167 +51,346 @@ export default function CreateProperty() {
     visibility: 'public'
   })
 
-    const [mainImage, setMainImage] = useState<File | null>(null)
-    const [additionalImages, setAdditionalImages] = useState<File[]>([])
-    const [mainImagePreview, setMainImagePreview] = useState<string | null>(null)
-    const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([])
-    const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [mainImage, setMainImage] = useState<File | null>(null)
+  const [additionalImages, setAdditionalImages] = useState<File[]>([])
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null)
+  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([])
+
+  // FILE SIZE VALIDATION HELPER
+  const validateFileSize = (file: File, maxSizeMB: number = 10): boolean => {
+    const maxSizeBytes = maxSizeMB * 1024 * 1024
+    if (file.size > maxSizeBytes) {
+      setErrorMessage(`Fails "${file.name}" pārāk liels. Maksimums ${maxSizeMB}MB.`)
+      return false
+    }
+    return true
+  }
+
+  // CALCULATE TOTAL UPLOAD SIZE
+  const getTotalUploadSize = (): number => {
+    let totalSize = 0
+    if (mainImage) totalSize += mainImage.size
+    additionalImages.forEach(img => totalSize += img.size)
+    return totalSize
+  }
+
+  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-        setMainImage(file)
-        const previewUrl = URL.createObjectURL(file)
-        setMainImagePreview(previewUrl)
+      console.log('📁 Main image selected:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        sizeMB: (file.size / 1024 / 1024).toFixed(2)
+      })
+
+      // Validate file size
+      if (!validateFileSize(file, 10)) {
+        return
+      }
+
+      setMainImage(file)
+      const previewUrl = URL.createObjectURL(file)
+      setMainImagePreview(previewUrl)
     }
+  }
+
+  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    
+    console.log('📁 Additional images selected:', files.map(f => ({
+      name: f.name,
+      size: f.size,
+      sizeMB: (f.size / 1024 / 1024).toFixed(2)
+    })))
+
+    // Validate each file size
+    for (const file of files) {
+      if (!validateFileSize(file, 10)) {
+        return
+      }
     }
 
-    const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
+    // Check total number of images
     if (files.length + additionalImages.length > 10) {
-        setErrorMessage("Maksimums 10 papildu attēli")
-        return
+      setErrorMessage("Maksimums 10 papildu attēli")
+      return
     }
-    
+
+    // Check total upload size
+    const currentTotalSize = getTotalUploadSize()
+    const newFilesSize = files.reduce((sum, file) => sum + file.size, 0)
+    const totalSizeMB = (currentTotalSize + newFilesSize) / 1024 / 1024
+
+    if (totalSizeMB > 50) {
+      setErrorMessage(`Kopējais failu izmērs pārāk liels: ${totalSizeMB.toFixed(1)}MB. Maksimums 50MB.`)
+      return
+    }
+
     setAdditionalImages(prev => [...prev, ...files])
     
     const newPreviews = files.map(file => URL.createObjectURL(file))
     setAdditionalImagePreviews(prev => [...prev, ...newPreviews])
-    }
+  }
 
-    const removeAdditionalImage = (index: number) => {
+  const removeAdditionalImage = (index: number) => {
+    console.log('🗑️ Removing additional image:', index)
     setAdditionalImages(prev => prev.filter((_, i) => i !== index))
     setAdditionalImagePreviews(prev => prev.filter((_, i) => i !== index))
-    }
+  }
 
-    useEffect(() => {
-      loadCategories()
-      loadAgent()
-    }, [])
+  useEffect(() => {
+    loadCategories()
+    loadAgent()
+  }, [])
 
-    const loadAgent = async () => {
-      try {
-        const res = await fetch("/api/admin/agent/me")
-        const data = await res.json()
-        setAgent({ firstName: data.firstName, lastName: data.lastName })
-      } catch (error) {
-        console.error("Neizdevās ielādēt aģentu", error)
+  // DEBUG: Log state changes
+  useEffect(() => {
+    console.log('🔄 Categories state changed:', {
+      count: categories.length,
+      loading: categoriesLoading,
+      categories: categories.map(c => ({ id: c.id, name: c.name, visible: c.isVisible }))
+    })
+  }, [categories, categoriesLoading])
+
+  useEffect(() => {
+    console.log('🔄 Form categoryId changed:', formData.categoryId)
+  }, [formData.categoryId])
+
+  const loadAgent = async () => {
+    try {
+      console.log('👤 Loading agent...')
+      const res = await fetch("/api/admin/agent/me")
+      
+      if (!res.ok) {
+        console.warn('⚠️ Agent API returned non-OK status:', res.status)
+        return
       }
+      
+      const data = await res.json()
+      setAgent({ firstName: data.firstName, lastName: data.lastName })
+      console.log('✅ Agent loaded:', data.firstName, data.lastName)
+    } catch (error) {
+      console.error("❌ Failed to load agent:", error)
     }
+  }
 
-    const loadCategories = async () => {
-      try {
-        const res = await fetch("/api/admin/property-categories")
-        
-        if (!res.ok) {
-          throw new Error("Failed to load categories")
-        }
-        
-        const data = await res.json()
-        
-        // SVARĪGI: Noņem .filter((cat: any) => cat.isVisible)
-        // Admin panelī rādam VISAS kategorijas, ne tikai redzamās
-        setCategories(data)
-        
-        console.log("Ielādētās kategorijas:", data) // Debug info
-        
-      } catch (error) {
-        console.error("Error loading categories:", error)
-        setErrorMessage("Neizdevās ielādēt kategorijas")
+  const loadCategories = async () => {
+    try {
+      console.log('📂 Loading categories...')
+      setCategoriesLoading(true)
+      
+      const res = await fetch("/api/admin/property-categories")
+      
+      console.log('📂 Categories API response:', {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok,
+        headers: Object.fromEntries(res.headers.entries())
+      })
+      
+      if (!res.ok) {
+        throw new Error(`Categories API failed: ${res.status} ${res.statusText}`)
       }
+      
+      const data = await res.json()
+      
+      console.log('📂 Categories raw data:', data)
+      console.log('📂 Categories count:', data?.length || 0)
+      
+      if (!Array.isArray(data)) {
+        throw new Error(`Categories API returned invalid data type: ${typeof data}`)
+      }
+      
+      // SVARĪGI: Admin panelī rādam VISAS kategorijas
+      setCategories(data)
+      
+      console.log('✅ Categories loaded successfully:', {
+        total: data.length,
+        visible: data.filter((c: Category) => c.isVisible).length,
+        hidden: data.filter((c: Category) => !c.isVisible).length
+      })
+      
+    } catch (error) {
+      console.error("❌ Error loading categories:", error)
+      setErrorMessage(`Neizdevās ielādēt kategorijas: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setCategoriesLoading(false)
     }
+  }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('🚀 Starting form submission...')
+    
     setLoading(true)
     setErrorMessage(null)
+    setUploadProgress(0)
 
+    // CLIENT-SIDE VALIDATION
+    console.log('✅ Validating form data...')
+    
     if (!formData.title.trim()) {
-        setErrorMessage("Nosaukums ir obligāts")
-        setLoading(false)
-        return
+      setErrorMessage("Nosaukums ir obligāts")
+      setLoading(false)
+      return
     }
 
     if (!formData.categoryId) {
-        setErrorMessage("Kategorija ir obligāta")
-        setLoading(false)
-        return
+      setErrorMessage(`Kategorija ir obligāta. Pieejamas ${categories.length} kategorijas.`)
+      setLoading(false)
+      return
     }
 
     if (!formData.address.trim()) {
-        setErrorMessage("Adrese ir obligāta")
-        setLoading(false)
-        return
+      setErrorMessage("Adrese ir obligāta")
+      setLoading(false)
+      return
     }
 
     if (!formData.city.trim()) {
-        setErrorMessage("Pilsēta ir obligāta")
-        setLoading(false)
-        return
+      setErrorMessage("Pilsēta ir obligāta")
+      setLoading(false)
+      return
     }
+
+    // Validate selected category exists
+    const selectedCategory = categories.find(c => c.id === formData.categoryId)
+    if (!selectedCategory) {
+      setErrorMessage("Izvēlētā kategorija neeksistē")
+      setLoading(false)
+      return
+    }
+
+    // Final file size check
+    const totalSizeMB = getTotalUploadSize() / 1024 / 1024
+    if (totalSizeMB > 50) {
+      setErrorMessage(`Kopējais failu izmērs pārāk liels: ${totalSizeMB.toFixed(1)}MB. Maksimums 50MB.`)
+      setLoading(false)
+      return
+    }
+
+    console.log('✅ Validation passed, preparing form data...')
+
+    // Progress simulation
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval)
+          return prev
+        }
+        return prev + 10
+      })
+    }, 500)
 
     try {
-        const formDataToSend = new FormData()
-        const amenitiesList = formData.amenities.split(",").map(a => a.trim()).filter(Boolean)
-        amenitiesList.forEach(a => formDataToSend.append("amenities", a))
+      const formDataToSend = new FormData()
+      
+      // Log what we're sending
+      console.log('📝 Form data being sent:', {
+        title: formData.title,
+        categoryId: formData.categoryId,
+        selectedCategory: selectedCategory.name,
+        price: formData.price,
+        address: formData.address,
+        city: formData.city,
+        mainImage: mainImage ? `${mainImage.name} (${(mainImage.size / 1024 / 1024).toFixed(2)}MB)` : 'None',
+        additionalImages: additionalImages.length,
+        totalSizeMB: totalSizeMB.toFixed(2)
+      })
 
-        formDataToSend.append("title", formData.title.trim())
-        formDataToSend.append("description", formData.description.trim())
-        formDataToSend.append("price", formData.price)
-        formDataToSend.append("currency", formData.currency)
-        formDataToSend.append("address", formData.address.trim())
-        formDataToSend.append("city", formData.city.trim())
-        formDataToSend.append("district", formData.district.trim())
-        formDataToSend.append("rooms", formData.rooms)
-        formDataToSend.append("area", formData.area)
-        formDataToSend.append("floor", formData.floor)
-        formDataToSend.append("totalFloors", formData.totalFloors)
-        formDataToSend.append("series", formData.series)
-        formDataToSend.append("hasElevator", formData.hasElevator.toString())
-        formDataToSend.append("categoryId", formData.categoryId)
-        formDataToSend.append("status", formData.status)
-        formDataToSend.append("isActive", formData.isActive.toString())
-        formDataToSend.append("isFeatured", formData.isFeatured.toString())
-        formDataToSend.append("propertyProject", formData.propertyProject)
-        formDataToSend.append("visibility", formData.visibility)
-        formDataToSend.append("isActive", formData.isActive.toString())
+      // Add form fields
+      const amenitiesList = formData.amenities.split(",").map(a => a.trim()).filter(Boolean)
+      amenitiesList.forEach(a => formDataToSend.append("amenities", a))
 
-        if (mainImage) {
+      formDataToSend.append("title", formData.title.trim())
+      formDataToSend.append("description", formData.description.trim())
+      formDataToSend.append("price", formData.price)
+      formDataToSend.append("currency", formData.currency)
+      formDataToSend.append("address", formData.address.trim())
+      formDataToSend.append("city", formData.city.trim())
+      formDataToSend.append("district", formData.district.trim())
+      formDataToSend.append("rooms", formData.rooms)
+      formDataToSend.append("area", formData.area)
+      formDataToSend.append("floor", formData.floor)
+      formDataToSend.append("totalFloors", formData.totalFloors)
+      formDataToSend.append("series", formData.series)
+      formDataToSend.append("hasElevator", formData.hasElevator.toString())
+      formDataToSend.append("categoryId", formData.categoryId)
+      formDataToSend.append("status", formData.status)
+      formDataToSend.append("isActive", formData.isActive.toString())
+      formDataToSend.append("isFeatured", formData.isFeatured.toString())
+      formDataToSend.append("propertyProject", formData.propertyProject)
+      formDataToSend.append("visibility", formData.visibility)
+
+      // Add images
+      if (mainImage) {
+        console.log('📎 Adding main image:', mainImage.name)
         formDataToSend.append("mainImage", mainImage)
-        }
-        
-        additionalImages.forEach((image, index) => {
+      }
+      
+      additionalImages.forEach((image, index) => {
+        console.log(`📎 Adding additional image ${index + 1}:`, image.name)
         formDataToSend.append(`additionalImage${index}`, image)
-        })
+      })
 
-        const res = await fetch("/api/admin/properties", {
+      console.log('🌐 Sending POST request to /api/admin/properties...')
+
+      const res = await fetch("/api/admin/properties", {
         method: "POST",
         body: formDataToSend
-        })
+      })
 
-        const responseData = await res.json()
+      console.log('📡 API Response:', {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok,
+        headers: Object.fromEntries(res.headers.entries())
+      })
 
-        if (res.ok) {
+      const responseData = await res.json()
+      console.log('📄 Response data:', responseData)
+
+      setUploadProgress(100)
+      clearInterval(progressInterval)
+
+      if (res.ok) {
+        console.log('🎉 Property created successfully!')
         setSuccessMessage("Īpašums izveidots veiksmīgi!")
         setTimeout(() => {
-            router.push("/admin/properties")
+          router.push("/admin/properties")
         }, 1500)
-        } else {
-        setErrorMessage(responseData.error || "Kļūda izveidojot īpašumu")
-        }
+      } else {
+        console.error('❌ API returned error:', responseData)
+        setErrorMessage(responseData.error || `Kļūda izveidojot īpašumu (${res.status})`)
+      }
     } catch (error) {
-        console.error("Submit error:", error)
-        setErrorMessage("Kļūda izveidojot īpašumu")
+      console.error("💥 Submit error:", error)
+      clearInterval(progressInterval)
+      setUploadProgress(0)
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          setErrorMessage("Savienojuma kļūda. Pārbaudiet interneta savienojumu.")
+        } else if (error.message.includes('413')) {
+          setErrorMessage("Faili pārāk lieli serverim")
+        } else {
+          setErrorMessage(`Kļūda izveidojot īpašumu: ${error.message}`)
+        }
+      } else {
+        setErrorMessage("Nezināma kļūda izveidojot īpašumu")
+      }
     } finally {
-        setLoading(false)
+      setLoading(false)
     }
-    }
+  }
 
-    const handleInputChange = (field: string, value: any) => {
-        setFormData(prev => ({
-        ...prev,
-        [field]: value
-        }))
-    }
-
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
   return (
     <div className="space-y-6 max-w-4xl mx-auto py-10">
       <div className="flex items-center space-x-4">
@@ -223,6 +404,34 @@ export default function CreateProperty() {
 
       {successMessage && <AlertMessage type="success" message={successMessage} />}
       {errorMessage && <AlertMessage type="error" message={errorMessage} />}
+
+            {/* DEBUG INFO (remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-gray-100 p-4 rounded-lg text-xs">
+          <h4 className="font-bold mb-2">Debug Info:</h4>
+          <p>Categories loading: {categoriesLoading ? 'Yes' : 'No'}</p>
+          <p>Categories count: {categories.length}</p>
+          <p>Selected category: {formData.categoryId || 'None'}</p>
+          <p>Total upload size: {(getTotalUploadSize() / 1024 / 1024).toFixed(2)}MB</p>
+          <p>Agent: {agent ? `${agent.firstName} ${agent.lastName}` : 'Not loaded'}</p>
+        </div>
+      )}
+
+      {/* Progress bar */}
+      {loading && uploadProgress > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-blue-800">Augšupielādē...</span>
+            <span className="text-sm text-blue-600">{uploadProgress}%</span>
+          </div>
+          <div className="w-full bg-blue-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white p-6 rounded-lg border">
