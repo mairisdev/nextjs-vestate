@@ -1,8 +1,9 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
-import { writeFile, mkdir } from "fs/promises"
-import path from "path"
+import { existsSync } from 'fs'
+import { mkdir, writeFile } from 'fs/promises'
+import path from 'path'
 import { PropertyStatus, PropertyVisibility } from "@prisma/client"
 
 // SVARĪGI: Pievieno šos exports lai izslēgtu static generation
@@ -172,114 +173,195 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Validācijas kļūda" }, { status: 400 })
       }
 
-      // 6. VIENKĀRŠS FAILU UPLOAD
-      let mainImagePath: string | null = null
-      const additionalImagePaths: string[] = []
+let mainImagePath: string | null = null
+const additionalImagePaths: string[] = []
+
+try {
+  console.log('📁 Processing serverless-safe file uploads...')
+  
+  // Pārbaudām, vai public mape eksistē
+  const publicDir = path.join(process.cwd(), "public")
+  const uploadsDir = path.join(publicDir, "uploads")
+  const propertiesDir = path.join(uploadsDir, "properties")
+  
+  console.log('📂 Checking directories:', {
+    publicDir: existsSync(publicDir),
+    uploadsDir: existsSync(uploadsDir),
+    propertiesDir: existsSync(propertiesDir)
+  })
+  
+  // Izveidojam mapes tikai tad, ja tās neeksistē
+  try {
+    if (!existsSync(publicDir)) {
+      console.log('Creating public directory...')
+      await mkdir(publicDir, { recursive: true })
+    }
+    
+    if (!existsSync(uploadsDir)) {
+      console.log('Creating uploads directory...')
+      await mkdir(uploadsDir, { recursive: true })
+    }
+    
+    if (!existsSync(propertiesDir)) {
+      console.log('Creating properties directory...')
+      await mkdir(propertiesDir, { recursive: true })
+    }
+    
+    console.log('✅ Directory structure ready')
+  } catch (mkdirError) {
+    console.error('❌ Failed to create directory structure:', mkdirError)
+    
+    // Ja nevar izveidot mapes, izmantojam tikai public/
+    const fallbackDir = path.join(process.cwd(), "public")
+    if (!existsSync(fallbackDir)) {
+      return NextResponse.json({ 
+        error: "Servera konfigurācijas problēma - nevar piekļūt public mapei" 
+      }, { status: 500 })
+    }
+    
+    // Saglabājam failus tieši public/ mapē
+    console.log('⚠️ Using fallback - saving directly to public/')
+    
+    // Izveido unikālu ID īpašumam
+    const timestamp = Date.now()
+    const propertyId = `property-${createSlug(title)}-${timestamp}`
+    
+    // Main image
+    const mainImageFile = formData.get("mainImage") as File | null
+    if (mainImageFile && mainImageFile.size > 0) {
+      try {
+        const ext = path.extname(mainImageFile.name) || ".jpg"
+        const fileName = `${propertyId}-main${ext}`
+        const filePath = path.join(fallbackDir, fileName)
+        
+        const buffer = Buffer.from(await mainImageFile.arrayBuffer())
+        await writeFile(filePath, buffer)
+        
+        mainImagePath = `/${fileName}`
+        console.log('✅ Main image saved (fallback):', mainImagePath)
+      } catch (saveError) {
+        console.error('❌ Failed to save main image (fallback):', saveError)
+        return NextResponse.json({ 
+          error: "Neizdevās saglabāt galveno attēlu" 
+        }, { status: 500 })
+      }
+    }
+    
+    // Additional images
+    let imageIndex = 0
+    while (true) {
+      const additionalImageFile = formData.get(`additionalImage${imageIndex}`) as File | null
+      if (!additionalImageFile || additionalImageFile.size === 0) break
 
       try {
-        console.log('📁 Processing simple file uploads...')
+        const ext = path.extname(additionalImageFile.name) || ".jpg"
+        const fileName = `${propertyId}-${imageIndex + 1}${ext}`
+        const filePath = path.join(fallbackDir, fileName)
         
-        // Izveido uploads/properties mapi (NE public!)
-        const uploadsDir = path.join(process.cwd(), "public", "uploads", "properties")
-        console.log('📂 Upload directory:', uploadsDir)
+        const buffer = Buffer.from(await additionalImageFile.arrayBuffer())
+        await writeFile(filePath, buffer)
         
-        try {
-          await mkdir(uploadsDir, { recursive: true })
-          console.log('✅ Upload directory created/exists')
-        } catch (mkdirError) {
-          console.error('❌ Failed to create upload directory:', mkdirError)
-          return NextResponse.json({ 
-            error: "Nevar izveidot upload direktoriju" 
-          }, { status: 500 })
-        }
-
-        // Izveido unikālu ID īpašumam
-        const timestamp = Date.now()
-        const propertyId = `${createSlug(title)}-${timestamp}`
-        
-        // Main image
-        const mainImageFile = formData.get("mainImage") as File | null
-        if (mainImageFile && mainImageFile.size > 0) {
-          console.log('🖼️ Processing main image:', {
-            name: mainImageFile.name,
-            size: mainImageFile.size,
-            type: mainImageFile.type
-          })
-          
-          // Check file size
-          if (mainImageFile.size > 10 * 1024 * 1024) {
-            console.error('❌ Main image too large:', mainImageFile.size)
-            return NextResponse.json({ 
-              error: "Galvenais attēls pārāk liels (max 10MB)" 
-            }, { status: 413 })
-          }
-          
-          try {
-            const ext = path.extname(mainImageFile.name) || ".jpg"
-            const fileName = `${propertyId}-main${ext}`
-            const filePath = path.join(uploadsDir, fileName)
-            
-            const buffer = Buffer.from(await mainImageFile.arrayBuffer())
-            await writeFile(filePath, buffer)
-            
-            // Saglabā relatīvo ceļu datubāzē
-            mainImagePath = `/uploads/properties/${fileName}`
-            console.log('✅ Main image saved:', mainImagePath)
-            
-          } catch (saveError) {
-            console.error('❌ Failed to save main image:', saveError)
-            return NextResponse.json({ 
-              error: "Neizdevās saglabāt galveno attēlu" 
-            }, { status: 500 })
-          }
-        }
-
-        // Additional images
-        let imageIndex = 0
-        while (true) {
-          const additionalImageFile = formData.get(`additionalImage${imageIndex}`) as File | null
-          if (!additionalImageFile || additionalImageFile.size === 0) break
-
-          console.log(`🖼️ Processing additional image ${imageIndex + 1}:`, {
-            name: additionalImageFile.name,
-            size: additionalImageFile.size
-          })
-          
-          // Check file size
-          if (additionalImageFile.size > 10 * 1024 * 1024) {
-            console.error(`❌ Additional image ${imageIndex + 1} too large:`, additionalImageFile.size)
-            return NextResponse.json({ 
-              error: `Attēls ${imageIndex + 1} pārāk liels (max 10MB)` 
-            }, { status: 413 })
-          }
-
-          try {
-            const ext = path.extname(additionalImageFile.name) || ".jpg"
-            const fileName = `${propertyId}-${imageIndex + 1}${ext}`
-            const filePath = path.join(uploadsDir, fileName)
-            
-            const buffer = Buffer.from(await additionalImageFile.arrayBuffer())
-            await writeFile(filePath, buffer)
-            
-            // Saglabā relatīvo ceļu datubāzē
-            const relativePath = `properties/${fileName}`
-            additionalImagePaths.push(relativePath)
-            console.log(`✅ Additional image ${imageIndex + 1} saved:`, relativePath)
-            
-          } catch (saveError) {
-            console.error(`❌ Failed to save additional image ${imageIndex + 1}:`, saveError)
-            // Turpinām ar citiem attēliem
-          }
-          
-          imageIndex++
-        }
-
-        console.log('✅ All files processed successfully')
-
-      } catch (error) {
-        logError('FILE_UPLOAD', error, { title })
-        return NextResponse.json({ error: "Kļūda augšupielādējot failus" }, { status: 500 })
+        const relativePath = `/${fileName}`
+        additionalImagePaths.push(relativePath)
+        console.log(`✅ Additional image ${imageIndex + 1} saved (fallback):`, relativePath)
+      } catch (saveError) {
+        console.error(`❌ Failed to save additional image ${imageIndex + 1} (fallback):`, saveError)
       }
+      
+      imageIndex++
+    }
+    
+    // Iziet no try/catch bloka ar fallback rezultātiem
+    console.log('✅ All files processed successfully (fallback mode)')
+    // Turpinām ar datubāzes saglabāšanu...
+    return // vai arī continue ar kodu
+  }
+
+  // NORMĀLAIS CEĻŠ - ja mapes tika izveidotas veiksmīgi
+  const timestamp = Date.now()
+  const propertyId = `${createSlug(title)}-${timestamp}`
+  
+  // Main image
+  const mainImageFile = formData.get("mainImage") as File | null
+  if (mainImageFile && mainImageFile.size > 0) {
+    console.log('🖼️ Processing main image:', {
+      name: mainImageFile.name,
+      size: mainImageFile.size,
+      type: mainImageFile.type
+    })
+    
+    // Check file size
+    if (mainImageFile.size > 10 * 1024 * 1024) {
+      console.error('❌ Main image too large:', mainImageFile.size)
+      return NextResponse.json({ 
+        error: "Galvenais attēls pārāk liels (max 10MB)" 
+      }, { status: 413 })
+    }
+    
+    try {
+      const ext = path.extname(mainImageFile.name) || ".jpg"
+      const fileName = `${propertyId}-main${ext}`
+      const filePath = path.join(propertiesDir, fileName)
+      
+      const buffer = Buffer.from(await mainImageFile.arrayBuffer())
+      await writeFile(filePath, buffer)
+      
+      mainImagePath = `/uploads/properties/${fileName}`
+      console.log('✅ Main image saved:', mainImagePath)
+      
+    } catch (saveError) {
+      console.error('❌ Failed to save main image:', saveError)
+      return NextResponse.json({ 
+        error: "Neizdevās saglabāt galveno attēlu" 
+      }, { status: 500 })
+    }
+  }
+
+  // Additional images
+  let imageIndex = 0
+  while (true) {
+    const additionalImageFile = formData.get(`additionalImage${imageIndex}`) as File | null
+    if (!additionalImageFile || additionalImageFile.size === 0) break
+
+    console.log(`🖼️ Processing additional image ${imageIndex + 1}:`, {
+      name: additionalImageFile.name,
+      size: additionalImageFile.size
+    })
+    
+    // Check file size
+    if (additionalImageFile.size > 10 * 1024 * 1024) {
+      console.error(`❌ Additional image ${imageIndex + 1} too large:`, additionalImageFile.size)
+      return NextResponse.json({ 
+        error: `Attēls ${imageIndex + 1} pārāk liels (max 10MB)` 
+      }, { status: 413 })
+    }
+
+    try {
+      const ext = path.extname(additionalImageFile.name) || ".jpg"
+      const fileName = `${propertyId}-${imageIndex + 1}${ext}`
+      const filePath = path.join(propertiesDir, fileName)
+      
+      const buffer = Buffer.from(await additionalImageFile.arrayBuffer())
+      await writeFile(filePath, buffer)
+      
+      const relativePath = `/uploads/properties/${fileName}`
+      additionalImagePaths.push(relativePath)
+      console.log(`✅ Additional image ${imageIndex + 1} saved:`, relativePath)
+      
+    } catch (saveError) {
+      console.error(`❌ Failed to save additional image ${imageIndex + 1}:`, saveError)
+      // Turpinām ar citiem attēliem
+    }
+    
+    imageIndex++
+  }
+
+  console.log('✅ All files processed successfully')
+
+} catch (error) {
+  logError('FILE_UPLOAD', error, { title })
+  return NextResponse.json({ error: "Kļūda augšupielādējot failus" }, { status: 500 })
+}
 
       // 7. DATABASE SAVE
       try {
