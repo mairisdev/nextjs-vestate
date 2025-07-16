@@ -180,7 +180,7 @@ export async function POST(req: Request) {
         console.log('📁 Processing simple file uploads...')
         
         // Izveido uploads/properties mapi (NE public!)
-        const uploadsDir = path.join(process.cwd(), "uploads", "properties")
+        const uploadsDir = path.join(process.cwd(), "public", "uploads", "properties")
         console.log('📂 Upload directory:', uploadsDir)
         
         try {
@@ -223,7 +223,7 @@ export async function POST(req: Request) {
             await writeFile(filePath, buffer)
             
             // Saglabā relatīvo ceļu datubāzē
-            mainImagePath = `properties/${fileName}`
+            mainImagePath = `/uploads/properties/${fileName}`
             console.log('✅ Main image saved:', mainImagePath)
             
           } catch (saveError) {
