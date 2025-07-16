@@ -77,7 +77,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
     propertyProject: ""
   })
 
-  // Attēlu stāvokļi
   const [currentMainImage, setCurrentMainImage] = useState<string | null>(null)
   const [currentAdditionalImages, setCurrentAdditionalImages] = useState<string[]>([])
   const [newMainImage, setNewMainImage] = useState<File | null>(null)
@@ -170,7 +169,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
     }))
   }
 
-  // Attēlu apstrādes funkcijas
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -215,7 +213,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
     setSaving(true)
     setErrorMessage(null)
 
-    // Validācija
     if (!formData.title.trim()) {
       setErrorMessage("Nosaukums ir obligāts")
       setSaving(false)
@@ -232,7 +229,7 @@ export default function EditProperty({ params }: EditPropertyProps) {
       const formDataToSend = new FormData()
       const amenitiesList = formData.amenities.split(",").map(a => a.trim()).filter(Boolean)
       amenitiesList.forEach(a => formDataToSend.append("amenities", a))
-      // Pievienojam visus teksta laukus
+
       formDataToSend.append("title", formData.title.trim())
       formDataToSend.append("description", formData.description.trim())
       formDataToSend.append("price", formData.price)
@@ -253,7 +250,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
       formDataToSend.append("propertyProject", formData.propertyProject)
       formDataToSend.append("videoUrl", formData.videoUrl || "")
 
-      // Pievienojam jauno galveno attēlu
       if (newMainImage) {
         formDataToSend.append("mainImage", newMainImage)
       }
@@ -263,10 +259,8 @@ export default function EditProperty({ params }: EditPropertyProps) {
         formDataToSend.append(`additionalImage${index}`, image)
       })
 
-      // Pievienojam dzēšamos attēlus
       formDataToSend.append("imagesToDelete", JSON.stringify(imagesToDelete))
       
-      // Pievienojam esošos attēlus, kas paliks
       formDataToSend.append("currentMainImage", currentMainImage || "")
       formDataToSend.append("currentAdditionalImages", JSON.stringify(currentAdditionalImages))
 
@@ -322,7 +316,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
       {errorMessage && <AlertMessage type="error" message={errorMessage} />}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Pamata informācija - tāds pats kā create */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Pamata informācija</h3>
           
@@ -392,7 +385,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
           </div>
         </div>
 
-        {/* Cena */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Cena</h3>
           
@@ -423,7 +415,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
           </div>
         </div>
 
-        {/* Atrašanās vieta */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Atrašanās vieta</h3>
           
@@ -459,7 +450,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
           </div>
         </div>
 
-        {/* Tehniskie parametri */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Tehniskie parametri</h3>
           
@@ -534,11 +524,9 @@ export default function EditProperty({ params }: EditPropertyProps) {
           </div>
         </div>
 
-        {/* Attēli */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Attēli</h3>
           
-          {/* Esošais galvenais attēls */}
           {currentMainImage && (
             <div className="mb-4">
               <Label>Pašreizējais galvenais attēls</Label>
@@ -559,7 +547,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
             </div>
           )}
 
-          {/* Jauns galvenais attēls */}
           <div className="mb-6">
             <Label>Mainīt galveno attēlu</Label>
             <div className="mt-2">
@@ -591,7 +578,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
             </div>
           </div>
 
-          {/* Esošie papildu attēli */}
           {currentAdditionalImages.length > 0 && (
             <div className="mb-4">
               <Label>Pašreizējie papildu attēli</Label>
@@ -616,7 +602,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
             </div>
           )}
 
-          {/* Jauni papildu attēli */}
           <div>
             <Label>Pievienot papildu attēlus (max 10)</Label>
             <div className="mt-2">
@@ -651,20 +636,18 @@ export default function EditProperty({ params }: EditPropertyProps) {
           </div>
 
           <div className="space-y-2">
-  <Label htmlFor="videoUrl">YouTube video saite</Label>
-  <Input
-    id="videoUrl"
-    type="url"
-    value={formData.videoUrl}
-    onChange={(e) => handleInputChange('videoUrl', e.target.value)}
-    placeholder="https://www.youtube.com/embed/..."
-  />
-</div>
-
+            <Label htmlFor="videoUrl">YouTube video saite</Label>
+            <Input
+              id="videoUrl"
+              type="url"
+              value={formData.videoUrl}
+              onChange={(e) => handleInputChange('videoUrl', e.target.value)}
+              placeholder="https://www.youtube.com/embed/..."
+            />
+          </div>
 
         </div>
 
-        {/* Papildu opcijas */}
         <div className="bg-white p-6 rounded-lg border">
           <h3 className="text-lg font-semibold mb-4">Papildu opcijas</h3>
           
@@ -691,7 +674,6 @@ export default function EditProperty({ params }: EditPropertyProps) {
           </div>
         </div>
 
-        {/* Saglabāšanas pogas */}
         <div className="flex space-x-4">
           <Button type="submit" disabled={saving}>
             {saving ? "Saglabā..." : "Atjaunināt īpašumu"}
