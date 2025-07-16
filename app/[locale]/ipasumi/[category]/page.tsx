@@ -5,8 +5,9 @@ import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import Navbar from "../../../components/Navbar"
 
+// ✅ IZLABOTS PageProps interface - noņemti Promise wrappers
 interface PageProps {
-  params: { category: string } // Noņemam Promise wrapper
+  params: { category: string } // ❌ bija: Promise<{ category: string }>
   searchParams: {
     page?: string
     minPrice?: string
@@ -19,15 +20,18 @@ interface PageProps {
     propertyProject?: string
     status?: string
     'kartot-pec'?: string
-  } // Noņemam Promise wrapper
+  } // ❌ bija: Promise<{ ... }>
 }
 
-// Pārveidojam par sync funkciju
+// ✅ IZLABOTS - pārveidots uz sync funkciju
 function CategoryPageContent({ 
   params, 
   searchParams 
 }: PageProps) {
-  // Noņemam await - params un searchParams nav promises Next.js 15
+  // ✅ IZLABOTS - noņemti await, jo params un searchParams nav Promise
+  // ❌ bija: const resolvedParams = await params
+  // ❌ bija: const resolvedSearchParams = await searchParams
+  
   const page = parseInt(searchParams.page || "1")
   const filters = {
     minPrice: searchParams.minPrice || '',
@@ -44,7 +48,7 @@ function CategoryPageContent({
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <CategoryPageContentAsync 
-        category={params.category}
+        category={params.category} // ✅ IZLABOTS - tieši params.category
         page={page}
         filters={filters}
         sort={sort}
@@ -53,7 +57,7 @@ function CategoryPageContent({
   )
 }
 
-// Async operācijas pārvietojam uz atsevišķu komponentu
+// ✅ JAUNS - async operācijas pārvietotas uz atsevišķu komponentu
 async function CategoryPageContentAsync({ 
   category, 
   page, 
@@ -111,7 +115,7 @@ async function CategoryPageContentAsync({
             <div className="lg:w-80 flex-shrink-0">
               <PropertyFiltersClientWrapper 
                 categories={categories}
-                currentCategory={category}
+                currentCategory={category} // ✅ IZLABOTS - tieši category
                 cities={cities.filter((city: string | null): city is string => city !== null)}
                 districts={districts.filter((district: string | null): district is string => district !== null)}
                 propertyProjects={propertyProjects}
@@ -123,7 +127,7 @@ async function CategoryPageContentAsync({
                 properties={properties}
                 currentPage={page}
                 totalPages={pages}
-                category={category}
+                category={category} // ✅ IZLABOTS - tieši category
                 total={total}
               />
             </div>
@@ -144,6 +148,7 @@ export async function generateStaticParams() {
   }))
 }
 
+// ✅ IZLABOTS - noņemti Promise wrappers no params un searchParams
 export default function CategoryPage({ params, searchParams }: PageProps) {
   return (
     <div className="min-h-screen bg-gray-50">
