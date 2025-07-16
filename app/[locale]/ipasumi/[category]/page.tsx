@@ -1,9 +1,8 @@
 import { getPropertiesByCategory, getPropertyCategories, getCitiesAndDistrictsForCategory, getPropertyProjectsForCategory } from "@/lib/queries/properties"
-import PropertyGrid from "../../../components/PropertyGrid"
-import PropertyFiltersClientWrapper from "../../../components/PropertyFiltersClientWrapper"
+import PropertyGrid from "@/app/components/PropertyGrid"
+import PropertyFiltersClientWrapper from "@/app/components/PropertyFiltersClientWrapper"
+import Navbar from "@/app/components/Navbar"
 import { notFound } from "next/navigation"
-import { Suspense } from "react"
-import Navbar from "../../../components/Navbar"
 
 // ✅ PAREIZI - saglabājam Promise wrappers (Next.js 15 prasība)
 interface PageProps {
