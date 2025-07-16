@@ -7,7 +7,6 @@ import PropertyDetails from "@/app/components/PropertyDetails"
 import PropertyContact from "@/app/components/PropertyContact"
 import Link from "next/link"
 import { ArrowLeft, MapPin, Eye } from "lucide-react"
-import { useTrackView } from "@/app/hooks/useTrackView"
 import { TrackPropertyView } from '@/app/components/TrackPropertyView'
 import Navbar from "@/app/components/Navbar"
 import { ViewCounter } from "@/app/components/ViewCounter"
@@ -54,8 +53,6 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
   }
 
   <TrackPropertyView propertyId={property.id} />
-
-  useTrackView(property.id)
 
   const getStatusLabel = (status: string) => {
     const statusMap = {
