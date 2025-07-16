@@ -1,6 +1,8 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
+import { writeFile, mkdir } from "fs/promises"
+import path from "path"
 import { PropertyStatus, PropertyVisibility } from "@prisma/client"
 
 // SVARĪGI: Pievieno šos exports lai izslēgtu static generation
@@ -31,57 +33,6 @@ function logError(stage: string, error: any, context?: any) {
   console.error(`🔍 Error stack:`, error?.stack)
 }
 
-// VERCEL-COMPATIBLE FAILU UPLOAD FUNKCIJA
-async function uploadToCloudinary(file: File, folder: string): Promise<string> {
-  try {
-    // Konvertē File uz base64
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const base64 = buffer.toString('base64')
-    
-    // Cloudinary API call (ja ir konfigurēts)
-    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-      const formData = new FormData()
-      formData.append('file', `data:${file.type};base64,${base64}`)
-      formData.append('upload_preset', 'properties') // Vai jebkāds preset
-      formData.append('folder', `properties/${folder}`)
-      
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      )
-      
-      if (response.ok) {
-        const result = await response.json()
-        return result.secure_url
-      }
-    }
-    
-    // Fallback: Saglabā kā base64 string datubāzē (tikai development)
-    // PIEZĪME: Šis nav ieteicams production, bet darbosies
-    return `data:${file.type};base64,${base64}`
-    
-  } catch (error) {
-    console.error('Upload error:', error)
-    throw new Error(`Failed to upload file: ${error}`)
-  }
-}
-
-// ALTERNATĪVS RISINĀJUMS: Bez failu saglabāšanas
-async function saveFileAsBase64(file: File): Promise<string> {
-  try {
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const base64 = buffer.toString('base64')
-    return `data:${file.type};base64,${base64}`
-  } catch (error) {
-    throw new Error(`Failed to process file: ${error}`)
-  }
-}
-
 export async function GET() {
   try {
     console.log('🔍 GET /api/admin/properties - Starting...')
@@ -104,8 +55,6 @@ export async function GET() {
 
 export async function POST(req: Request) {
   console.log('🚀 POST /api/admin/properties - Starting...')
-  console.log('🌍 Environment:', process.env.NODE_ENV)
-  console.log('📂 Working directory:', process.cwd())
   
   try {
     // 1. AUTHENTICATION CHECK
@@ -147,17 +96,6 @@ export async function POST(req: Request) {
         formData = await req.formData()
         console.log('✅ Form data parsed successfully')
         
-        // Log all form fields (bez file content)
-        const formFields: Record<string, any> = {}
-        for (const [key, value] of formData.entries()) {
-          if (value instanceof File) {
-            formFields[key] = `FILE: ${value.name} (${value.size} bytes)`
-          } else {
-            formFields[key] = value
-          }
-        }
-        console.log('📝 Form fields:', formFields)
-        
       } catch (error) {
         logError('FORM_DATA_PARSING', error)
         return NextResponse.json({ error: "Nevar nolasīt form datus" }, { status: 400 })
@@ -192,8 +130,7 @@ export async function POST(req: Request) {
         propertyProject = formData.get("propertyProject")?.toString() || null
 
         console.log('✅ Form values extracted:', {
-          title, price, currency, address, city, categoryId, status, visibility,
-          hasImages: formData.get("mainImage") ? 'Yes' : 'No'
+          title, price, currency, address, city, categoryId, status, visibility
         })
 
       } catch (error) {
@@ -235,16 +172,31 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Validācijas kļūda" }, { status: 400 })
       }
 
-      // 6. FILE UPLOAD PROCESSING - VERCEL COMPATIBLE
+      // 6. VIENKĀRŠS FAILU UPLOAD
       let mainImagePath: string | null = null
       const additionalImagePaths: string[] = []
 
       try {
-        console.log('📁 Processing file uploads (Vercel compatible)...')
+        console.log('📁 Processing simple file uploads...')
         
-        const folderName = createSlug(title)
-        console.log('📂 Folder name:', folderName)
+        // Izveido uploads/properties mapi (NE public!)
+        const uploadsDir = path.join(process.cwd(), "uploads", "properties")
+        console.log('📂 Upload directory:', uploadsDir)
+        
+        try {
+          await mkdir(uploadsDir, { recursive: true })
+          console.log('✅ Upload directory created/exists')
+        } catch (mkdirError) {
+          console.error('❌ Failed to create upload directory:', mkdirError)
+          return NextResponse.json({ 
+            error: "Nevar izveidot upload direktoriju" 
+          }, { status: 500 })
+        }
 
+        // Izveido unikālu ID īpašumam
+        const timestamp = Date.now()
+        const propertyId = `${createSlug(title)}-${timestamp}`
+        
         // Main image
         const mainImageFile = formData.get("mainImage") as File | null
         if (mainImageFile && mainImageFile.size > 0) {
@@ -254,20 +206,28 @@ export async function POST(req: Request) {
             type: mainImageFile.type
           })
           
-          // Check file size (5MB limit for base64 storage)
-          if (mainImageFile.size > 5 * 1024 * 1024) {
+          // Check file size
+          if (mainImageFile.size > 10 * 1024 * 1024) {
             console.error('❌ Main image too large:', mainImageFile.size)
             return NextResponse.json({ 
-              error: "Galvenais attēls pārāk liels (max 5MB)" 
+              error: "Galvenais attēls pārāk liels (max 10MB)" 
             }, { status: 413 })
           }
           
-          // Saglabā kā base64 (Vercel compatible)
           try {
-            mainImagePath = await saveFileAsBase64(mainImageFile)
-            console.log('✅ Main image saved as base64')
-          } catch (uploadError) {
-            console.error('❌ Failed to save main image:', uploadError)
+            const ext = path.extname(mainImageFile.name) || ".jpg"
+            const fileName = `${propertyId}-main${ext}`
+            const filePath = path.join(uploadsDir, fileName)
+            
+            const buffer = Buffer.from(await mainImageFile.arrayBuffer())
+            await writeFile(filePath, buffer)
+            
+            // Saglabā relatīvo ceļu datubāzē
+            mainImagePath = `properties/${fileName}`
+            console.log('✅ Main image saved:', mainImagePath)
+            
+          } catch (saveError) {
+            console.error('❌ Failed to save main image:', saveError)
             return NextResponse.json({ 
               error: "Neizdevās saglabāt galveno attēlu" 
             }, { status: 500 })
@@ -286,19 +246,28 @@ export async function POST(req: Request) {
           })
           
           // Check file size
-          if (additionalImageFile.size > 5 * 1024 * 1024) {
+          if (additionalImageFile.size > 10 * 1024 * 1024) {
             console.error(`❌ Additional image ${imageIndex + 1} too large:`, additionalImageFile.size)
             return NextResponse.json({ 
-              error: `Attēls ${imageIndex + 1} pārāk liels (max 5MB)` 
+              error: `Attēls ${imageIndex + 1} pārāk liels (max 10MB)` 
             }, { status: 413 })
           }
 
           try {
-            const imagePath = await saveFileAsBase64(additionalImageFile)
-            additionalImagePaths.push(imagePath)
-            console.log(`✅ Additional image ${imageIndex + 1} saved as base64`)
-          } catch (uploadError) {
-            console.error(`❌ Failed to save additional image ${imageIndex + 1}:`, uploadError)
+            const ext = path.extname(additionalImageFile.name) || ".jpg"
+            const fileName = `${propertyId}-${imageIndex + 1}${ext}`
+            const filePath = path.join(uploadsDir, fileName)
+            
+            const buffer = Buffer.from(await additionalImageFile.arrayBuffer())
+            await writeFile(filePath, buffer)
+            
+            // Saglabā relatīvo ceļu datubāzē
+            const relativePath = `properties/${fileName}`
+            additionalImagePaths.push(relativePath)
+            console.log(`✅ Additional image ${imageIndex + 1} saved:`, relativePath)
+            
+          } catch (saveError) {
+            console.error(`❌ Failed to save additional image ${imageIndex + 1}:`, saveError)
             // Turpinām ar citiem attēliem
           }
           
@@ -308,7 +277,7 @@ export async function POST(req: Request) {
         console.log('✅ All files processed successfully')
 
       } catch (error) {
-        logError('FILE_UPLOAD', error, { title, folderName: createSlug(title) })
+        logError('FILE_UPLOAD', error, { title })
         return NextResponse.json({ error: "Kļūda augšupielādējot failus" }, { status: 500 })
       }
 
@@ -344,11 +313,10 @@ export async function POST(req: Request) {
         }
         
         console.log('📝 Property data to save:', {
-          ...propertyData,
-          price: propertyData.price / 100, // Show in EUR for readability
-          amenities: propertyData.amenities.length,
-          images: propertyData.images.length,
-          mainImageSize: mainImagePath ? `${mainImagePath.length} chars` : 'None'
+          title,
+          price: propertyData.price / 100,
+          mainImage: mainImagePath,
+          additionalImages: additionalImagePaths.length
         })
 
         const property = await prisma.property.create({
@@ -375,16 +343,13 @@ export async function POST(req: Request) {
           if (error.message.includes('Unique constraint')) {
             return NextResponse.json({ error: "Īpašums ar šādu nosaukumu jau eksistē" }, { status: 400 })
           }
-          if (error.message.includes('String too long')) {
-            return NextResponse.json({ error: "Attēli pārāk lieli datubāzei" }, { status: 413 })
-          }
         }
         
         return NextResponse.json({ error: "Kļūda saglabājot īpašumu datubāzē" }, { status: 500 })
       }
 
     } else {
-      // JSON REQUEST HANDLING
+      // JSON REQUEST HANDLING (bez attēliem)
       console.log('📋 Processing JSON request...')
       
       try {
@@ -429,27 +394,6 @@ export async function POST(req: Request) {
     }
   } catch (error) {
     logError('GENERAL', error)
-    
-    // Check for specific error types
-    if (error instanceof Error) {
-      if (error.message.includes('PayloadTooLargeError') || error.message.includes('413')) {
-        return NextResponse.json({ 
-          error: "Augšupielādētie faili pārāk lieli (max 50MB)" 
-        }, { status: 413 })
-      }
-      
-      if (error.message.includes('timeout')) {
-        return NextResponse.json({ 
-          error: "Pieprasījums beidzies ar timeout" 
-        }, { status: 408 })
-      }
-
-      if (error.message.includes('ENOENT') || error.message.includes('mkdir')) {
-        return NextResponse.json({ 
-          error: "Serverless environment - izmanto alternatīvu failu glabāšanu" 
-        }, { status: 500 })
-      }
-    }
     
     console.error('💥 PROPERTIES API CRITICAL ERROR:', error)
     return NextResponse.json({ 
