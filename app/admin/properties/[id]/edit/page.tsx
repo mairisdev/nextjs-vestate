@@ -11,6 +11,7 @@ import Link from "next/link"
 import AlertMessage from "../../../../components/ui/alert-message"
 
 interface Category {
+  isVisible: any
   id: string
   name: string
 }
@@ -155,9 +156,17 @@ export default function EditProperty({ params }: EditPropertyProps) {
   const loadCategories = async () => {
     try {
       const res = await fetch("/api/admin/property-categories")
+      
+      if (!res.ok) {
+        throw new Error("Failed to load categories")
+      }
+      
       const data = await res.json()
-      setCategories(data.filter((cat: any) => cat.isVisible))
+
+      setCategories(data)
+      
     } catch (error) {
+      console.error("Error loading categories:", error)
       setErrorMessage("Neizdevās ielādēt kategorijas")
     }
   }
@@ -332,19 +341,25 @@ export default function EditProperty({ params }: EditPropertyProps) {
 
             <div>
               <Label>Kategorija *</Label>
-              <select
-                value={formData.categoryId}
-                onChange={(e) => handleInputChange('categoryId', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Izvēlies kategoriju</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+              {categories.length === 0 ? (
+                <div className="w-full px-3 py-2 border border-red-300 rounded-md bg-red-50 text-red-700">
+                  Kategorijas nav atrastas. Lūdzu, vispirms izveidojiet kategorijas.
+                </div>
+              ) : (
+                <select
+                  value={formData.categoryId}
+                  onChange={(e) => handleInputChange('categoryId', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Izvēlies kategoriju</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name} {!category.isVisible && " (paslēpts)"}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>

@@ -7,13 +7,13 @@ import { v4 as uuidv4 } from "uuid"
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-    const formData = await request.formData();
-    const uploadDir = path.join(process.cwd(), "public", "categories");
+  const formData = await request.formData();
+  const uploadDir = path.join(process.cwd(), "public", "categories");
 
-    if (!fs.existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-  // Move the closing brace to the end of the function and use the correct variable name 'formData'
+  if (!fs.existsSync(uploadDir)) {
+    await mkdir(uploadDir, { recursive: true });
+  }
+  
   const name = String(formData.get("name") || "")
   const slug = String(formData.get("slug") || "")
   const description = String(formData.get("description") || "")
@@ -50,5 +50,57 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   } catch (error) {
     console.error("PUT kategorijas kļūda:", error)
     return NextResponse.json({ error: "Kļūda atjauninot kategoriju" }, { status: 500 })
+  }
+}
+
+// PIEVIENO ŠO DELETE METODI:
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await context.params;
+
+    // Pārbaudām, vai kategorijai ir piesaistīti īpašumi
+    const propertiesCount = await prisma.property.count({
+      where: { categoryId: id }
+    });
+
+    if (propertiesCount > 0) {
+      return NextResponse.json(
+        { error: `Nevar dzēst kategoriju, jo tai ir piesaistīti ${propertiesCount} īpašumi` }, 
+        { status: 400 }
+      );
+    }
+
+    // Iegūstam kategoriju, lai dzēstu attēlu
+    const category = await prisma.propertyCategory.findUnique({
+      where: { id }
+    });
+
+    if (!category) {
+      return NextResponse.json({ error: "Kategorija nav atrasta" }, { status: 404 });
+    }
+
+    // Dzēšam kategorijas attēlu, ja tāds ir
+    if (category.image) {
+      try {
+        const imagePath = path.join(process.cwd(), "public", category.image);
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      } catch (error) {
+        console.error("Error deleting category image:", error);
+        // Turpinām dzēšanu, pat ja attēla dzēšana neizdevās
+      }
+    }
+
+    // Dzēšam kategoriju no datubāzes
+    await prisma.propertyCategory.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ success: true });
+    
+  } catch (error) {
+    console.error("DELETE kategorijas kļūda:", error)
+    return NextResponse.json({ error: "Kļūda dzēšot kategoriju" }, { status: 500 })
   }
 }
