@@ -1,10 +1,11 @@
-// app/components/server/RecentSalesServer.tsx
-import { getSoldProperties } from "@/lib/queries/soldProperties"
+import { prisma } from '@/lib/prisma'
 import { getSafeTranslations } from "@/lib/safeTranslations"
 import ClientGallery from "../RecentSalesGallery"
 
 export default async function RecentSalesServer() {
-  const dbProperties = await getSoldProperties()
+  const dbProperties = await prisma.soldProperty.findMany({
+  orderBy: { createdAt: "desc" },
+})
   const { safe } = await getSafeTranslations('RecentSalesGallery');
 
   console.log('🏠 RecentSales: Found', dbProperties.length, 'properties');

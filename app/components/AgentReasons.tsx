@@ -5,7 +5,7 @@ import Image from "next/image"
 type AgentReasonsData = {
   heading: string
   imageUrl: string
-  reasons: string[]
+  reasons: any
 } | null
 
 type Translations = {

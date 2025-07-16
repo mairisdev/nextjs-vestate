@@ -1,21 +1,14 @@
-// app/components/server/AgentReasonsServer.tsx
+import { prisma } from '@/lib/prisma'
 import { getSafeTranslations } from '@/lib/safeTranslations';
 import AgentReasonsClient from '../AgentReasons';
 
 async function getAgentReasonsData() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/second-section`, {
-      cache: 'no-store'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch agent reasons data');
-    }
-    
-    return await response.json();
+    const data = await prisma.secondSection.findFirst()
+    return data
   } catch (error) {
-    console.error('Error fetching agent reasons data:', error);
-    return null;
+    console.error('Error fetching agent reasons data:', error)
+    return null
   }
 }
 

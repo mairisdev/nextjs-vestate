@@ -1,9 +1,9 @@
-import { getPartnersSection } from "@/lib/queries/partners"
+import { prisma } from '@/lib/prisma'
 import { getTranslations } from "next-intl/server"
 import PartnersSection from "../PartnersSection"
 
 export default async function PartnersSectionServer() {
-  const data = await getPartnersSection()
+  const data = await prisma.partnersSection.findFirst()
   const t = await getTranslations("PartnersSection")
 
   // Sagatavo tulkojumus

@@ -25,24 +25,36 @@ export default function PropertyGrid({
   const searchParams = useSearchParams()
   const [hasPrivateAccess, setHasPrivateAccess] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [isClient, setIsClient] = useState(false) // Hydration fix
 
-  // Pārbaudam localStorage piekļuvi
+  // Hydration fix - čekojam vai esam client side
   useEffect(() => {
-    const storedEmail = localStorage.getItem("private_access_email")
-    const storedValidUntil = localStorage.getItem("private_access_valid_until")
-    
-    if (storedEmail && storedValidUntil) {
-      const validUntil = parseInt(storedValidUntil)
-      if (validUntil > Date.now()) {
-        setUserEmail(storedEmail)
-        setHasPrivateAccess(true)
-      } else {
-        // Piekļuve beigusies
-        localStorage.removeItem("private_access_email")
-        localStorage.removeItem("private_access_valid_until")
-      }
-    }
+    setIsClient(true)
   }, [])
+
+  // Pārbaudam localStorage piekļuvi TIKAI client side
+  useEffect(() => {
+    if (!isClient) return // Nepalaižam server side
+    
+    try {
+      const storedEmail = localStorage.getItem("private_access_email")
+      const storedValidUntil = localStorage.getItem("private_access_valid_until")
+      
+      if (storedEmail && storedValidUntil) {
+        const validUntil = parseInt(storedValidUntil)
+        if (validUntil > Date.now()) {
+          setUserEmail(storedEmail)
+          setHasPrivateAccess(true)
+        } else {
+          // Piekļuve beigusies
+          localStorage.removeItem("private_access_email")
+          localStorage.removeItem("private_access_valid_until")
+        }
+      }
+    } catch (error) {
+      console.warn('LocalStorage not available:', error)
+    }
+  }, [isClient])
 
   const currentSort = searchParams.get('kartot-pec') || ''
 
@@ -70,11 +82,36 @@ export default function PropertyGrid({
   const publicProperties = properties.filter(p => p.visibility === 'public')
   const privateProperties = properties.filter(p => p.visibility === 'private')
 
+  const handleLogout = () => {
+    if (!isClient) return
+    
+    try {
+      localStorage.removeItem("private_access_email")
+      localStorage.removeItem("private_access_valid_until")
+      setHasPrivateAccess(false)
+      setUserEmail(null)
+      window.location.reload()
+    } catch (error) {
+      console.warn('LocalStorage not available:', error)
+    }
+  }
+
+  const getValidUntilDate = () => {
+    if (!isClient) return ''
+    
+    try {
+      const validUntil = localStorage.getItem("private_access_valid_until")
+      return validUntil ? new Date(parseInt(validUntil)).toLocaleString('lv-LV') : ''
+    } catch (error) {
+      return ''
+    }
+  }
+
   return (
     <div className="space-y-8">
       
-      {/* Piekļuves statuss un info */}
-      {privateProperties.length > 0 && (
+      {/* Piekļuves statuss un info - rādām tikai client side */}
+      {isClient && privateProperties.length > 0 && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
           <div className="flex items-start justify-between">
             <div>
@@ -93,20 +130,14 @@ export default function PropertyGrid({
               </h3>
               <p className="text-sm text-blue-700">
                 {hasPrivateAccess 
-                  ? `Piekļuve aktīva līdz: ${new Date(parseInt(localStorage.getItem("private_access_valid_until") || "0")).toLocaleString('lv-LV')}`
+                  ? `Piekļuve aktīva līdz: ${getValidUntilDate()}`
                   : `Atrasti ${privateProperties.length} privāti sludinājumi. Nospiediet uz sludinājuma, lai pieprasītu piekļuvi.`
                 }
               </p>
             </div>
             {hasPrivateAccess && (
               <button
-                onClick={() => {
-                  localStorage.removeItem("private_access_email")
-                  localStorage.removeItem("private_access_valid_until")
-                  setHasPrivateAccess(false)
-                  setUserEmail(null)
-                  window.location.reload()
-                }}
+                onClick={handleLogout}
                 className="text-red-600 hover:text-red-800 text-sm underline whitespace-nowrap ml-4"
               >
                 Atcelt piekļuvi

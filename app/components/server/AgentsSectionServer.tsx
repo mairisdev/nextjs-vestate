@@ -1,10 +1,16 @@
-// app/components/server/AgentsSectionServer.tsx
-import { getAgents } from "@/lib/queries/agents";
+import { prisma } from '@/lib/prisma'
 import { getSafeTranslations } from "@/lib/safeTranslations";
 import AgentsSectionClient from "../AgentsSection";
 
 export default async function AgentsSectionServer() {
-  const agentsRaw = await getAgents();
+  const agentsRaw = await prisma.agent.findMany({
+  include: {
+    reviews: true,
+  },
+  orderBy: {
+    createdAt: "asc",
+  },
+})
   
   // Drošie tulkojumi
   const { safe } = await getSafeTranslations("AgentsSection");

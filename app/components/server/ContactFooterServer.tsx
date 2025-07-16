@@ -1,38 +1,25 @@
+import { prisma } from '@/lib/prisma'
 import { getTranslations } from "next-intl/server"
 import ContactSection from "../ContactSection"
 import FooterSection from "../FooterSection"
 
 async function getContactData() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/contact`, {
-      cache: 'no-store'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch contact data');
-    }
-    
-    return await response.json();
+    const contact = await prisma.contactSettings.findFirst()
+    return contact
   } catch (error) {
-    console.error('Error fetching contact data:', error);
-    return null;
+    console.error('Error fetching contact data:', error)
+    return null
   }
 }
 
 async function getFooterData() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/footer-settings`, {
-      cache: 'no-store'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch footer data');
-    }
-    
-    return await response.json();
+    const footer = await prisma.footerSettings.findFirst()
+    return footer
   } catch (error) {
-    console.error('Error fetching footer data:', error);
-    return null;
+    console.error('Error fetching footer data:', error)
+    return null
   }
 }
 

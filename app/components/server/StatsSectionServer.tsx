@@ -1,20 +1,16 @@
+import { prisma } from '@/lib/prisma'
 import { getTranslations } from "next-intl/server"
 import StatsSection from "../StatsSection"
 
 async function getStatsData() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/statistics`, {
-      cache: 'no-store'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch statistics data');
-    }
-    
-    return await response.json();
+    const stats = await prisma.statistic.findMany({
+      orderBy: { order: "asc" }
+    })
+    return stats
   } catch (error) {
-    console.error('Error fetching statistics data:', error);
-    return [];
+    console.error('Error fetching statistics data:', error)
+    return []
   }
 }
 

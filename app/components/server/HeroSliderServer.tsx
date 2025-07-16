@@ -1,32 +1,17 @@
-// app/components/server/HeroSliderServer.tsx
+import { prisma } from '@/lib/prisma'
 import { getSafeTranslations } from '@/lib/safeTranslations';
 import HeroSliderClient from '../HeroSlider';
 
 async function getSlides() {
   try {
-    // Lokālajā izstrādē izmantojam localhost, produkcijai NEXT_PUBLIC_BASE_URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                   (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '');
-    
-    const url = `${baseUrl}/api/slides`;
-    console.log('Fetching slides from:', url);
-    
-    const response = await fetch(url, {
-      cache: 'no-store'
-    });
-    
-    if (!response.ok) {
-      console.error('Slides API response not ok:', response.status, response.statusText);
-      throw new Error(`Failed to fetch slides: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('Slides data fetched successfully:', data.length, 'slides');
-    return data;
+    const slides = await prisma.slide.findMany({
+      orderBy: { order: 'asc' }
+    })
+    console.log('Slides data fetched successfully:', slides.length, 'slides')
+    return slides
   } catch (error) {
-    console.error('Error fetching slides:', error);
-    // Atgriežam tukšu masīvu, lai komponents varētu rādīt fallback
-    return [];
+    console.error('Error fetching slides:', error)
+    return []
   }
 }
 

@@ -1,9 +1,11 @@
-import { getTestimonials } from "@/lib/queries/testimonials";
+import { prisma } from '@/lib/prisma'
 import { getTranslations } from "next-intl/server";
 import TestimonialsSection from "../Testimonials";
 
 export default async function TestimonialsServer() {
-  const testimonialsRaw = await getTestimonials();
+  const testimonials = await prisma.testimonial.findMany({
+  orderBy: { createdAt: "desc" }
+})
   const t = await getTranslations("Testimonials");
 
   // Sagatavo tulkojumus
@@ -25,7 +27,7 @@ export default async function TestimonialsServer() {
   };
 
   // Pievienojam katras atsauksmes tulkojumus
-  testimonialsRaw.forEach((_, index) => {
+  testimonials.forEach((_, index) => {
     const nameKey = `testimonial${index + 1}Name`;
     const messageKey = `testimonial${index + 1}Message`;
     
@@ -44,7 +46,7 @@ export default async function TestimonialsServer() {
 
   return (
     <TestimonialsSection 
-      testimonials={testimonialsRaw}
+      testimonials={testimonials}
       translations={translations as { [key: string]: string; defaultHeading: string; defaultSubheading: string; }} 
     />
   );

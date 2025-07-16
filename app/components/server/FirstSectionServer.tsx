@@ -1,17 +1,12 @@
 import { getTranslations } from 'next-intl/server';
+import { prisma } from '@/lib/prisma';
 import FirstSectionClient from '../FirstSection';
 
 async function getFirstSectionData() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/first-section`, {
-      cache: 'no-store'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch first section data');
-    }
-    
-    return await response.json();
+    // Tiešs database query nevis fetch
+    const section = await prisma.firstSection.findFirst();
+    return section;
   } catch (error) {
     console.error('Error fetching first section data:', error);
     return null;
