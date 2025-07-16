@@ -195,36 +195,93 @@ export default function PropertiesAdmin() {
                 </th>
               </tr>
             </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredProperties.map((property) => (
-                  <tr key={property.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        {property.mainImage && (
-                          <img
-                            src={getImageUrl(property.mainImage) || '/placeholder-property.jpg'}
-                            alt={property.title}
-                            className="w-16 h-16 object-cover rounded-lg mr-4"
-                            onError={(e) => {
-                              // Fallback ja attēls neielādējas
-                              e.currentTarget.src = '/placeholder-property.jpg'
-                            }}
-                          />
-                        )}
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {property.title}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {property.address}, {property.city}
-                          </div>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredProperties.map((property) => (
+                <tr key={property.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center">
+                      {property.mainImage && (
+                        <img
+                          src={getImageUrl(property.mainImage) || '/placeholder-property.jpg'}
+                          alt={property.title}
+                          className="w-16 h-16 object-cover rounded-lg mr-4"
+                          onError={(e) => {
+                            // Fallback ja attēls neielādējas
+                            e.currentTarget.src = '/placeholder-property.jpg'
+                          }}
+                        />
+                      )}
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {property.title}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {property.address}, {property.city}
                         </div>
                       </div>
-                    </td>
-                    {/* Pārējais kods paliek nemainīgs... */}
-                  </tr>
-                ))}
-              </tbody>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {property.category.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {formatPrice(property.price, property.currency)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {property.rooms && `${property.rooms} ist.`}
+                    {property.rooms && property.area && " • "}
+                    {property.area && `${property.area} m²`}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex flex-col space-y-1">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        property.isActive 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {property.isActive ? 'Aktīvs' : 'Neaktīvs'}
+                      </span>
+                      {property.isFeatured && (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          Izcelts
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <Link href={`/admin/properties/${property.id}/edit`}>
+                        <Button variant="ghost" size="icon">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => toggleActive(property.id, property.isActive)}
+                      >
+                        <Eye className={`w-4 h-4 ${property.isActive ? 'text-green-600' : 'text-gray-400'}`} />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => toggleFeatured(property.id, property.isFeatured)}
+                        className={property.isFeatured ? 'text-yellow-600' : 'text-gray-400'}
+                      >
+                        ★
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDelete(property.id)}
+                      >
+                        <Trash className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </div>
