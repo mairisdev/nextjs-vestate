@@ -39,7 +39,6 @@ const navItems = [
   { href: "/admin/agents", label: "Aģenti", icon: <Users className="w-5 h-5" /> },
   { href: "/admin/testimonials", label: "Atsauksmes", icon: <Star className="w-5 h-5" /> },
   { href: "/admin/sold-properties", label: "Karstākie piedāvājumi", icon: <FolderOpen className="w-5 h-5" /> },
-  { href: "/admin/private-listings", label: "Privātie sludinājumi", icon: <Shield className="w-5 h-5" /> },
   { href: "/admin/why-choose-us", label: "Kāpēc izvēlēties mūs", icon: <Globe className="w-5 h-5" /> },
   { href: "/admin/statistics", label: "Statistika", icon: <BarChart className="w-5 h-5" /> },
   { href: "/admin/partners", label: "Partneri", icon: <Building className="w-5 h-5" /> },

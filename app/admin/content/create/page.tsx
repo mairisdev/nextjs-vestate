@@ -15,7 +15,7 @@ type ContentItem = {
   title: string
   excerpt: string
   content: string
-  type: "EDUCATIONAL" | "VILLAGES"
+  type: "EDUCATIONAL" | "VILLAGES" | "BLOG"
   published: boolean
   videoUrl: string
   author: string
@@ -52,7 +52,7 @@ export default function CreateContent() {
       title: "",
       excerpt: "",
       content: "",
-      type: "EDUCATIONAL",
+      type: "BLOG",
       published: false,
       videoUrl: "",
       author: "",
@@ -397,14 +397,16 @@ export default function CreateContent() {
                     </div>
 
                     <div>
-                      <Label>Tips *</Label>
+                      <Label htmlFor="type">Satura tips</Label>
                       <select
-                        value={contents[editingIndex].type}
-                        onChange={(e) => updateContent(editingIndex, "type", e.target.value as "EDUCATIONAL" | "VILLAGES")}
+                        id="type"
+                        value={contents[editingIndex]?.type || "EDUCATIONAL"}
+                        onChange={(e) => updateContent(editingIndex!, "type", e.target.value as "EDUCATIONAL" | "VILLAGES" | "BLOG")}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="EDUCATIONAL">Izglītojošais saturs</option>
                         <option value="VILLAGES">Ciemati</option>
+                        <option value="BLOG">Blog ieraksts</option>
                       </select>
                     </div>
 

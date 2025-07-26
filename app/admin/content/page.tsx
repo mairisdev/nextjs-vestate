@@ -87,27 +87,31 @@ export default function ContentAdmin() {
     }
   }
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "EDUCATIONAL":
-        return <GraduationCap className="w-4 h-4" />
-      case "VILLAGES":
-        return <Home className="w-4 h-4" />
-      default:
-        return <FileText className="w-4 h-4" />
-    }
+const getTypeIcon = (type: string) => {
+  switch (type) {
+    case "EDUCATIONAL":
+      return <GraduationCap className="w-4 h-4" />
+    case "VILLAGES":
+      return <Home className="w-4 h-4" />
+    case "BLOG":
+      return <FileText className="w-4 h-4" />
+    default:
+      return <FileText className="w-4 h-4" />
   }
+}
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "EDUCATIONAL":
-        return "Izglītojošais"
-      case "VILLAGES":
-        return "Ciemati"
-      default:
-        return type
-    }
+const getTypeLabel = (type: string) => {
+  switch (type) {
+    case "EDUCATIONAL":
+      return "Izglītojošais"
+    case "VILLAGES":
+      return "Ciemati"
+    case "BLOG":
+      return "Blog ieraksts"
+    default:
+      return type
   }
+}
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Ielādē...</div>
@@ -131,15 +135,16 @@ export default function ContentAdmin() {
       <div className="flex flex-col md:flex-row gap-4 bg-gray-50 p-4 rounded-lg">
         <div>
           <Label>Tips</Label>
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">Visi tipi</option>
-            <option value="EDUCATIONAL">Izglītojošais</option>
-            <option value="VILLAGES">Ciemati</option>
-          </select>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Visi tipi</option>
+              <option value="EDUCATIONAL">Izglītojošais</option>
+              <option value="VILLAGES">Ciemati</option>
+              <option value="BLOG">Blog ieraksti</option>
+            </select>
         </div>
         
         <div>

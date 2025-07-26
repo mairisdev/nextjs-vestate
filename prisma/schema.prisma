@@ -345,6 +345,7 @@ model Content {
 enum ContentType {
   EDUCATIONAL
   VILLAGES
+  BLOG
 }
 
 model Translation {
