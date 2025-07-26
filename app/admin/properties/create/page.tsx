@@ -98,12 +98,6 @@ export default function CreateProperty() {
   const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     
-    console.log('📁 Additional images selected:', files.map(f => ({
-      name: f.name,
-      size: f.size,
-      sizeMB: (f.size / 1024 / 1024).toFixed(2)
-    })))
-
     // Validate each file size
     for (const file of files) {
       if (!validateFileSize(file, 10)) {
@@ -177,39 +171,22 @@ export default function CreateProperty() {
 
   const loadCategories = async () => {
     try {
-      console.log('📂 Loading categories...')
       setCategoriesLoading(true)
       
       const res = await fetch("/api/admin/property-categories")
-      
-      console.log('📂 Categories API response:', {
-        status: res.status,
-        statusText: res.statusText,
-        ok: res.ok,
-        headers: Object.fromEntries(res.headers.entries())
-      })
-      
+            
       if (!res.ok) {
         throw new Error(`Categories API failed: ${res.status} ${res.statusText}`)
       }
       
       const data = await res.json()
-      
-      console.log('📂 Categories raw data:', data)
-      console.log('📂 Categories count:', data?.length || 0)
-      
+            
       if (!Array.isArray(data)) {
         throw new Error(`Categories API returned invalid data type: ${typeof data}`)
       }
       
       // SVARĪGI: Admin panelī rādam VISAS kategorijas
       setCategories(data)
-      
-      console.log('✅ Categories loaded successfully:', {
-        total: data.length,
-        visible: data.filter((c: Category) => c.isVisible).length,
-        hidden: data.filter((c: Category) => !c.isVisible).length
-      })
       
     } catch (error) {
       console.error("❌ Error loading categories:", error)
@@ -221,14 +198,10 @@ export default function CreateProperty() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('🚀 Starting form submission...')
     
     setLoading(true)
     setErrorMessage(null)
     setUploadProgress(0)
-
-    // CLIENT-SIDE VALIDATION
-    console.log('✅ Validating form data...')
     
     if (!formData.title.trim()) {
       setErrorMessage("Nosaukums ir obligāts")
@@ -270,8 +243,6 @@ export default function CreateProperty() {
       return
     }
 
-    console.log('✅ Validation passed, preparing form data...')
-
     // Progress simulation
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => {
@@ -286,19 +257,6 @@ export default function CreateProperty() {
     try {
       const formDataToSend = new FormData()
       
-      // Log what we're sending
-      console.log('📝 Form data being sent:', {
-        title: formData.title,
-        categoryId: formData.categoryId,
-        selectedCategory: selectedCategory.name,
-        price: formData.price,
-        address: formData.address,
-        city: formData.city,
-        mainImage: mainImage ? `${mainImage.name} (${(mainImage.size / 1024 / 1024).toFixed(2)}MB)` : 'None',
-        additionalImages: additionalImages.length,
-        totalSizeMB: totalSizeMB.toFixed(2)
-      })
-
       // Add form fields
       const amenitiesList = formData.amenities.split(",").map(a => a.trim()).filter(Boolean)
       amenitiesList.forEach(a => formDataToSend.append("amenities", a))
@@ -339,13 +297,6 @@ export default function CreateProperty() {
       const res = await fetch("/api/admin/properties", {
         method: "POST",
         body: formDataToSend
-      })
-
-      console.log('📡 API Response:', {
-        status: res.status,
-        statusText: res.statusText,
-        ok: res.ok,
-        headers: Object.fromEntries(res.headers.entries())
       })
 
       const responseData = await res.json()
@@ -404,18 +355,6 @@ export default function CreateProperty() {
 
       {successMessage && <AlertMessage type="success" message={successMessage} />}
       {errorMessage && <AlertMessage type="error" message={errorMessage} />}
-
-            {/* DEBUG INFO (remove in production) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-gray-100 p-4 rounded-lg text-xs">
-          <h4 className="font-bold mb-2">Debug Info:</h4>
-          <p>Categories loading: {categoriesLoading ? 'Yes' : 'No'}</p>
-          <p>Categories count: {categories.length}</p>
-          <p>Selected category: {formData.categoryId || 'None'}</p>
-          <p>Total upload size: {(getTotalUploadSize() / 1024 / 1024).toFixed(2)}MB</p>
-          <p>Agent: {agent ? `${agent.firstName} ${agent.lastName}` : 'Not loaded'}</p>
-        </div>
-      )}
 
       {/* Progress bar */}
       {loading && uploadProgress > 0 && (

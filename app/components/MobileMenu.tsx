@@ -12,23 +12,29 @@ interface MenuItem {
   link: string
   label: string
   isVisible: boolean
+  isHighlighted?: boolean
 }
 
 interface DropdownItem {
   link: string
   label: string
   isVisible: boolean
-  subItems: SubItem[]
+  subItems?: SubItem[]
 }
 
 interface MobileMenuProps {
   phone: string
-  menuItems: any[] // Vienkāršs any tips
-  dropdownItems?: any[] // Vienkāršs any tips
+  menuItems: MenuItem[]
+  dropdownItems?: DropdownItem[]
   securityText: string
 }
 
-export default function MobileMenu({ phone, menuItems, dropdownItems = [], securityText }: MobileMenuProps) {
+export default function MobileMenu({ 
+  phone, 
+  menuItems, 
+  dropdownItems = [], 
+  securityText 
+}: MobileMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([])
 
@@ -76,7 +82,7 @@ export default function MobileMenu({ phone, menuItems, dropdownItems = [], secur
         <div className="absolute top-full left-0 right-0 md:hidden bg-white border-t border-gray-200 shadow-lg">
           <nav className="px-6 py-4 space-y-2">
             {/* Parastie menu linki */}
-            {Array.isArray(menuItems) && menuItems.map((item: MenuItem) => (
+            {menuItems.map((item) => (
               item.isVisible && (
                 <a
                   key={item.link}
@@ -90,7 +96,7 @@ export default function MobileMenu({ phone, menuItems, dropdownItems = [], secur
             ))}
 
             {/* Dropdown menu linki */}
-            {Array.isArray(dropdownItems) && dropdownItems.map((item: DropdownItem) => (
+            {dropdownItems.map((item) => (
               item.isVisible && (
                 <div key={item.link}>
                   {/* Dropdown galvenais links */}
@@ -106,9 +112,9 @@ export default function MobileMenu({ phone, menuItems, dropdownItems = [], secur
                   </button>
                   
                   {/* Dropdown apakšlinki */}
-                  {openDropdowns.includes(item.link) && (
+                  {openDropdowns.includes(item.link) && item.subItems && (
                     <div className="pl-6 space-y-1 py-2 bg-gray-50 rounded-md mt-1">
-                      {item.subItems?.map((subItem) => (
+                      {item.subItems.map((subItem) => (
                         <a
                           key={subItem.link}
                           href={subItem.link}
