@@ -4,11 +4,9 @@ import PropertyFiltersClientWrapper from "@/app/components/PropertyFiltersClient
 import Navbar from "@/app/components/Navbar"
 import { notFound } from "next/navigation"
 
-// SVARĪGI: Pievieno šos exports lai izslēgtu static generation
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// ✅ PAREIZI - saglabājam Promise wrappers (Next.js 15 prasība)
 interface PageProps {
   params: Promise<{ locale: string; category: string }>
   searchParams: Promise<{
@@ -26,15 +24,7 @@ interface PageProps {
   }>
 }
 
-// ERROR REPORTING KOMPONENTE
 function ErrorDisplay({ error, category }: { error: Error, category: string }) {
-  console.error('=== CATEGORY PAGE ERROR ===')
-  console.error('Category:', category)
-  console.error('Error:', error)
-  console.error('Error message:', error?.message)
-  console.error('Error stack:', error?.stack)
-  console.error('==========================')
-
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="max-w-2xl w-full bg-white rounded-lg shadow-lg p-8">
@@ -83,35 +73,25 @@ function ErrorDisplay({ error, category }: { error: Error, category: string }) {
   )
 }
 
-// ✅ PAREIZI - izmantojam async funkciju ar await
 async function CategoryPageContent({ 
   params, 
   searchParams 
 }: PageProps) {
-  // Inicializējam ar undefined, lai TypeScript nezina
   let resolvedParams: Awaited<PageProps['params']> | undefined
   let resolvedSearchParams: Awaited<PageProps['searchParams']>
   
   try {
-    console.log('=== CATEGORY PAGE START ===')
-    
-    // 1. PĀRBAUDA PARAMS
+    // Resolve params
     try {
       resolvedParams = await params
-      console.log('✅ Resolved params:', resolvedParams)
     } catch (error) {
-      console.error('❌ Error resolving params:', error)
       throw new Error(`Params resolution failed: ${error}`)
     }
 
-    // 2. PĀRBAUDA SEARCH PARAMS
+    // Resolve search params
     try {
       resolvedSearchParams = await searchParams
-      console.log('✅ Resolved searchParams:', resolvedSearchParams)
     } catch (error) {
-      console.error('❌ Error resolving searchParams:', error)
-      // Ja searchParams neizdevās, izmantojam default vērtības
-      console.warn('⚠️ Using default searchParams due to error')
       resolvedSearchParams = {
         page: '1',
         minPrice: '',
@@ -128,8 +108,6 @@ async function CategoryPageContent({
     }
 
     const category = resolvedParams.category
-    console.log('📂 Processing category:', category)
-    
     const page = parseInt(resolvedSearchParams.page || "1")
     const filters = {
       minPrice: resolvedSearchParams.minPrice || '',
@@ -142,84 +120,58 @@ async function CategoryPageContent({
       propertyProject: resolvedSearchParams.propertyProject || '',
     }
     const sort = resolvedSearchParams['kartot-pec'] || ""
-    
-    console.log('📊 Query params:', { page, filters, sort })
 
-    // 3. PĀRBAUDA KATEGORIJAS - Izmantojam any, lai izvairītos no type checking
+    // Get categories
     let categories: any[]
     try {
-      console.log('🔍 Getting all categories...')
       categories = await getPropertyCategories()
-      console.log('✅ Categories loaded:', categories?.length || 0)
-      console.log('📋 Available category slugs:', categories?.map((c: any) => c.slug) || [])
     } catch (error) {
-      console.error('❌ getPropertyCategories failed:', error)
       throw new Error(`Categories loading failed: ${error}`)
     }
 
     const currentCategory = categories.find((cat: any) => cat.slug === category)
-    console.log('🎯 Current category found:', currentCategory ? '✅' : '❌')
-    
     if (!currentCategory) {
-      console.error('❌ Category not found:', category)
-      console.error('Available categories:', categories.map((c: any) => ({ id: c.id, slug: c.slug, name: c.name })))
       notFound()
     }
 
-    // 4. PĀRBAUDA PROPERTIES - Izmantojam any
+    // Get properties
     let properties: any[]
     let total: number
     let pages: number
     try {
-      console.log('🏠 Getting properties for category:', category)
       const result: any = await getPropertiesByCategory(category, page, 12, sort, filters)
       properties = result.properties
       total = result.total
       pages = result.pages
-      console.log('✅ Properties loaded:', { count: properties?.length || 0, total, pages })
     } catch (error) {
-      console.error('❌ getPropertiesByCategory failed:', error)
-      console.error('Failed with params:', { category, page, sort, filters })
       throw new Error(`Properties loading failed: ${error}`)
     }
 
-    // 5. PĀRBAUDA CITIES & DISTRICTS
+    // Get cities & districts
     let cities: string[] = []
     let districts: string[] = []
     try {
-      console.log('🏙️ Getting cities and districts...')
       const result: any = await getCitiesAndDistrictsForCategory(category)
       cities = (result.cities || []).filter((city: string | null): city is string => city !== null)
       districts = (result.districts || []).filter((district: string | null): district is string => district !== null)
-      console.log('✅ Cities/Districts loaded:', { cities: cities.length, districts: districts.length })
     } catch (error) {
-      console.error('❌ getCitiesAndDistrictsForCategory failed:', error)
-      console.warn('⚠️ Continuing without cities/districts')
-      // Ne-bloķē, turpinām bez cities/districts
+      // Continue without cities/districts
     }
 
-    // 6. PĀRBAUDA PROPERTY PROJECTS
+    // Get property projects
     let propertyProjects: string[] = []
     try {
-      console.log('🏗️ Getting property projects...')
       const result: any = await getPropertyProjectsForCategory(category)
       propertyProjects = result || []
-      console.log('✅ Property projects loaded:', propertyProjects.length)
     } catch (error) {
-      console.error('❌ getPropertyProjectsForCategory failed:', error)
-      console.warn('⚠️ Continuing without property projects')
-      // Ne-bloķē, turpinām bez projects
+      // Continue without property projects
     }
 
-    // 7. PĀRBAUDA EMPTY RESULTS
+    // Check for empty results
     const filtersApplied = Object.values(filters).some((v: string) => v)
     if (properties.length === 0 && page === 1 && !filtersApplied) {
-      console.log('📭 No properties found for category, calling notFound()')
       notFound()
     }
-
-    console.log('✅ All data loaded successfully!')
-    console.log('=== CATEGORY PAGE SUCCESS ===')
 
     return (
       <>
@@ -264,15 +216,8 @@ async function CategoryPageContent({
     )
 
   } catch (error) {
-    console.error('💥 CATEGORY PAGE CRITICAL ERROR:', error)
-    
-    // Type assertion lai TypeScript zina, ka error ir Error tips
     const errorObj = error instanceof Error ? error : new Error(String(error))
-    
-    // Pārbaudām vai resolvedParams ir definēts
     const categoryName = resolvedParams?.category || 'unknown'
-    
-    // Atgriežam error komponentu ar detalizētu informāciju
     return <ErrorDisplay error={errorObj} category={categoryName} />
   }
 }

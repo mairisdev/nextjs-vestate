@@ -1,4 +1,3 @@
-import Navbar from '../components/Navbar'
 import HashNavigationHandler from '../components/HashNavigationHandler'
 import FirstSection from '../components/server/FirstSectionServer'
 import AgentReasons from '../components/server/AgentReasonsServer'
@@ -15,13 +14,14 @@ import LegalConsultSection2 from '../components/SevenSection'
 import CookieConsentBanner from '../components/CookieConsentBanner'
 import HeroSlider from '../components/server/HeroSliderServer'
 import { ContactSectionServer, FooterSectionServer } from '../components/server/ContactFooterServer'
+import NavbarServer from '../components/server/NavbarServer'
 
 export default function Home() {
   return (
     <>
       <CookieConsentBanner />
       <HashNavigationHandler />
-      <Navbar />
+      <NavbarServer />
       <HeroSlider />
       <main className="min-h-screen">
         <FirstSection />
