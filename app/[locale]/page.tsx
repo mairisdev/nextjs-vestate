@@ -15,10 +15,12 @@ import CookieConsentBanner from '../components/CookieConsentBanner'
 import HeroSlider from '../components/server/HeroSliderServer'
 import { ContactSectionServer, FooterSectionServer } from '../components/server/ContactFooterServer'
 import NavbarServer from '../components/server/NavbarServer'
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export default function Home() {
   return (
     <>
+      <SpeedInsights/>
       <CookieConsentBanner />
       <HashNavigationHandler />
       <NavbarServer />
