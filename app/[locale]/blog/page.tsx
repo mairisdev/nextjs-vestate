@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma"
 import Navbar from "../../components/Navbar"
 import { GraduationCap, Home, BookOpen, Calendar, User, ArrowRight, FileText } from "lucide-react"
 
-// Definē vienotu tipu kombinētajiem blog ierakstiem
 interface CombinedBlogPost {
   id: string
   title: string
@@ -23,7 +22,7 @@ async function getBlogPosts() {
   try {
     const posts = await prisma.blogPost.findMany({
       orderBy: { date: "desc" },
-      take: 6 // Parādi tikai 6 jaunākos
+      take: 6
     })
     return posts
   } catch (error) {
@@ -91,9 +90,8 @@ export default async function BlogMainPage() {
     getBlogContent()
   ])
 
-  // Kombinē gan vecos blog ierakstus, gan jaunos Content BLOG ierakstus ar precīziem tipiem
   const allBlogPosts: CombinedBlogPost[] = [
-    // Vecie BlogPost ieraksti
+
     ...blogPosts.map(post => ({
       id: post.id,
       title: post.title,
@@ -107,7 +105,7 @@ export default async function BlogMainPage() {
       author: null,
       tags: []
     })),
-    // Jaunie Content BLOG ieraksti
+
     ...blogContent.map(content => ({
       id: content.id,
       title: content.title,
@@ -131,7 +129,6 @@ export default async function BlogMainPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      {/* Hero Section */}
       <section className="bg-gradient-to-br from-[#00332D] to-[#004940] text-white py-20">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
@@ -144,8 +141,7 @@ export default async function BlogMainPage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-6 py-16">
-        
-        {/* Blog Posts Section - Kombinēti visi blog ieraksti */}
+
         <section className="mb-20">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
@@ -181,7 +177,7 @@ export default async function BlogMainPage() {
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                      {/* Badge lai parādītu avotu */}
+
                       <div className="absolute top-3 left-3">
                         <div className="flex items-center px-2 py-1 bg-[#77D4B4]/90 text-white rounded-full text-xs font-medium">
                           {post.source === 'content' ? (
@@ -245,7 +241,6 @@ export default async function BlogMainPage() {
           )}
         </section>
 
-        {/* Educational Content Section */}
         <section className="mb-20">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
@@ -328,7 +323,6 @@ export default async function BlogMainPage() {
           )}
         </section>
 
-        {/* Villages Section */}
         <section>
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
@@ -411,7 +405,6 @@ export default async function BlogMainPage() {
           )}
         </section>
 
-        {/* Global empty state - kad nav nekāda satura */}
         {allBlogPosts.length === 0 && educationalContent.length === 0 && villagesContent.length === 0 && (
           <div className="text-center py-20">
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Saturs tiek gatavots</h3>
