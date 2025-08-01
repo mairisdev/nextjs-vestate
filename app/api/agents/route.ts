@@ -113,13 +113,14 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // SVARĪGI: Šeit ir labojums - pareizi kartē laukus
       reviewsToCreate.push({
-        reviewerName: r.reviewerName,
-        rating: parseInt(r.rating),
-        comment: r.comment,
+        reviewerName: r.author || "",  // author -> reviewerName
+        rating: parseInt(r.rating) || 5,
+        comment: r.content || "",      // content -> comment  
         imageUrl: finalImageUrl,
-        content: r.comment, // or map to the correct field if different
-        author: r.reviewerName, // or map to the correct field if different
+        content: r.content || "",      // content paliek content
+        author: r.author || "",        // author paliek author
       })
     }
 
@@ -130,7 +131,7 @@ export async function POST(req: NextRequest) {
           name: agent.name,
           title: agent.title,
           phone: agent.phone,
-          email: agent.email,
+          email: agent.email || `${agent.name.toLowerCase().replace(/\s+/g, '.')}@vestate.lv`,
           image: imageUrl,
           reviews: {
             create: reviewsToCreate,
