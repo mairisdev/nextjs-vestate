@@ -736,3 +736,60 @@ export async function syncPropertyCategoriesTranslations(categories: any[]) {
 
   console.log(`✅ PropertyCategories tulkojumi sinhronizēti: ${categories.length} kategorijas`);
 }
+
+export async function syncPropertyFiltersTranslations() {
+  const locales = ["lv", "en", "ru"]
+  const category = "PropertyFilters"
+
+  console.log(`🔄 Sinhronizē PropertyFilters tulkojumus...`);
+
+  // Statiskās atslēgas filtru komponentam
+  const staticKeys = {
+    filtersTitle: "Filtri",
+    clearAllButton: "Notīrīt visus", 
+    cityLabel: "Pilsēta",
+    allCitiesOption: "Visas pilsētas",
+    districtLabel: "Rajons",
+    allDistrictsOption: "Visi rajoni", 
+    projectLabel: "Projekts",
+    allProjectsOption: "Visi projekti",
+    priceLabel: "Cena EUR",
+    priceFromPlaceholder: "No",
+    priceToPlaceholder: "Līdz",
+    roomsLabel: "Istabu skaits",
+    areaLabel: "Platība / m²",
+    areaFromPlaceholder: "No", 
+    areaToPlaceholder: "Līdz",
+    applyFiltersButton: "Pielietot filtrus",
+    // Papildu tulkojumi
+    statusLabel: "Statuss",
+    allStatusesOption: "Visi statusi",
+    availableStatus: "Pieejams",
+    reservedStatus: "Rezervēts", 
+    soldStatus: "Pārdots",
+    rentedStatus: "Iznomāts",
+    sortLabel: "Kārtot pēc",
+    sortNewest: "Jaunākie",
+    sortOldest: "Vecākie",
+    sortPriceAsc: "Cena: no lētākās",
+    sortPriceDesc: "Cena: no dārgākās",
+    sortAreaAsc: "Platība: no mazākās",
+    sortAreaDesc: "Platība: no lielākās",
+    noFiltersText: "Nav aktīvu filtru",
+    activeFiltersText: "Aktīvie filtri"
+  }
+
+  // Sinhronizējam statiskās atslēgas
+  for (const [key, value] of Object.entries(staticKeys)) {
+    for (const locale of locales) {
+      await upsertTranslation(
+        `${category}.${key}`,
+        locale,
+        locale === "lv" ? value : "",
+        category
+      )
+    }
+  }
+
+  console.log(`✅ PropertyFilters tulkojumi sinhronizēti!`);
+}

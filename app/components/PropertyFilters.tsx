@@ -1,6 +1,7 @@
 'use client'
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { getSafeTranslations } from "@/lib/safeTranslations"
 
 interface Category {
   id: string
@@ -15,11 +16,56 @@ export interface PropertyFiltersProps {
   cities?: string[]
   districts?: string[]
   propertyProjects?: string[]
+  translations?: {
+    filtersTitle: string
+    clearAllButton: string
+    cityLabel: string
+    allCitiesOption: string
+    districtLabel: string
+    allDistrictsOption: string
+    projectLabel: string
+    allProjectsOption: string
+    priceLabel: string
+    priceFromPlaceholder: string
+    priceToPlaceholder: string
+    roomsLabel: string
+    areaLabel: string  
+    areaFromPlaceholder: string
+    areaToPlaceholder: string
+    applyFiltersButton: string
+  }
 }
 
-export default function PropertyFilters({ categories, currentCategory, cities, districts, propertyProjects }: PropertyFiltersProps) {
+export default function PropertyFilters({ 
+  categories, 
+  currentCategory, 
+  cities, 
+  districts, 
+  propertyProjects,
+  translations 
+}: PropertyFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Fallback tulkojumi, ja nav nodoti
+  const t = translations || {
+    filtersTitle: "Filtri",
+    clearAllButton: "Notīrīt visus",
+    cityLabel: "Pilsēta",
+    allCitiesOption: "Visas pilsētas",
+    districtLabel: "Rajons", 
+    allDistrictsOption: "Visi rajoni",
+    projectLabel: "Projekts",
+    allProjectsOption: "Visi projekti",
+    priceLabel: "Cena EUR",
+    priceFromPlaceholder: "No",
+    priceToPlaceholder: "Līdz",
+    roomsLabel: "Istabu skaits",
+    areaLabel: "Platība / m²",
+    areaFromPlaceholder: "No",
+    areaToPlaceholder: "Līdz",
+    applyFiltersButton: "Pielietot filtrus"
+  }
 
   const [filters, setFilters] = useState({
     minPrice: searchParams.get("minPrice") || "",
@@ -77,43 +123,25 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
     <div className="space-y-6 bg-white p-6 rounded-xl shadow border w-full">
 
       <div className="flex justify-between items-center mb-2">
-        <span className="text-lg font-semibold text-[#00332D]">Filtri</span>
+        <span className="text-lg font-semibold text-[#00332D]">{t.filtersTitle}</span>
         <button
           onClick={clearFilters}
           className="text-xs text-[#B91C1C] hover:underline"
         >
-          Notīrīt visus
+          {t.clearAllButton}
         </button>
       </div>
 
-      {/*
-      <div className="mb-4">
-        <div className="flex items-center space-x-2 mb-2">
-          <span className="font-medium">Darījuma veids</span>
-        </div>
-        <div className="space-y-2 pl-7">
-          <div className="flex space-x-2 items-center">
-            <input type="checkbox" id="ire" className="rounded" />
-            <label htmlFor="ire" className="text-sm">Īrē</label>
-          </div>
-          <div className="flex space-x-2 items-center">
-            <input type="checkbox" id="pirkt" className="rounded" />
-            <label htmlFor="pirkt" className="text-sm">Pirkt</label>
-          </div>
-        </div>
-      </div>
-      */}
-
       {Array.isArray(cities) && cities.length > 0 && (
         <div className="mb-4">
-          <label htmlFor="city" className="block text-sm font-medium mb-1">Pilsēta</label>
+          <label htmlFor="city" className="block text-sm font-medium mb-1">{t.cityLabel}</label>
           <select
             id="city"
             value={filters.city}
             onChange={(e) => handleFilterChange("city", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           >
-            <option value="">Visas pilsētas</option>
+            <option value="">{t.allCitiesOption}</option>
             {cities.map((city) => (
               <option key={city} value={city}>{city}</option>
             ))}
@@ -123,14 +151,14 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
 
       {Array.isArray(districts) && districts.length > 0 && (
         <div className="mb-4">
-          <label htmlFor="district" className="block text-sm font-medium mb-1">Rajons</label>
+          <label htmlFor="district" className="block text-sm font-medium mb-1">{t.districtLabel}</label>
           <select
             id="district"
             value={filters.district}
             onChange={(e) => handleFilterChange("district", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           >
-            <option value="">Visi rajoni</option>
+            <option value="">{t.allDistrictsOption}</option>
             {districts.map((district) => (
               <option key={district} value={district}>{district}</option>
             ))}
@@ -140,14 +168,14 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
 
       {Array.isArray(propertyProjects) && propertyProjects.length > 0 && (
         <div className="mb-4">
-          <label htmlFor="propertyProject" className="block text-sm font-medium mb-1">Projekts</label>
+          <label htmlFor="propertyProject" className="block text-sm font-medium mb-1">{t.projectLabel}</label>
           <select
             id="propertyProject"
             value={filters.propertyProject}
             onChange={(e) => handleFilterChange("propertyProject", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           >
-            <option value="">Visi projekti</option>
+            <option value="">{t.allProjectsOption}</option>
             {propertyProjects.map((project) => (
               <option key={project} value={project}>{project}</option>
             ))}
@@ -156,18 +184,18 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
       )}
 
       <div className="mb-4">
-        <h3 className="font-medium mb-2">Cena EUR</h3>
+        <h3 className="font-medium mb-2">{t.priceLabel}</h3>
         <div className="grid grid-cols-2 gap-2">
           <input
             type="number"
-            placeholder="No"
+            placeholder={t.priceFromPlaceholder}
             value={filters.minPrice}
             onChange={(e) => handleFilterChange("minPrice", e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           />
           <input
             type="number"
-            placeholder="Līdz"
+            placeholder={t.priceToPlaceholder}
             value={filters.maxPrice}
             onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
@@ -176,7 +204,7 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
       </div>
 
       <div className="mb-4">
-        <h3 className="font-medium mb-2">Istabu skaits</h3>
+        <h3 className="font-medium mb-2">{t.roomsLabel}</h3>
         <div className="grid grid-cols-6 gap-2">
           {[1, 2, 3, 4, 5, '+'].map((num) => {
             const value = num.toString()
@@ -199,18 +227,18 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
       </div>
 
       <div className="mb-4">
-        <h3 className="font-medium mb-2">Platība / m²</h3>
+        <h3 className="font-medium mb-2">{t.areaLabel}</h3>
         <div className="grid grid-cols-2 gap-2">
           <input
             type="number"
-            placeholder="No"
+            placeholder={t.areaFromPlaceholder}
             value={filters.minArea}
             onChange={(e) => handleFilterChange("minArea", e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
           />
           <input
             type="number"
-            placeholder="Līdz"
+            placeholder={t.areaToPlaceholder}
             value={filters.maxArea}
             onChange={(e) => handleFilterChange("maxArea", e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#00332D]"
@@ -222,7 +250,7 @@ export default function PropertyFilters({ categories, currentCategory, cities, d
         onClick={applyFilters}
         className="w-full bg-[#00332D] text-white py-3 rounded-md font-medium hover:bg-[#004940] transition-colors mt-2"
       >
-        Pielietot filtrus
+        {t.applyFiltersButton}
       </button>
     </div>
   )
