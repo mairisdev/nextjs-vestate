@@ -8,12 +8,13 @@ import { Trash, Plus, Pencil } from "lucide-react"
 import ReviewModal from "../../components/ReviewModal"
 
 type Agent = {
-  id?: string
+  id?: string 
   name: string
   title: string
   phone: string
   image: string | File
   reviews: {
+    id?: string
     content: string
     author: string
     rating: number
@@ -276,8 +277,7 @@ const handleSave = async () => {
             setAgents(updated)
             setEditingReviewIndex(null)
             setEditingReviewData(null)
-          }}
-        />
+          } } agentId={""}        />
       )}
     </div>
   )
