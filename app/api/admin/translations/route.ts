@@ -482,6 +482,32 @@ export async function POST(request: NextRequest) {
 
     }
   }
+
+  if (key.startsWith('PropertyCategories.')) {
+  if (locale === "lv") {
+    // Ja atjauninām konkrēto kategoriju
+    if (key.includes('category') && (key.includes('Name') || key.includes('Description'))) {
+      // Izvēlamies kategorijas no datu bāzes
+      const categories = await prisma.propertyCategory.findMany({
+        orderBy: { order: 'asc' }
+      })
+      
+      // Atrodam, kuru kategoriju mēs rediģējam
+      const match = key.match(/category(\d+)(Name|Description)/)
+      if (match) {
+        const index = parseInt(match[1], 10) - 1
+        const field = match[2].toLowerCase() // 'name' vai 'description'
+        
+        if (index >= 0 && index < categories.length) {
+          await prisma.propertyCategory.update({
+            where: { id: categories[index].id },
+            data: { [field]: value }
+          })
+        }
+      }
+    }
+  }
+}
     
     return NextResponse.json(translation);
   } catch (error) {

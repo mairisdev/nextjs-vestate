@@ -678,3 +678,61 @@ export async function syncFooterSectionTranslations(footerData: any) {
     }
   }
 }
+
+export async function syncPropertyCategoriesTranslations(categories: any[]) {
+  const locales = ["lv", "en", "ru"]
+  const category = "PropertyCategories"
+
+  console.log(`🔄 Sinhronizē PropertyCategories: ${categories.length} kategorijas`);
+
+  // Statiskās atslēgas sekcijas galvenajiem elementiem
+  const staticKeys = {
+    pageTitle: "Īpašumu Kategorijas",
+    pageSubtitle: "Atrodiet savu ideālo īpašumu pie mums!",
+    pageDescription: "VESTATE ĪPAŠUMU KATEGORIJAS",
+    propertiesCountText: "īpašumi",
+    noPropertiesText: "Nav īpašumu",
+    viewCategoryButton: "Skatīt kategoriju",
+    backToHomeButton: "Atpakaļ uz sākumu",
+    noImageAlt: "Kategorijas attēls",
+    loadingText: "Ielādē kategorijas...",
+  }
+
+  // Sinhronizējam statiskās atslēgas
+  for (const [key, value] of Object.entries(staticKeys)) {
+    for (const locale of locales) {
+      await upsertTranslation(
+        `${category}.${key}`,
+        locale,
+        locale === "lv" ? value : "",
+        category
+      )
+    }
+  }
+
+  // Sinhronizējam katras kategorijas nosaukumu un aprakstu
+  for (let i = 0; i < categories.length; i++) {
+    const cat = categories[i]
+    
+    const keysAndValues = {
+      [`category${i + 1}Name`]: cat.name || `Kategorija ${i + 1}`,
+      [`category${i + 1}Description`]: cat.description || `Apraksts ${i + 1}`,
+      [`category${i + 1}Slug`]: cat.slug || `kategorija-${i + 1}`,
+    }
+
+    console.log(`📝 Category ${i + 1}: ${cat.name} (${cat.slug})`);
+
+    for (const [key, value] of Object.entries(keysAndValues)) {
+      for (const locale of locales) {
+        await upsertTranslation(
+          `${category}.${key}`,
+          locale,
+          locale === "lv" ? value : "",
+          category
+        )
+      }
+    }
+  }
+
+  console.log(`✅ PropertyCategories tulkojumi sinhronizēti: ${categories.length} kategorijas`);
+}
