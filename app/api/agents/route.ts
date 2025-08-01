@@ -1,10 +1,51 @@
-import { writeFile, mkdir } from "fs/promises"
-import path from "path"
-import { v4 as uuidv4 } from "uuid"
+// app/api/agents/route.ts (AIZVIETO PILNĪBĀ)
 import { NextResponse, NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
-import fs from "fs"
+import { v2 as cloudinary } from 'cloudinary'
 import { syncAgentTranslations } from "@/lib/translationSync"
+
+// Cloudinary konfigurācija
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config(process.env.CLOUDINARY_URL)
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  })
+}
+
+// Cloudinary upload funkcija
+async function uploadToCloudinary(file: File, folder: string): Promise<string> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const timestamp = Date.now()
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+      
+      cloudinary.uploader.upload_stream(
+        {
+          public_id: `${timestamp}-${safeFileName}`,
+          folder: folder,
+          resource_type: 'auto',
+          transformation: [
+            { width: 400, height: 400, crop: 'fill', quality: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary upload error:', error)
+            reject(error)
+          } else {
+            resolve(result!.secure_url)
+          }
+        }
+      ).end(buffer)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
 
 export async function GET() {
   try {
@@ -25,12 +66,6 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData()
-  const uploadDir = path.join(process.cwd(), "public", "agents")
-
-  // Pārliecinies, ka mape eksistē
-  if (!fs.existsSync(uploadDir)) {
-    await mkdir(uploadDir, { recursive: true })
-  }
 
   let agents: any[] = []
 
@@ -54,13 +89,12 @@ export async function POST(req: NextRequest) {
 
     // Saglabā aģenta attēlu, ja tika augšupielādēts
     if (matchedFile) {
-      const ext = path.extname(matchedFile.name)
-      const filename = `${uuidv4()}${ext}`
-      const buffer = Buffer.from(await matchedFile.arrayBuffer())
-      const filePath = path.join(uploadDir, filename)
-
-      await writeFile(filePath, buffer)
-      imageUrl = `/agents/${filename}`
+      try {
+        imageUrl = await uploadToCloudinary(matchedFile, 'agents')
+      } catch (error) {
+        console.error("Failed to upload agent image:", error)
+        imageUrl = null // Fallback
+      }
     }
 
     // Apstrādā katras atsauksmes attēlu (ja ir)
@@ -71,60 +105,49 @@ export async function POST(req: NextRequest) {
       const matchedReviewFile = files.find((f) => f.name === r.imageUrl)
 
       if (matchedReviewFile) {
-        const ext = path.extname(matchedReviewFile.name)
-        const filename = `${uuidv4()}${ext}`
-        const buffer = Buffer.from(await matchedReviewFile.arrayBuffer())
-        const filePath = path.join(uploadDir, filename)
-        await writeFile(filePath, buffer)
-        finalImageUrl = `/agents/${filename}`
+        try {
+          finalImageUrl = await uploadToCloudinary(matchedReviewFile, 'agents/reviews')
+        } catch (error) {
+          console.error("Failed to upload review image:", error)
+          finalImageUrl = null // Fallback
+        }
       }
 
       reviewsToCreate.push({
-        content: r.content,
-        author: r.author,
-        rating: r.rating || 5,
+        reviewerName: r.reviewerName,
+        rating: parseInt(r.rating),
+        comment: r.comment,
         imageUrl: finalImageUrl,
+        content: r.comment, // or map to the correct field if different
+        author: r.reviewerName, // or map to the correct field if different
       })
     }
 
+    // Izveido aģentu datubāzē
     try {
-      let upserted
-      if (agent.id) {
-        // Esošs aģents — atjauno datus
-        await prisma.agentReview.deleteMany({ where: { agentId: agent.id } })
-      
-        upserted = await prisma.agent.update({
-          where: { id: agent.id },
-          data: {
-            name: agent.name,
-            title: agent.title,
-            phone: agent.phone,
-            image: imageUrl,
-            reviews: {
-              create: reviewsToCreate,
-            },
+      const createdAgent = await prisma.agent.create({
+        data: {
+          name: agent.name,
+          title: agent.title,
+          phone: agent.phone,
+          email: agent.email,
+          image: imageUrl,
+          reviews: {
+            create: reviewsToCreate,
           },
-        })
-      } else {
-        // Jauns aģents — izveido
-        upserted = await prisma.agent.create({
-          data: {
-            name: agent.name,
-            title: agent.title,
-            phone: agent.phone,
-            image: imageUrl,
-            reviews: {
-              create: reviewsToCreate,
-            },
-          },
-        })
-      }
-      
-      await syncAgentTranslations(createdAgents)
+        },
+        include: {
+          reviews: true,
+        },
+      })
 
-      createdAgents.push(upserted)
-    } catch (err) {
-      return NextResponse.json({ success: false, message: "Database error", error: String(err) }, { status: 500 })
+      createdAgents.push(createdAgent)
+
+      // Sinhronizē tulkojumus
+      await syncAgentTranslations([createdAgent])
+    } catch (error) {
+      console.error("Failed to create agent:", error)
+      return NextResponse.json({ success: false, message: "Failed to create agent" }, { status: 500 })
     }
   }
 

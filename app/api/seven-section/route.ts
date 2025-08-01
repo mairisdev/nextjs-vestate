@@ -1,9 +1,51 @@
-// app/api/seven-section/route.ts
+// app/api/seven-section/route.ts (AIZVIETO PILNĪBĀ)
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { writeFile } from "fs/promises"
-import path from "path"
+import { v2 as cloudinary } from 'cloudinary'
 import { syncSevenSectionTranslations } from "@/lib/translationSync"
+
+// Cloudinary konfigurācija
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config(process.env.CLOUDINARY_URL)
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  })
+}
+
+// Cloudinary upload funkcija
+async function uploadToCloudinary(file: File, folder: string): Promise<string> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const timestamp = Date.now()
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+      
+      cloudinary.uploader.upload_stream(
+        {
+          public_id: `${timestamp}-${safeFileName}`,
+          folder: folder,
+          resource_type: 'auto',
+          transformation: [
+            { width: 1200, height: 800, crop: 'limit', quality: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary upload error:', error)
+            reject(error)
+          } else {
+            resolve(result!.secure_url)
+          }
+        }
+      ).end(buffer)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
 
 export async function GET() {
   try {
@@ -26,12 +68,12 @@ export async function POST(req: Request) {
     let imageUrl = formData.get("existingImageUrl") as string || ""
 
     if (file && file.size > 0) {
-      const bytes = await file.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-      const fileName = `section7_${Date.now()}.webp`
-      const filePath = path.join(process.cwd(), "public/seven-section", fileName)
-      await writeFile(filePath, buffer)
-      imageUrl = `/seven-section/${fileName}`
+      try {
+        imageUrl = await uploadToCloudinary(file, 'seven-section')
+      } catch (error) {
+        console.error("Failed to upload image:", error)
+        return new NextResponse("Failed to upload image", { status: 500 })
+      }
     }
 
     const existing = await prisma.sevenSection.findFirst()

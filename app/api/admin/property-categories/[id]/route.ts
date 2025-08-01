@@ -1,18 +1,54 @@
+// app/api/admin/property-categories/[id]/route.ts (AIZVIETO PILNĪBĀ)
 import { prisma } from "@/lib/db"
 import { NextResponse } from "next/server"
-import path from "path"
-import { writeFile, mkdir } from "fs/promises"
-import fs from "fs"
-import { v4 as uuidv4 } from "uuid"
+import { v2 as cloudinary } from 'cloudinary'
+
+// Cloudinary konfigurācija
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config(process.env.CLOUDINARY_URL)
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  })
+}
+
+// Cloudinary upload funkcija
+async function uploadToCloudinary(file: File, folder: string): Promise<string> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const timestamp = Date.now()
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+      
+      cloudinary.uploader.upload_stream(
+        {
+          public_id: `${timestamp}-${safeFileName}`,
+          folder: folder,
+          resource_type: 'auto',
+          transformation: [
+            { width: 400, height: 300, crop: 'fill', quality: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary upload error:', error)
+            reject(error)
+          } else {
+            resolve(result!.secure_url)
+          }
+        }
+      ).end(buffer)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const formData = await request.formData();
-  const uploadDir = path.join(process.cwd(), "public", "categories");
-
-  if (!fs.existsSync(uploadDir)) {
-    await mkdir(uploadDir, { recursive: true });
-  }
   
   const name = String(formData.get("name") || "")
   const slug = String(formData.get("slug") || "")
@@ -24,13 +60,12 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   const file = formData.get("image")
 
   if (file instanceof File && file.size > 0) {
-    const ext = path.extname(file.name)
-    const filename = `${uuidv4()}${ext}`
-    const buffer = Buffer.from(await file.arrayBuffer())
-    const filePath = path.join(uploadDir, filename)
-
-    await writeFile(filePath, buffer)
-    imageUrl = `/categories/${filename}`
+    try {
+      imageUrl = await uploadToCloudinary(file, 'categories')
+    } catch (error) {
+      console.error("Failed to upload category image:", error)
+      return NextResponse.json({ error: "Neizdevās augšupielādēt attēlu" }, { status: 500 })
+    }
   }
 
   try {
@@ -53,7 +88,6 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   }
 }
 
-// PIEVIENO ŠO DELETE METODI:
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
@@ -65,40 +99,16 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
 
     if (propertiesCount > 0) {
       return NextResponse.json(
-        { error: `Nevar dzēst kategoriju, jo tai ir piesaistīti ${propertiesCount} īpašumi` }, 
+        { error: `Nevar dzēst kategoriju, jo tai ir piesaistīti ${propertiesCount} īpašumi` },
         { status: 400 }
       );
     }
 
-    // Iegūstam kategoriju, lai dzēstu attēlu
-    const category = await prisma.propertyCategory.findUnique({
-      where: { id }
-    });
-
-    if (!category) {
-      return NextResponse.json({ error: "Kategorija nav atrasta" }, { status: 404 });
-    }
-
-    // Dzēšam kategorijas attēlu, ja tāds ir
-    if (category.image) {
-      try {
-        const imagePath = path.join(process.cwd(), "public", category.image);
-        if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath);
-        }
-      } catch (error) {
-        console.error("Error deleting category image:", error);
-        // Turpinām dzēšanu, pat ja attēla dzēšana neizdevās
-      }
-    }
-
-    // Dzēšam kategoriju no datubāzes
     await prisma.propertyCategory.delete({
       where: { id }
     });
 
-    return NextResponse.json({ success: true });
-    
+    return NextResponse.json({ message: "Kategorija veiksmīgi dzēsta" });
   } catch (error) {
     console.error("DELETE kategorijas kļūda:", error)
     return NextResponse.json({ error: "Kļūda dzēšot kategoriju" }, { status: 500 })
