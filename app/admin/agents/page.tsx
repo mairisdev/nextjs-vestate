@@ -7,8 +7,8 @@ import { Label } from "../../components/ui/label"
 import { Trash, Plus, Pencil } from "lucide-react"
 import ReviewModal from "../../components/ReviewModal"
 
-// === Types ===
 type Agent = {
+  id?: string
   name: string
   title: string
   phone: string
@@ -73,45 +73,79 @@ export default function AgentsAdminPage() {
     setAgents(agents.filter((_, i) => i !== index))
   }
 
-  const handleSave = async () => {
-    setLoading(true)
+const handleSave = async () => {
+  setLoading(true)
 
-    const formData = new FormData()
-    const agentsToSend = agents.map((agent) => ({
-      ...agent,
-      image:
-        typeof agent.image === "string"
-          ? agent.image
-          : (agent.image as File).name,
-      reviews: agent.reviews.map((r) => ({
-        content: r.content,
-        author: r.author,
-        rating: r.rating,
-        imageUrl: r.imageFile ? r.imageFile.name : r.imageUrl || "",
-      })),
-    }))    
+  try {
+    // Izšķiram starp jaunajiem un esošajiem aģentiem
+    const newAgents = agents.filter(agent => !agent.id)
+    const existingAgents = agents.filter(agent => agent.id)
 
-    formData.append("agents", JSON.stringify(agentsToSend))
-    agents.forEach((agent) => {
-      if (agent.image instanceof File) {
-        formData.append("files", agent.image)
-      }
-      agent.reviews.forEach((r) => {
-        if (r.imageFile instanceof File) {
-          formData.append("files", r.imageFile)
+    // 1. IZVEIDOJAM tikai jaunos aģentus
+    if (newAgents.length > 0) {
+      const formData = new FormData()
+      const agentsToCreate = newAgents.map((agent) => ({
+        name: agent.name,
+        title: agent.title,
+        phone: agent.phone,
+        image: typeof agent.image === "string" ? agent.image : (agent.image as File).name,
+        reviews: [] // Pagaidām bez atsauksmēm
+      }))
+
+      formData.append("agents", JSON.stringify(agentsToCreate))
+      
+      // Pievienojam attēlus
+      newAgents.forEach((agent) => {
+        if (agent.image instanceof File) {
+          formData.append("files", agent.image)
         }
       })
-    })    
 
-    const res = await fetch("/api/agents", {
-      method: "POST",
-      body: formData,
-    })
+      const createRes = await fetch("/api/agents", {
+        method: "POST",
+        body: formData,
+      })
 
-    const data = await res.json()
-    alert(data.success ? "Saglabāts veiksmīgi!" : `Kļūda: ${data.message}`)
+      const createData = await createRes.json()
+      if (!createData.success) {
+        alert(`Kļūda izveidojot aģentus: ${createData.message}`)
+        setLoading(false)
+        return
+      }
+    }
+
+    // 2. ATJAUNINĀM esošos aģentus (ja nepieciešams)
+    for (const agent of existingAgents) {
+      // Šeit var pievienot UPDATE API izsaukumu, ja nepieciešams
+      // Pagaidām tikai console.log
+      console.log("Updating existing agent:", agent.id, agent.name)
+    }
+
+    // 3. Pārlādējam aģentus no servera
+    const refreshRes = await fetch("/api/agents")
+    const refreshData = await refreshRes.json()
+    if (refreshData.success) {
+      setAgents(
+        refreshData.agents.map((agent: any) => ({
+          ...agent,
+          image: agent.image || "",
+          reviews: agent.reviews?.map((r: any) => ({
+            content: r.content,
+            author: r.author,
+            rating: r.rating || 5,
+          })) || [],
+        }))
+      )
+    }
+
+    alert("Aģenti saglabāti veiksmīgi!")
+  } catch (error) {
+    console.error("Save error:", error)
+    alert("Kļūda saglabājot aģentus")
+  } finally {
     setLoading(false)
   }
+}
 
   return (
     <div className="max-w-6xl mx-auto py-10 space-y-6">

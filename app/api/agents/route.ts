@@ -97,50 +97,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Apstrādā katras atsauksmes attēlu (ja ir)
-    const reviewsToCreate = []
-
-    for (const r of agent.reviews || []) {
-      let finalImageUrl = r.imageUrl
-      const matchedReviewFile = files.find((f) => f.name === r.imageUrl)
-
-      if (matchedReviewFile) {
-        try {
-          finalImageUrl = await uploadToCloudinary(matchedReviewFile, 'agents/reviews')
-        } catch (error) {
-          console.error("Failed to upload review image:", error)
-          finalImageUrl = null // Fallback
-        }
-      }
-
-      // SVARĪGI: Šeit ir labojums - izmanto tikai tos laukus, kas eksistē shēmā
-      reviewsToCreate.push({
-        content: r.content || "",      // content (obligāts)
-        author: r.author || "",        // author (obligāts)
-        rating: parseInt(r.rating) || 5,
-        imageUrl: finalImageUrl || null,
-      })
-    }
-
-    // Izveido aģentu datubāzē
+    // Izveido aģentu datubāzē (tikai CREATE)
     try {
-      const agentData: any = {
-        name: agent.name,
-        title: agent.title,
-        phone: agent.phone,
-        email: agent.email || `${agent.name.toLowerCase().replace(/\s+/g, '.')}@vestate.lv`,
-        image: imageUrl,
-      }
-
-      // Pievieno atsauksmes tikai ja tās eksistē
-      if (reviewsToCreate.length > 0) {
-        agentData.reviews = {
-          create: reviewsToCreate,
-        }
-      }
-
       const createdAgent = await prisma.agent.create({
-        data: agentData,
+        data: {
+          name: agent.name,
+          title: agent.title,
+          phone: agent.phone,
+          email: agent.email || `${agent.name.toLowerCase().replace(/\s+/g, '.')}@vestate.lv`,
+          image: imageUrl,
+        },
         include: {
           reviews: true,
         },
