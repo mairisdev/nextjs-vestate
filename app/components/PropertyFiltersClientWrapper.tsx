@@ -1,12 +1,15 @@
 'use client'
 
-import { getSafeTranslations } from "@/lib/safeTranslations"
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import PropertyFilters from './PropertyFilters'
 import type { PropertyFiltersProps } from './PropertyFilters'
-import { useEffect, useState } from 'react'
 
-// Client wrapper ar client-side tulkojumiem
+// Client wrapper ar dynamic tulkojumu ielādi
 export default function PropertyFiltersClientWrapper(props: Omit<PropertyFiltersProps, 'translations'>) {
+  const params = useParams()
+  const locale = params?.locale as string || 'lv' // Iegūstam pašreizējo valodu
+  
   const [translations, setTranslations] = useState({
     filtersTitle: "Filtri",
     clearAllButton: "Notīrīt visus",
@@ -26,23 +29,31 @@ export default function PropertyFiltersClientWrapper(props: Omit<PropertyFilters
     applyFiltersButton: "Pielietot filtrus"
   })
 
+  const [isLoading, setIsLoading] = useState(true)
+
   useEffect(() => {
-    // Client-side tulkojumu ielāde
     const loadTranslations = async () => {
       try {
-        const response = await fetch('/api/admin/translations?category=PropertyFilters&locale=lv')
+        setIsLoading(true)
+        console.log(`🌐 Loading PropertyFilters translations for locale: ${locale}`)
+        
+        const response = await fetch(`/api/admin/translations?category=PropertyFilters&locale=${locale}`)
         if (response.ok) {
           const data = await response.json()
+          
+          console.log(`📝 Received ${data.length} translations for ${locale}:`, data)
           
           const translationsMap: { [key: string]: string } = {}
           data.forEach((t: any) => {
             const key = t.key.split('.').pop()
-            if (key) {
+            if (key && t.value.trim()) { // Tikai ja ir vērtība
               translationsMap[key] = t.value
             }
           })
           
-          // Atjaunojam tulkojumus ar server vērtībām, bet saglabājam fallback
+          console.log(`🔄 Mapped translations:`, translationsMap)
+          
+          // Atjaunojam tulkojumus ar server vērtībām
           setTranslations(prev => ({
             filtersTitle: translationsMap.filtersTitle || prev.filtersTitle,
             clearAllButton: translationsMap.clearAllButton || prev.clearAllButton,
@@ -61,15 +72,25 @@ export default function PropertyFiltersClientWrapper(props: Omit<PropertyFilters
             areaToPlaceholder: translationsMap.areaToPlaceholder || prev.areaToPlaceholder,
             applyFiltersButton: translationsMap.applyFiltersButton || prev.applyFiltersButton
           }))
+        } else {
+          console.warn(`⚠️ Failed to load translations for ${locale}:`, response.status)
         }
       } catch (error) {
-        console.warn('Failed to load PropertyFilters translations:', error)
-        // Saglabājam fallback tulkojumus
+        console.error('❌ Error loading PropertyFilters translations:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
     loadTranslations()
-  }, [])
+  }, [locale]) // Atkārtoti ielādējam, kad mainās valoda
+
+  // Rādām ielādes indikatoru vai fallback tulkojumus
+  if (isLoading) {
+    console.log(`⏳ Still loading translations for ${locale}...`)
+  }
+
+  console.log(`🎯 Final translations for ${locale}:`, translations)
 
   return <PropertyFilters {...props} translations={translations} />
 }
