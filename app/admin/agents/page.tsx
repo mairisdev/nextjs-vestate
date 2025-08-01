@@ -115,14 +115,10 @@ const handleSave = async () => {
       }
     }
 
-    // 2. ATJAUNINĀM esošos aģentus (ja nepieciešams)
     for (const agent of existingAgents) {
-      // Šeit var pievienot UPDATE API izsaukumu, ja nepieciešams
-      // Pagaidām tikai console.log
       console.log("Updating existing agent:", agent.id, agent.name)
     }
 
-    // 3. Pārlādējam aģentus no servera
     const refreshRes = await fetch("/api/agents")
     const refreshData = await refreshRes.json()
     if (refreshData.success) {
