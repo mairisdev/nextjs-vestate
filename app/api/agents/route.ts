@@ -113,30 +113,34 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // SVARĪGI: Šeit ir labojums - pareizi kartē laukus
+      // SVARĪGI: Šeit ir labojums - izmanto tikai tos laukus, kas eksistē shēmā
       reviewsToCreate.push({
-        reviewerName: r.author || "",  // author -> reviewerName
+        content: r.content || "",      // content (obligāts)
+        author: r.author || "",        // author (obligāts)
         rating: parseInt(r.rating) || 5,
-        comment: r.content || "",      // content -> comment  
-        imageUrl: finalImageUrl,
-        content: r.content || "",      // content paliek content
-        author: r.author || "",        // author paliek author
+        imageUrl: finalImageUrl || null,
       })
     }
 
     // Izveido aģentu datubāzē
     try {
+      const agentData: any = {
+        name: agent.name,
+        title: agent.title,
+        phone: agent.phone,
+        email: agent.email || `${agent.name.toLowerCase().replace(/\s+/g, '.')}@vestate.lv`,
+        image: imageUrl,
+      }
+
+      // Pievieno atsauksmes tikai ja tās eksistē
+      if (reviewsToCreate.length > 0) {
+        agentData.reviews = {
+          create: reviewsToCreate,
+        }
+      }
+
       const createdAgent = await prisma.agent.create({
-        data: {
-          name: agent.name,
-          title: agent.title,
-          phone: agent.phone,
-          email: agent.email || `${agent.name.toLowerCase().replace(/\s+/g, '.')}@vestate.lv`,
-          image: imageUrl,
-          reviews: {
-            create: reviewsToCreate,
-          },
-        },
+        data: agentData,
         include: {
           reviews: true,
         },
