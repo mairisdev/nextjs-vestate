@@ -1,3 +1,4 @@
+// app/admin/agents/page.tsx (AIZVIETO PILNĪBĀ)
 "use client"
 
 import { useState, useEffect } from "react"
@@ -30,9 +31,11 @@ export default function AgentsAdminPage() {
   const [activeAgentIndex, setActiveAgentIndex] = useState<number | null>(null)
   const [editingReviewIndex, setEditingReviewIndex] = useState<number | null>(null)
   const [editingReviewData, setEditingReviewData] = useState<{
+    id?: string
     content: string
     author: string
     rating: number
+    imageUrl?: string
   } | null>(null)
 
   useEffect(() => {
@@ -46,9 +49,11 @@ export default function AgentsAdminPage() {
             image: agent.image || "",
             reviews:
               agent.reviews?.map((r: any) => ({
+                id: r.id, // ✅ Pievienojam ID
                 content: r.content,
                 author: r.author,
                 rating: r.rating || 5,
+                imageUrl: r.imageUrl, // ✅ Pievienojam imageUrl
               })) || [],
           }))
         )
@@ -115,10 +120,13 @@ const handleSave = async () => {
       }
     }
 
+    // 2. ATJAUNOJAM esošos aģentus (bez atsauksmēm - tās tiek pārvaldītas atsevišķi)
     for (const agent of existingAgents) {
       console.log("Updating existing agent:", agent.id, agent.name)
+      // Šeit tu vari pievienot loģiku esošo aģentu atjaunošanai, ja nepieciešams
     }
 
+    // 3. ATJAUNOJAM lapu ar jaunākajiem datiem
     const refreshRes = await fetch("/api/agents")
     const refreshData = await refreshRes.json()
     if (refreshData.success) {
@@ -127,9 +135,11 @@ const handleSave = async () => {
           ...agent,
           image: agent.image || "",
           reviews: agent.reviews?.map((r: any) => ({
+            id: r.id, // ✅ Pievienojam ID
             content: r.content,
             author: r.author,
             rating: r.rating || 5,
+            imageUrl: r.imageUrl, // ✅ Pievienojam imageUrl
           })) || [],
         }))
       )
@@ -137,54 +147,54 @@ const handleSave = async () => {
 
     alert("Aģenti saglabāti veiksmīgi!")
   } catch (error) {
-    console.error("Save error:", error)
-    alert("Kļūda saglabājot aģentus")
+    console.error("Error saving agents:", error)
+    alert("Radās kļūda saglabājot aģentus")
   } finally {
     setLoading(false)
   }
 }
 
   return (
-    <div className="max-w-6xl mx-auto py-10 space-y-6">
-      <h2 className="text-2xl font-bold text-[#00332D] mb-6">Aģentu iestatījumi</h2>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Aģentu pārvaldība</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {agents.map((agent, index) => (
-          <div
-            key={index}
-            className="bg-white shadow-md rounded-xl p-6 space-y-4 relative border"
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute top-4 right-4 text-red-600"
-              onClick={() => removeAgent(index)}
-            >
-              <Trash className="w-4 h-4" />
-            </Button>
-
-            <div className="space-y-2">
-              <Label>Vārds</Label>
-              <Input
-                value={agent.name}
-                onChange={(e) => updateAgent(index, "name", e.target.value)}
-              />
+          <div key={index} className="border p-4 rounded-lg space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                Aģents #{index + 1} {agent.name && `- ${agent.name}`}
+              </h3>
+              <Button variant="outline" size="sm" onClick={() => removeAgent(index)}>
+                <Trash className="w-4 h-4" />
+              </Button>
             </div>
 
-            <div className="space-y-2">
-              <Label>Amats</Label>
-              <Input
-                value={agent.title}
-                onChange={(e) => updateAgent(index, "title", e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Vārds</Label>
+                <Input
+                  value={agent.name}
+                  onChange={(e) => updateAgent(index, "name", e.target.value)}
+                  placeholder="Vineta Villere"
+                />
+              </div>
+              <div>
+                <Label>Amats</Label>
+                <Input
+                  value={agent.title}
+                  onChange={(e) => updateAgent(index, "title", e.target.value)}
+                  placeholder="Nekustamo īpašumu speciālists"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
+            <div>
               <Label>Tālrunis</Label>
               <Input
                 value={agent.phone}
                 onChange={(e) => updateAgent(index, "phone", e.target.value)}
+                placeholder="+371 28 446 677"
               />
             </div>
 
@@ -193,7 +203,13 @@ const handleSave = async () => {
               <Input
                 type="file"
                 accept="image/*"
-                onChange={e => updateAgent(index, "image", e.target.files?.[0] || "")}
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    updateAgent(index, "image", file)
+                  }
+                }}
+                placeholder={typeof agent.image === "string" ? agent.image : (agent.image as File)?.name || ""}
               />
               {typeof agent.image === "string" && agent.image && (
                 <div className="mt-2">
@@ -257,7 +273,11 @@ const handleSave = async () => {
           {loading ? "Saglabā..." : "Saglabāt izmaiņas"}
         </Button>
       </div>
+      {agents.length === 0 && (
+        <p className="text-gray-500">Nav pievienots neviens aģents.</p>
+      )}
 
+      {/* Atsauksmju modāls */}
       {activeAgentIndex !== null && (
         <ReviewModal
           open={reviewModalOpen}
@@ -266,14 +286,18 @@ const handleSave = async () => {
           onSave={(review) => {
             const updated = [...agents]
             if (editingReviewIndex !== null) {
+              // Rediģē esošo atsauksmi
               updated[activeAgentIndex].reviews[editingReviewIndex] = review
             } else {
+              // Pievieno jaunu atsauksmi
               updated[activeAgentIndex].reviews.push(review)
             }
             setAgents(updated)
             setEditingReviewIndex(null)
             setEditingReviewData(null)
-          } } agentId={""}        />
+          }}
+          agentId={agents[activeAgentIndex]?.id || ""}
+        />
       )}
     </div>
   )
