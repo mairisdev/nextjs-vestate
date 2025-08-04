@@ -83,9 +83,8 @@ export default function EditProperty({ params }: EditPropertyProps) {
   const [currentMainImage, setCurrentMainImage] = useState<string | null>(null)
   const [currentAdditionalImages, setCurrentAdditionalImages] = useState<string[]>([])
   const [newMainImage, setNewMainImage] = useState<File | null>(null)
-  const [newAdditionalImages, setNewAdditionalImages] = useState<File[]>([])
+  const [newAdditionalImages, setNewAdditionalImages] = useState<{ file: File; preview: string }[]>([])
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null)
-  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([])
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([])
 
   // LABOTS useEffect - tikai viens!
@@ -202,18 +201,21 @@ export default function EditProperty({ params }: EditPropertyProps) {
     }
   }
 
-  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    if (files.length + newAdditionalImages.length + currentAdditionalImages.length > 10) {
-      setErrorMessage("Maksimums 10 papildu attēli")
-      return
-    }
-    
-    setNewAdditionalImages(prev => [...prev, ...files])
-    
-    const newPreviews = files.map(file => URL.createObjectURL(file))
-    setAdditionalImagePreviews(prev => [...prev, ...newPreviews])
+const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files ? [...e.target.files] : []
+
+  if (files.length + newAdditionalImages.length + currentAdditionalImages.length > 30) {
+    setErrorMessage("Maksimums 30 papildu attēli")
+    return
   }
+
+  const newEntries = files.map(file => ({
+    file,
+    preview: URL.createObjectURL(file),
+  }))
+
+  setNewAdditionalImages(prev => [...prev, ...newEntries])
+}
 
   const removeCurrentMainImage = () => {
     if (currentMainImage) {
@@ -227,10 +229,20 @@ export default function EditProperty({ params }: EditPropertyProps) {
     setCurrentAdditionalImages(prev => prev.filter(img => img !== imagePath))
   }
 
-  const removeNewAdditionalImage = (index: number) => {
-    setNewAdditionalImages(prev => prev.filter((_, i) => i !== index))
-    setAdditionalImagePreviews(prev => prev.filter((_, i) => i !== index))
-  }
+const removeNewAdditionalImage = (index: number) => {
+  const removed = newAdditionalImages[index]
+  if (removed?.preview) URL.revokeObjectURL(removed.preview)
+  setNewAdditionalImages(prev => prev.filter((_, i) => i !== index))
+}
+
+const moveNewAdditionalImage = (from: number, to: number) => {
+  setNewAdditionalImages(prev => {
+    const updated = [...prev]
+    const [moved] = updated.splice(from, 1)
+    updated.splice(to, 0, moved)
+    return updated
+  })
+}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -280,8 +292,8 @@ export default function EditProperty({ params }: EditPropertyProps) {
       }
       
       // Pievienojam jaunos papildu attēlus
-      newAdditionalImages.forEach((image, index) => {
-        formDataToSend.append(`additionalImage${index}`, image)
+      newAdditionalImages.forEach((item, index) => {
+        formDataToSend.append(`additionalImage${index}`, item.file)
       })
 
       formDataToSend.append("imagesToDelete", JSON.stringify(imagesToDelete))
@@ -670,26 +682,47 @@ export default function EditProperty({ params }: EditPropertyProps) {
                 onChange={handleAdditionalImagesChange}
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
-              {additionalImagePreviews.length > 0 && (
-                <div className="mt-3 grid grid-cols-3 md:grid-cols-5 gap-3">
-                  {additionalImagePreviews.map((preview, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={preview}
-                        alt={`Jauns papildu attēls ${index + 1}`}
-                        className="w-20 h-20 object-cover rounded-lg border"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeNewAdditionalImage(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+{newAdditionalImages.length > 0 && (
+  <div className="mt-3 grid grid-cols-3 md:grid-cols-5 gap-3">
+    {newAdditionalImages.map((item, index) => (
+      <div key={index} className="relative">
+        <img
+          src={item.preview}
+          alt={`Jauns papildu attēls ${index + 1}`}
+          className="w-20 h-20 object-cover rounded-lg border"
+        />
+        <button
+          type="button"
+          onClick={() => removeNewAdditionalImage(index)}
+          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600"
+        >
+          ×
+        </button>
+
+        <div className="flex justify-center mt-1 space-x-1">
+          {index > 0 && (
+            <button
+              type="button"
+              className="text-xs bg-gray-100 px-2 py-1 rounded border hover:bg-gray-200"
+              onClick={() => moveNewAdditionalImage(index, index - 1)}
+            >
+              ↑
+            </button>
+          )}
+          {index < newAdditionalImages.length - 1 && (
+            <button
+              type="button"
+              className="text-xs bg-gray-100 px-2 py-1 rounded border hover:bg-gray-200"
+              onClick={() => moveNewAdditionalImage(index, index + 1)}
+            >
+              ↓
+            </button>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
             </div>
           </div>
 
