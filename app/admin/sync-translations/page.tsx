@@ -342,7 +342,6 @@ export default function SyncTranslationsPage() {
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
               <div>
-                <h4 className="font-medium text-amber-900">Svarīgi - Uzlabotā versija!</h4>
                 <p className="text-sm text-amber-800 mt-1">
                   Šī uzlabotā bulk sinhronizācija tagad var:
                 </p>
@@ -352,9 +351,6 @@ export default function SyncTranslationsPage() {
                   <li><strong>Atjaunināt placeholder</strong> tulkojumus (kur value = key)</li>
                   <li><strong>Izlaist esošos</strong> tulkojumus ar derīgām vērtībām</li>
                 </ul>
-                <p className="text-sm text-amber-800 mt-2">
-                  Tagad tam vajadzētu nokopēt jūsu LV tulkojumus uz EN/RU valodām!
-                </p>
               </div>
             </div>
           </div>
