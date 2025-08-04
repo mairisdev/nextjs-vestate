@@ -831,7 +831,7 @@ export async function syncPropertyDetailsTranslations() {
     propertyId: "Īpašuma ID: {id}"
   }
 
-  // PropertyPage tulkojumi 
+  // PropertyPage tulkojumi - PIEVIENOTA uniqueViews!
   const propertyPageKeys = {
     statusAvailable: "Pieejams",
     statusReserved: "Rezervēts",
@@ -840,7 +840,10 @@ export async function syncPropertyDetailsTranslations() {
     breadcrumbHome: "Sākums",
     breadcrumbProperties: "Īpašumi",
     backToList: "Atpakaļ uz sarakstu",
-    pricePerSquare: "€{price}/m²"
+    pricePerSquare: "€{price}/m²",
+    uniqueViews: "unikāli skatījumi", // ⭐ ŠEIT BIJA PROBLĒMA!
+    viewsCounter: "skatījumi",
+    viewsLabel: "Skatījumi"
   }
 
   // Sinhronizējam PropertyDetails

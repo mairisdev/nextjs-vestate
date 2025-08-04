@@ -63,6 +63,12 @@ export default function SyncTranslationsPage() {
     description: 'Īpašuma detaļu lapas tulkojumi',
     endpoint: '/api/admin/sync-property-details-translations'
     },
+      {
+    key: 'missing-keys',
+    name: 'MissingKeys',
+    description: 'Trūkstošās atslēgas (uniqueViews, status tulkojumi)',
+    endpoint: '/api/admin/sync-missing-translations'
+    },
   ]
 
   const syncCategory = async (category: typeof syncCategories[0]) => {
