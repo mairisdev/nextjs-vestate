@@ -20,7 +20,7 @@ interface Category {
 export default function CreateProperty() {
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
-  const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [, setCategoriesLoading] = useState(true)
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -52,9 +52,8 @@ export default function CreateProperty() {
   })
 
   const [mainImage, setMainImage] = useState<File | null>(null)
-  const [additionalImages, setAdditionalImages] = useState<File[]>([])
+  const [additionalImages, setAdditionalImages] = useState<{ file: File; preview: string }[]>([])
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null)
-  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([])
 
   const validateFileSize = (file: File, maxSizeMB: number = 10): boolean => {
     const maxSizeBytes = maxSizeMB * 1024 * 1024
@@ -68,7 +67,7 @@ export default function CreateProperty() {
   const getTotalUploadSize = (): number => {
     let totalSize = 0
     if (mainImage) totalSize += mainImage.size
-    additionalImages.forEach(img => totalSize += img.size)
+    additionalImages.forEach(img => totalSize += img.file.size)
     return totalSize
   }
 
@@ -85,43 +84,54 @@ export default function CreateProperty() {
     }
   }
 
-  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    
-    for (const file of files) {
-      if (!validateFileSize(file, 10)) {
-        return
-      }
-    }
+const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files ? [...e.target.files] : []
 
-    if (files.length + additionalImages.length > 10) {
-      setErrorMessage("Maksimums 10 papildu attēli")
-      return
-    }
-    if (files.length === 0) {
-      setErrorMessage("Nav izvēlēti papildu attēli")
-      return
-    }
-
-    const currentTotalSize = getTotalUploadSize()
-    const newFilesSize = files.reduce((sum, file) => sum + file.size, 0)
-    const totalSizeMB = (currentTotalSize + newFilesSize) / 1024 / 1024
-
-    if (totalSizeMB > 50) {
-      setErrorMessage(`Kopējais failu izmērs pārāk liels: ${totalSizeMB.toFixed(1)}MB. Maksimums 50MB.`)
-      return
-    }
-
-    setAdditionalImages(prev => [...prev, ...files])
-    
-    const newPreviews = files.map(file => URL.createObjectURL(file))
-    setAdditionalImagePreviews(prev => [...prev, ...newPreviews])
+  for (const file of files) {
+    if (!validateFileSize(file, 10)) return
   }
 
-  const removeAdditionalImage = (index: number) => {
-    setAdditionalImages(prev => prev.filter((_, i) => i !== index))
-    setAdditionalImagePreviews(prev => prev.filter((_, i) => i !== index))
+  if (files.length + additionalImages.length > 30) {
+    setErrorMessage("Maksimums 30 papildu attēli")
+    return
   }
+
+  if (files.length === 0) {
+    setErrorMessage("Nav izvēlēti papildu attēli")
+    return
+  }
+
+  const currentTotalSize = getTotalUploadSize()
+  const newFilesSize = files.reduce((sum, file) => sum + file.size, 0)
+  const totalSizeMB = (currentTotalSize + newFilesSize) / 1024 / 1024
+
+  if (totalSizeMB > 50) {
+    setErrorMessage(`Kopējais failu izmērs pārāk liels: ${totalSizeMB.toFixed(1)}MB. Maksimums 50MB.`)
+    return
+  }
+
+  const newEntries = files.map(file => ({
+    file,
+    preview: URL.createObjectURL(file),
+  }))
+
+  setAdditionalImages(prev => [...prev, ...newEntries])
+}
+
+const removeAdditionalImage = (index: number) => {
+  const removed = additionalImages[index]
+  if (removed?.preview) URL.revokeObjectURL(removed.preview)
+  setAdditionalImages(prev => prev.filter((_, i) => i !== index))
+}
+
+const moveImage = (from: number, to: number) => {
+  setAdditionalImages(prev => {
+    const updated = [...prev]
+    const [moved] = updated.splice(from, 1)
+    updated.splice(to, 0, moved)
+    return updated
+  })
+}
 
   useEffect(() => {
     loadCategories()
@@ -230,6 +240,11 @@ export default function CreateProperty() {
       setLoading(false)
       return
     }
+    if (!mainImage) {
+      setErrorMessage("Galvenais attēls ir obligāts")
+      setLoading(false)
+      return
+    }
 
     const selectedCategory = categories.find(c => c.id === formData.categoryId)
     if (!selectedCategory) {
@@ -290,9 +305,9 @@ export default function CreateProperty() {
         formDataToSend.append("mainImage", mainImage)
       }
       
-      additionalImages.forEach((image, index) => {
-        formDataToSend.append(`additionalImage${index}`, image)
-      })
+    additionalImages.forEach((item, index) => {
+      formDataToSend.append(`additionalImage${index}`, item.file)
+    })
       
       const res = await fetch("/api/admin/properties", {
         method: "POST",
@@ -481,7 +496,7 @@ export default function CreateProperty() {
                 </div>
 
                 <div>
-                    <Label>Papildu attēli (maksimums 5)</Label>
+                    <Label>Papildu attēli (maksimums 30)</Label>
                     <div className="mt-2">
                         <input
                             type="file"
@@ -490,26 +505,47 @@ export default function CreateProperty() {
                             onChange={handleAdditionalImagesChange}
                             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />
-                        {additionalImagePreviews.length > 0 && (
-                            <div className="mt-3 grid grid-cols-3 md:grid-cols-5 gap-3">
-                            {additionalImagePreviews.map((preview, index) => (
-                                <div key={index} className="relative">
-                                <img
-                                    src={preview}
-                                    alt={`Papildu attēls ${index + 1}`}
-                                    className="w-20 h-20 object-cover rounded-lg border"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => removeAdditionalImage(index)}
-                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600"
-                                >
-                                    ×
-                                </button>
-                                </div>
-                            ))}
-                            </div>
-                        )}
+{additionalImages.length > 0 && (
+  <div className="mt-3 grid grid-cols-3 md:grid-cols-5 gap-3">
+    {additionalImages.map((item, index) => (
+      <div key={index} className="relative">
+        <img
+          src={item.preview}
+          alt={`Papildu attēls ${index + 1}`}
+          className="w-20 h-20 object-cover rounded-lg border"
+        />
+        <button
+          type="button"
+          onClick={() => removeAdditionalImage(index)}
+          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600"
+        >
+          ×
+        </button>
+
+        <div className="flex justify-center mt-1 space-x-1">
+          {index > 0 && (
+            <button
+              type="button"
+              className="text-xs bg-gray-100 px-2 py-1 rounded border hover:bg-gray-200"
+              onClick={() => moveImage(index, index - 1)}
+            >
+              ↑
+            </button>
+          )}
+          {index < additionalImages.length - 1 && (
+            <button
+              type="button"
+              className="text-xs bg-gray-100 px-2 py-1 rounded border hover:bg-gray-200"
+              onClick={() => moveImage(index, index + 1)}
+            >
+              ↓
+            </button>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
                     </div>
 
                     <div className="space-y-2">
