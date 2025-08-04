@@ -1,9 +1,51 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { writeFile, mkdir } from "fs/promises"
-import path from "path"
+import { v2 as cloudinary } from 'cloudinary' 
 import { randomUUID } from "crypto"
 import { removeDiacritics } from "@/lib/utils"
+
+// Cloudinary konfigurācija
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config(process.env.CLOUDINARY_URL)
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  })
+}
+
+// Cloudinary upload funkcija
+async function uploadToCloudinary(file: File, folder: string): Promise<string> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const timestamp = Date.now()
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+      
+      cloudinary.uploader.upload_stream(
+        {
+          public_id: `${timestamp}-${safeFileName}`,
+          folder: folder,
+          resource_type: 'auto',
+          transformation: [
+            { width: 1200, height: 800, crop: 'limit', quality: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary upload error:', error)
+            reject(error)
+          } else {
+            resolve(result!.secure_url)
+          }
+        }
+      ).end(buffer)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
 
 // GET - Fetch content by type or all
 export async function GET(req: Request) {
@@ -52,42 +94,63 @@ export async function POST(req: Request) {
     const metaDescription = formData.get("metaDescription") as string | null
 
     // Handle tags
-    const tags = tagsString ? tagsString.split(",").map(tag => tag.trim()).filter(Boolean) : []
+    const tags = tagsString ? 
+      tagsString.split(",").map(tag => tag.trim()).filter(Boolean) : []
 
     // Generate slug
     const slug = removeDiacritics(title.toLowerCase().replace(/\s+/g, "-"))
 
-    // Handle featured image upload
+    // Handle featured image upload to Cloudinary
     let featuredImage = formData.get("existingFeaturedImage") as string || null
     const featuredImageFile = formData.get("featuredImage") as File | null
     
     if (featuredImageFile && featuredImageFile.size > 0) {
-      const uploadDir = path.join(process.cwd(), "public/content")
-      await mkdir(uploadDir, { recursive: true })
+      console.log('📁 Uploading featured image to Cloudinary')
       
-      const fileName = `${randomUUID()}-${featuredImageFile.name.replace(/\s+/g, "_")}`
-      const filePath = path.join(uploadDir, fileName)
-      const buffer = Buffer.from(await featuredImageFile.arrayBuffer())
-      await writeFile(filePath, buffer)
-      featuredImage = `/content/${fileName}`
+      // Validējam faila izmēru (max 10MB)
+      if (featuredImageFile.size > 10 * 1024 * 1024) {
+        return NextResponse.json({ 
+          error: "Galvenais attēls pārāk liels (max 10MB)" 
+        }, { status: 413 })
+      }
+      
+      try {
+        featuredImage = await uploadToCloudinary(featuredImageFile, 'content')
+        console.log('✅ Featured image uploaded:', featuredImage)
+      } catch (uploadError) {
+        console.error('❌ Failed to upload featured image:', uploadError)
+        return NextResponse.json({ 
+          error: "Neizdevās augšupielādēt galveno attēlu" 
+        }, { status: 500 })
+      }
     }
 
-    // Handle video file upload
+    // Handle video file upload to Cloudinary
     let videoFile = formData.get("existingVideoFile") as string || null
     const videoFileUpload = formData.get("videoFile") as File | null
     
     if (videoFileUpload && videoFileUpload.size > 0) {
-      const uploadDir = path.join(process.cwd(), "public/content/videos")
-      await mkdir(uploadDir, { recursive: true })
+      console.log('📁 Uploading video file to Cloudinary')
       
-      const fileName = `${randomUUID()}-${videoFileUpload.name.replace(/\s+/g, "_")}`
-      const filePath = path.join(uploadDir, fileName)
-      const buffer = Buffer.from(await videoFileUpload.arrayBuffer())
-      await writeFile(filePath, buffer)
-      videoFile = `/content/videos/${fileName}`
+      // Validējam faila izmēru (max 100MB video failiem)
+      if (videoFileUpload.size > 100 * 1024 * 1024) {
+        return NextResponse.json({ 
+          error: "Video fails pārāk liels (max 100MB)" 
+        }, { status: 413 })
+      }
+      
+      try {
+        videoFile = await uploadToCloudinary(videoFileUpload, 'content/videos')
+        console.log('✅ Video file uploaded:', videoFile)
+      } catch (uploadError) {
+        console.error('❌ Failed to upload video file:', uploadError)
+        return NextResponse.json({ 
+          error: "Neizdevās augšupielādēt video failu" 
+        }, { status: 500 })
+      }
     }
 
-    // Handle additional images
+    // Handle additional images upload to Cloudinary
     const additionalImages: string[] = []
     let imageIndex = 0
     
@@ -95,14 +158,24 @@ export async function POST(req: Request) {
       const imageFile = formData.get(`additionalImage${imageIndex}`) as File | null
       if (!imageFile || imageFile.size === 0) break
       
-      const uploadDir = path.join(process.cwd(), "public/content")
-      await mkdir(uploadDir, { recursive: true })
+      console.log(`📁 Uploading additional image ${imageIndex + 1} to Cloudinary`)
       
-      const fileName = `${randomUUID()}-${imageFile.name.replace(/\s+/g, "_")}`
-      const filePath = path.join(uploadDir, fileName)
-      const buffer = Buffer.from(await imageFile.arrayBuffer())
-      await writeFile(filePath, buffer)
-      additionalImages.push(`/content/${fileName}`)
+      // Validējam faila izmēru (max 10MB)
+      if (imageFile.size > 10 * 1024 * 1024) {
+        console.log(`❌ Additional image ${imageIndex + 1} too large, skipping`)
+        imageIndex++
+        continue
+      }
+      
+      try {
+        const imageUrl = await uploadToCloudinary(imageFile, 'content')
+        additionalImages.push(imageUrl)
+        console.log(`✅ Additional image ${imageIndex + 1} uploaded:`, imageUrl)
+      } catch (uploadError) {
+        console.error(`❌ Failed to upload additional image ${imageIndex + 1}:`, uploadError)
+        // Turpinām ar citiem attēliem
+      }
+      
       imageIndex++
     }
 
@@ -118,29 +191,34 @@ export async function POST(req: Request) {
       videoUrl,
       videoFile,
       images: additionalImages,
-      tags,
       author,
+      tags,
       metaTitle,
       metaDescription,
+      updatedAt: new Date()
     }
 
     let result
     if (id) {
-      // Update existing
+      // Update existing content
       result = await prisma.content.update({
         where: { id },
-        data,
+        data
       })
     } else {
-      // Create new
+      // Create new content
       result = await prisma.content.create({
-        data,
+        data: {
+          ...data,
+          createdAt: new Date()
+        }
       })
     }
 
     return NextResponse.json(result)
   } catch (error) {
     console.error("[CONTENT_POST]", error)
-    return NextResponse.json({ error: "Kļūda saglabājot saturu" }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Kļūda saglabājot saturu"
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

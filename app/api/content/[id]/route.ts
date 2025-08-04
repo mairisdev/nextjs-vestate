@@ -1,7 +1,54 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { unlink } from "fs/promises"
-import path from "path"
+import { v2 as cloudinary } from 'cloudinary'
+
+// Cloudinary konfigurācija
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config(process.env.CLOUDINARY_URL)
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  })
+}
+
+// Funkcija public ID iegūšanai no Cloudinary URL
+function getCloudinaryPublicId(url: string): string | null {
+  try {
+    if (!url.includes('cloudinary.com')) return null
+    
+    const parts = url.split('/')
+    const versionIndex = parts.findIndex(part => part.startsWith('v'))
+    
+    if (versionIndex !== -1 && versionIndex < parts.length - 1) {
+      const fileName = parts[versionIndex + 1]
+      return fileName.split('.')[0] // noņemam faila paplašinājumu
+    }
+    
+    // Fallback - mēģinām iegūt no faila nosaukuma
+    const fileName = parts[parts.length - 1]
+    return fileName.split('.')[0]
+  } catch (error) {
+    console.error('Error extracting public ID from URL:', error)
+    return null
+  }
+}
+
+// Cloudinary delete funkcija
+async function deleteFromCloudinary(publicId: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(publicId, (error, result) => {
+      if (error) {
+        console.error('Cloudinary delete error:', error)
+        reject(error)
+      } else {
+        console.log('Cloudinary delete result:', result)
+        resolve()
+      }
+    })
+  })
+}
 
 // GET - Fetch single content by ID
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -44,7 +91,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-// DELETE - Delete content and its files
+// DELETE - Delete content and its files from Cloudinary
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
@@ -58,28 +105,41 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       return NextResponse.json({ error: "Saturs nav atrasts" }, { status: 404 })
     }
 
-    // Collect all files that need to be deleted
-    const filesToDelete: string[] = []
+    // Collect all Cloudinary URLs that need to be deleted
+    const cloudinaryUrls: string[] = []
     
-    if (content.featuredImage) {
-      filesToDelete.push(content.featuredImage)
+    if (content.featuredImage && content.featuredImage.includes('cloudinary.com')) {
+      cloudinaryUrls.push(content.featuredImage)
     }
     
-    if (content.videoFile) {
-      filesToDelete.push(content.videoFile)
+    if (content.videoFile && content.videoFile.includes('cloudinary.com')) {
+      cloudinaryUrls.push(content.videoFile)
     }
     
     if (content.images && content.images.length > 0) {
-      filesToDelete.push(...content.images)
+      content.images.forEach(imageUrl => {
+        if (imageUrl.includes('cloudinary.com')) {
+          cloudinaryUrls.push(imageUrl)
+        }
+      })
     }
 
-    // Delete files from filesystem
-    for (const filePath of filesToDelete) {
+    console.log('🗑️ Deleting content files from Cloudinary:', {
+      contentId: id,
+      title: content.title,
+      filesToDelete: cloudinaryUrls.length
+    })
+
+    // Delete files from Cloudinary
+    for (const cloudinaryUrl of cloudinaryUrls) {
       try {
-        const fullPath = path.join(process.cwd(), "public", filePath)
-        await unlink(fullPath)
+        const publicId = getCloudinaryPublicId(cloudinaryUrl)
+        if (publicId) {
+          await deleteFromCloudinary(publicId)
+          console.log(`✅ Deleted from Cloudinary: ${publicId}`)
+        }
       } catch (fileError) {
-        console.error(`Error deleting file: ${filePath}`, fileError)
+        console.error(`❌ Error deleting file from Cloudinary: ${cloudinaryUrl}`, fileError)
         // Continue even if file deletion fails
       }
     }
@@ -89,9 +149,16 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       where: { id }
     })
 
-    return NextResponse.json({ success: true, message: "Saturs dzēsts veiksmīgi" })
+    console.log('✅ Content deleted successfully:', id)
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "Saturs dzēsts veiksmīgi",
+      deletedFiles: cloudinaryUrls.length
+    })
   } catch (error) {
     console.error("[CONTENT_DELETE]", error)
-    return NextResponse.json({ error: "Kļūda dzēšot saturu" }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Kļūda dzēšot saturu"
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
