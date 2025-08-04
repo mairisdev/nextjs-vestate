@@ -1,9 +1,51 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { writeFile } from "fs/promises"
-import path from "path"
+import { v2 as cloudinary } from 'cloudinary'
 import { randomUUID } from "crypto"
 import { syncPartnersSectionTranslations } from "@/lib/translationSync"
+
+// Cloudinary konfigurācija
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config(process.env.CLOUDINARY_URL)
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  })
+}
+
+// Cloudinary upload funkcija
+async function uploadToCloudinary(file: File, folder: string): Promise<string> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const timestamp = Date.now()
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+      
+      cloudinary.uploader.upload_stream(
+        {
+          public_id: `${timestamp}-${safeFileName}`,
+          folder: folder,
+          resource_type: 'auto',
+          transformation: [
+            { width: 400, height: 400, crop: 'fit', quality: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary upload error:', error)
+            reject(error)
+          } else {
+            resolve(result!.secure_url)
+          }
+        }
+      ).end(buffer)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
 
 export async function GET() {
   try {
@@ -43,13 +85,27 @@ export async function POST(req: Request) {
 
       let logoUrl = typeof p.logoUrl === "string" ? p.logoUrl : ""
 
+      // Augšupielādējam uz Cloudinary, nevis lokālo failu sistēmu
       if (p.logo instanceof File && p.logo.name) {
-        const bytes = await p.logo.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-        const fileName = `${randomUUID()}-${p.logo.name.replace(/\s+/g, "_")}`
-        const filePath = path.join(process.cwd(), "public/partners", fileName)
-        await writeFile(filePath, buffer)
-        logoUrl = `/partners/${fileName}`
+        try {
+          console.log('📁 Uploading partner logo to Cloudinary:', {
+            name: p.logo.name,
+            size: p.logo.size,
+            type: p.logo.type
+          })
+          
+          // Validējam faila izmēru (max 5MB logotipiem)
+          if (p.logo.size > 5 * 1024 * 1024) {
+            console.error('❌ Partner logo too large:', p.logo.size)
+            throw new Error("Logo pārāk liels (max 5MB)")
+          }
+          
+          logoUrl = await uploadToCloudinary(p.logo, 'partners')
+          console.log('✅ Partner logo uploaded successfully:', logoUrl)
+        } catch (uploadError) {
+          console.error('❌ Failed to upload partner logo:', uploadError)
+          throw new Error("Neizdevās augšupielādēt logo")
+        }
       }
 
       partners.push({
@@ -76,6 +132,9 @@ export async function POST(req: Request) {
     return NextResponse.json(saved)
   } catch (error) {
     console.error("[PARTNERS_POST]", error)
-    return NextResponse.json({ error: "Failed to save partners data" }, { status: 500 })
+    
+    // Atgriežam vairāk informatīvu kļūdas ziņojumu
+    const errorMessage = error instanceof Error ? error.message : "Failed to save partners data"
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
