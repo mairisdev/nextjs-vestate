@@ -25,6 +25,7 @@ interface BulkSyncResult {
   details: {
     totalKeys: number
     copied: number
+    updated: number
     skipped: number
     failed: number
     categories: string[]
@@ -127,6 +128,7 @@ export default function SyncTranslationsPage() {
         details: data.details || {
           totalKeys: 0,
           copied: 0,
+          updated: 0,
           skipped: 0,
           failed: 0,
           categories: []
@@ -142,6 +144,7 @@ export default function SyncTranslationsPage() {
         details: {
           totalKeys: 0,
           copied: 0,
+          updated: 0,
           skipped: 0,
           failed: 0,
           categories: []
@@ -282,7 +285,7 @@ export default function SyncTranslationsPage() {
 
                   {/* Detailed stats */}
                   {bulkSyncResult.details && (
-                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-4">
                       <div className="text-center p-3 bg-white rounded border">
                         <div className="text-2xl font-bold text-blue-600">
                           {bulkSyncResult.details.totalKeys}
@@ -293,7 +296,13 @@ export default function SyncTranslationsPage() {
                         <div className="text-2xl font-bold text-green-600">
                           {bulkSyncResult.details.copied}
                         </div>
-                        <div className="text-xs text-gray-600">Nokopēti</div>
+                        <div className="text-xs text-gray-600">Jauni</div>
+                      </div>
+                      <div className="text-center p-3 bg-white rounded border">
+                        <div className="text-2xl font-bold text-blue-500">
+                          {bulkSyncResult.details.updated}
+                        </div>
+                        <div className="text-xs text-gray-600">Atjaunināti</div>
                       </div>
                       <div className="text-center p-3 bg-white rounded border">
                         <div className="text-2xl font-bold text-yellow-600">
@@ -333,11 +342,18 @@ export default function SyncTranslationsPage() {
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
               <div>
-                <h4 className="font-medium text-amber-900">Svarīgi!</h4>
+                <h4 className="font-medium text-amber-900">Svarīgi - Uzlabotā versija!</h4>
                 <p className="text-sm text-amber-800 mt-1">
-                  Bulk sinhronizācija kopēs tulkojumus tikai uz tukšajām atslēgām. 
-                  Esošie tulkojumi netiks pārrakstīti. Ja vēlaties pārrakstīt esošos tulkojumus, 
-                  izmantojiet individuālo tulkojumu pārvaldību.
+                  Šī uzlabotā bulk sinhronizācija tagad var:
+                </p>
+                <ul className="text-sm text-amber-800 mt-2 space-y-1 list-disc list-inside">
+                  <li><strong>Izveidot jaunus</strong> tulkojumus, ja tie neeksistē</li>
+                  <li><strong>Atjaunināt tukšos</strong> tulkojumus (ar "" vērtību)</li>
+                  <li><strong>Atjaunināt placeholder</strong> tulkojumus (kur value = key)</li>
+                  <li><strong>Izlaist esošos</strong> tulkojumus ar derīgām vērtībām</li>
+                </ul>
+                <p className="text-sm text-amber-800 mt-2">
+                  Tagad tam vajadzētu nokopēt jūsu LV tulkojumus uz EN/RU valodām!
                 </p>
               </div>
             </div>
