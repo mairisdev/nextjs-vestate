@@ -1,4 +1,4 @@
-// app/api/sixth-section/route.ts (AIZVIETO PILNĪBĀ)
+// app/api/sixth-section/route.ts
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { v2 as cloudinary } from 'cloudinary'
@@ -14,7 +14,7 @@ if (process.env.CLOUDINARY_URL) {
   })
 }
 
-// Cloudinary upload funkcija
+// Cloudinary upload funkcija ar high-quality iestatījumiem full-screen sadaļām
 async function uploadToCloudinary(file: File, folder: string): Promise<string> {
   return new Promise(async (resolve, reject) => {
     try {
@@ -22,13 +22,16 @@ async function uploadToCloudinary(file: File, folder: string): Promise<string> {
       const timestamp = Date.now()
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
       
+      console.log(`📸 Uploading ${folder} with high-quality transformation`)
+      
       cloudinary.uploader.upload_stream(
         {
           public_id: `${timestamp}-${safeFileName}`,
           folder: folder,
           resource_type: 'auto',
           transformation: [
-            { width: 1200, height: 800, crop: 'limit', quality: 'auto' }
+            // High-quality full-screen background
+            { width: 1920, height: 1080, crop: 'limit', quality: '90', format: 'auto' }
           ]
         },
         (error, result) => {
@@ -36,6 +39,7 @@ async function uploadToCloudinary(file: File, folder: string): Promise<string> {
             console.error('Cloudinary upload error:', error)
             reject(error)
           } else {
+            console.log('✅ High-quality upload successful:', result?.secure_url)
             resolve(result!.secure_url)
           }
         }
@@ -67,12 +71,36 @@ export async function POST(req: Request) {
 
     let imageUrl = formData.get("existingImageUrl") as string || ""
 
+    // Direct Cloudinary upload for better quality control
     if (file && file.size > 0) {
+      console.log('📁 Uploading sixth-section image directly to Cloudinary:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      })
+      
+      // Validate file size (max 15MB for high-quality images)
+      if (file.size > 15 * 1024 * 1024) {
+        return NextResponse.json({ 
+          error: "Attēls pārāk liels (max 15MB)" 
+        }, { status: 413 })
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        return NextResponse.json({ 
+          error: "Faila tips nav atbalstīts. Lūdzu, izvēlieties attēla failu." 
+        }, { status: 400 })
+      }
+
       try {
         imageUrl = await uploadToCloudinary(file, 'sixth-section')
+        console.log('✅ Sixth-section image uploaded successfully')
       } catch (error) {
-        console.error("Failed to upload image:", error)
-        return new NextResponse("Failed to upload image", { status: 500 })
+        console.error("❌ Failed to upload sixth-section image:", error)
+        return NextResponse.json({ 
+          error: "Neizdevās augšupielādēt attēlu" 
+        }, { status: 500 })
       }
     }
 
@@ -94,6 +122,7 @@ export async function POST(req: Request) {
     return NextResponse.json(updated)
   } catch (error) {
     console.error("[SIXTH_SECTION_POST]", error)
-    return new NextResponse("Server error", { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Server error"
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

@@ -1,3 +1,4 @@
+// app/api/upload-image/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { v2 as cloudinary } from 'cloudinary'
 
@@ -27,9 +28,9 @@ function getTransformationForType(type: string) {
       ]
     case 'sixth-section':
     case 'seven-section':
-      // Other sections - preserve content, don't crop aggressively
+      // Full-screen background sections - maintain high quality
       return [
-        { width: 1200, height: 800, crop: 'limit', quality: 'auto', format: 'auto' }
+        { width: 1920, height: 1080, crop: 'limit', quality: '90', format: 'auto' }
       ]
     case 'slider':
       // Slider images - can be cropped to fit aspect ratio

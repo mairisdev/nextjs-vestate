@@ -211,24 +211,6 @@ export default function SecondSectionSettings() {
           </label>
         </div>
 
-        {/* Attēla informācija */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-600 mt-0.5" />
-            <div className="text-sm">
-              <h4 className="font-medium text-blue-900 mb-1">Attēla optimizācijas iestatījumi</h4>
-              <ul className="text-blue-800 space-y-1">
-                <li>• <strong>Maksimālais izmērs:</strong> 800x600 pikseļi</li>
-                <li>• <strong>Apgriešana:</strong> Nav (saglabā oriģinālās proporcijas)</li>
-                <li>• <strong>Kvalitāte:</strong> Automātiska optimizācija</li>
-                <li>• <strong>Formāts:</strong> Automātiska konvertēšana (WebP, AVIF)</li>
-              </ul>
-              <p className="text-blue-700 mt-2 font-medium">
-                ✅ Jūsu attēls netiks apgriezts, tikai optimizēts ātrākai ielādei!
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Iemesli */}
