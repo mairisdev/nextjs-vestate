@@ -56,7 +56,6 @@ export default function CreateProperty() {
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null)
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([])
 
-  // FILE SIZE VALIDATION HELPER
   const validateFileSize = (file: File, maxSizeMB: number = 10): boolean => {
     const maxSizeBytes = maxSizeMB * 1024 * 1024
     if (file.size > maxSizeBytes) {
@@ -66,7 +65,6 @@ export default function CreateProperty() {
     return true
   }
 
-  // CALCULATE TOTAL UPLOAD SIZE
   const getTotalUploadSize = (): number => {
     let totalSize = 0
     if (mainImage) totalSize += mainImage.size
@@ -77,14 +75,6 @@ export default function CreateProperty() {
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      console.log('📁 Main image selected:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        sizeMB: (file.size / 1024 / 1024).toFixed(2)
-      })
-
-      // Validate file size
       if (!validateFileSize(file, 10)) {
         return
       }
@@ -98,20 +88,21 @@ export default function CreateProperty() {
   const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     
-    // Validate each file size
     for (const file of files) {
       if (!validateFileSize(file, 10)) {
         return
       }
     }
 
-    // Check total number of images
     if (files.length + additionalImages.length > 10) {
       setErrorMessage("Maksimums 10 papildu attēli")
       return
     }
+    if (files.length === 0) {
+      setErrorMessage("Nav izvēlēti papildu attēli")
+      return
+    }
 
-    // Check total upload size
     const currentTotalSize = getTotalUploadSize()
     const newFilesSize = files.reduce((sum, file) => sum + file.size, 0)
     const totalSizeMB = (currentTotalSize + newFilesSize) / 1024 / 1024
@@ -128,7 +119,6 @@ export default function CreateProperty() {
   }
 
   const removeAdditionalImage = (index: number) => {
-    console.log('🗑️ Removing additional image:', index)
     setAdditionalImages(prev => prev.filter((_, i) => i !== index))
     setAdditionalImagePreviews(prev => prev.filter((_, i) => i !== index))
   }
@@ -138,22 +128,8 @@ export default function CreateProperty() {
     loadAgent()
   }, [])
 
-  // DEBUG: Log state changes
-  useEffect(() => {
-    console.log('🔄 Categories state changed:', {
-      count: categories.length,
-      loading: categoriesLoading,
-      categories: categories.map(c => ({ id: c.id, name: c.name, visible: c.isVisible }))
-    })
-  }, [categories, categoriesLoading])
-
-  useEffect(() => {
-    console.log('🔄 Form categoryId changed:', formData.categoryId)
-  }, [formData.categoryId])
-
   const loadAgent = async () => {
     try {
-      console.log('👤 Loading agent...')
       const res = await fetch("/api/admin/agent/me")
       
       if (!res.ok) {
@@ -163,7 +139,6 @@ export default function CreateProperty() {
       
       const data = await res.json()
       setAgent({ firstName: data.firstName, lastName: data.lastName })
-      console.log('✅ Agent loaded:', data.firstName, data.lastName)
     } catch (error) {
       console.error("❌ Failed to load agent:", error)
     }
@@ -185,7 +160,6 @@ export default function CreateProperty() {
         throw new Error(`Categories API returned invalid data type: ${typeof data}`)
       }
       
-      // SVARĪGI: Admin panelī rādam VISAS kategorijas
       setCategories(data)
       
     } catch (error) {
@@ -226,8 +200,37 @@ export default function CreateProperty() {
       setLoading(false)
       return
     }
+    if (!formData.rooms || isNaN(Number(formData.rooms)) || Number(formData.rooms) <= 0) {
+      setErrorMessage("Istabu skaits ir obligāts un tam jābūt lielākam par 0")
+      setLoading(false)
+      return
+    }
+    if (!formData.area || isNaN(Number(formData.area)) || Number(formData.area) <= 0) {
+      setErrorMessage("Platība ir obligāta un tai jābūt lielākai par 0")
+      setLoading(false)
+      return
+    }
+    if (!formData.floor || isNaN(Number(formData.floor)) || Number(formData.floor) < 0) {
+      setErrorMessage("Stāvs ir obligāts un tam jābūt lielākam vai vienādam ar 0")
+      setLoading(false)
+      return
+    }
+    if (!formData.totalFloors || isNaN(Number(formData.totalFloors)) || Number(formData.totalFloors) <= 0) {
+      setErrorMessage("Kopējais stāvu skaits ir obligāts un tam jābūt lielākam par 0")
+      setLoading(false)
+      return
+    }
+    if (!formData.series.trim()) {
+      setErrorMessage("Sērija ir obligāta")
+      setLoading(false)
+      return
+    }
+    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
+      setErrorMessage("Cena ir obligāta un tai jābūt lielākai par 0")
+      setLoading(false)
+      return
+    }
 
-    // Validate selected category exists
     const selectedCategory = categories.find(c => c.id === formData.categoryId)
     if (!selectedCategory) {
       setErrorMessage("Izvēlētā kategorija neeksistē")
@@ -242,8 +245,11 @@ export default function CreateProperty() {
       setLoading(false)
       return
     }
-
-    // Progress simulation
+    if (totalSizeMB === 0) {
+      setErrorMessage("Nav pievienoti attēli")
+      setLoading(false)
+      return
+    }
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 90) {
@@ -257,7 +263,6 @@ export default function CreateProperty() {
     try {
       const formDataToSend = new FormData()
       
-      // Add form fields
       const amenitiesList = formData.amenities.split(",").map(a => a.trim()).filter(Boolean)
       amenitiesList.forEach(a => formDataToSend.append("amenities", a))
 
@@ -280,33 +285,26 @@ export default function CreateProperty() {
       formDataToSend.append("isFeatured", formData.isFeatured.toString())
       formDataToSend.append("propertyProject", formData.propertyProject)
       formDataToSend.append("visibility", formData.visibility)
-
-      // Add images
+      formDataToSend.append("videoUrl", formData.videoUrl.trim())
       if (mainImage) {
-        console.log('📎 Adding main image:', mainImage.name)
         formDataToSend.append("mainImage", mainImage)
       }
       
       additionalImages.forEach((image, index) => {
-        console.log(`📎 Adding additional image ${index + 1}:`, image.name)
         formDataToSend.append(`additionalImage${index}`, image)
       })
-
-      console.log('🌐 Sending POST request to /api/admin/properties...')
-
+      
       const res = await fetch("/api/admin/properties", {
         method: "POST",
         body: formDataToSend
       })
 
       const responseData = await res.json()
-      console.log('📄 Response data:', responseData)
 
       setUploadProgress(100)
       clearInterval(progressInterval)
 
       if (res.ok) {
-        console.log('🎉 Property created successfully!')
         setSuccessMessage("Īpašums izveidots veiksmīgi!")
         setTimeout(() => {
           router.push("/admin/properties")
