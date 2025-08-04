@@ -1,4 +1,3 @@
-// app/api/upload-image/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { v2 as cloudinary } from 'cloudinary'
 
@@ -13,20 +12,55 @@ if (process.env.CLOUDINARY_URL) {
   })
 }
 
-// Cloudinary upload funkcija
-async function uploadToCloudinary(file: File, folder: string, publicId: string): Promise<string> {
+// Improved transformations based on usage context
+function getTransformationForType(type: string) {
+  switch (type) {
+    case 'second-section':
+      // Second section - preserve aspect ratio, don't crop content
+      return [
+        { width: 800, height: 600, crop: 'limit', quality: 'auto', format: 'auto' }
+      ]
+    case 'first-section':
+      // First section background - can be cropped to fit
+      return [
+        { width: 1920, height: 1080, crop: 'fill', quality: 'auto', format: 'auto' }
+      ]
+    case 'sixth-section':
+    case 'seven-section':
+      // Other sections - preserve content, don't crop aggressively
+      return [
+        { width: 1200, height: 800, crop: 'limit', quality: 'auto', format: 'auto' }
+      ]
+    case 'slider':
+      // Slider images - can be cropped to fit aspect ratio
+      return [
+        { width: 1920, height: 1080, crop: 'fill', quality: 'auto', format: 'auto' }
+      ]
+    default:
+      // Default - preserve aspect ratio
+      return [
+        { width: 1200, height: 800, crop: 'limit', quality: 'auto', format: 'auto' }
+      ]
+  }
+}
+
+// Cloudinary upload funkcija ar uzlabotām transformācijām
+async function uploadToCloudinary(file: File, folder: string, publicId: string, type: string): Promise<string> {
   return new Promise(async (resolve, reject) => {
     try {
       const buffer = Buffer.from(await file.arrayBuffer())
+      
+      // Get appropriate transformation based on type
+      const transformation = getTransformationForType(type)
+      
+      console.log(`📸 Uploading ${type} with transformation:`, transformation)
       
       cloudinary.uploader.upload_stream(
         {
           public_id: publicId,
           folder: folder,
           resource_type: 'auto',
-          transformation: [
-            { width: 1200, height: 800, crop: 'fill', quality: 'auto' }
-          ]
+          transformation: transformation
         },
         (error, result) => {
           if (error) {
@@ -63,6 +97,13 @@ export async function POST(req: NextRequest) {
       }, { status: 413 })
     }
 
+    // Validēt faila tipu
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json({ 
+        error: 'Faila tips nav atbalstīts. Lūdzu, izvēlieties attēla failu.' 
+      }, { status: 400 })
+    }
+
     // Izveidot drošu nosaukumu
     const safeTitle = title
       ?.normalize("NFD") // sadala diakritiskās zīmes (č -> c + ̌)
@@ -85,7 +126,7 @@ export async function POST(req: NextRequest) {
         cloudinaryFolder = 'website/second-section'
         break
       case 'sixth-section':
-        cloudinaryFolder = 'website/sixth-section'
+        cloudinaryFolder = 'website/sixth-section'  
         break
       case 'seven-section':
         cloudinaryFolder = 'website/seven-section'
@@ -102,11 +143,12 @@ export async function POST(req: NextRequest) {
       size: file.size,
       type: file.type,
       folder: cloudinaryFolder,
-      publicId: publicId
+      publicId: publicId,
+      sectionType: type
     })
 
-    // Upload uz Cloudinary
-    const imageUrl = await uploadToCloudinary(file, cloudinaryFolder, publicId)
+    // Upload uz Cloudinary ar pareizajām transformācijām
+    const imageUrl = await uploadToCloudinary(file, cloudinaryFolder, publicId, type)
 
     console.log('✅ Upload successful:', imageUrl)
 
