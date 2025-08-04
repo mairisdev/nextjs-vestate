@@ -1,4 +1,3 @@
-// app/api/why-choose-us/route.ts (AIZVIETO PILNĪBĀ)
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { v2 as cloudinary } from 'cloudinary'

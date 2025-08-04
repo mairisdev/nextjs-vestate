@@ -37,6 +37,11 @@ function getTransformationForType(type: string) {
       return [
         { width: 1920, height: 1080, crop: 'fill', quality: 'auto', format: 'auto' }
       ]
+      case 'why-choose-us':
+      // Slider images - can be cropped to fit aspect ratio
+      return [
+        { width: 1200, height: 800, crop: 'limit', quality: 'auto', format: 'auto' }
+      ]
     default:
       // Default - preserve aspect ratio
       return [
@@ -134,6 +139,9 @@ export async function POST(req: NextRequest) {
         break
       case 'slider':
         cloudinaryFolder = 'website/slider'
+        break
+      case 'why-choose-us':
+        cloudinaryFolder = 'website/why-choose-us'
         break
       default:
         cloudinaryFolder = 'website/general'
