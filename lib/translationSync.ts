@@ -793,3 +793,94 @@ export async function syncPropertyFiltersTranslations() {
 
   console.log(`✅ PropertyFilters tulkojumi sinhronizēti!`);
 }
+
+export async function syncPropertyDetailsTranslations() {
+  const locales = ["lv", "en", "ru"]
+  
+  // PropertyDetails tulkojumi
+  const propertyDetailsKeys = {
+    title: "Īpašuma detaļas",
+    roomsLabel: "Istabu skaits",
+    roomsValue: "{count} istabas",
+    areaLabel: "Platība", 
+    areaValue: "{area} m²",
+    floorLabel: "Stāvs",
+    floorValue: "{floor}/{total}",
+    floorValueSingle: "{floor}. stāvs",
+    seriesLabel: "Sērija",
+    elevatorLabel: "Lifts",
+    elevatorYes: "Ir",
+    elevatorNo: "Nav",
+    amenitiesLabel: "Ērtības",
+    locationLabel: "Atrašanās vieta",
+    createdLabel: "Pievienots",
+    projectLabel: "Projekts",
+    notSpecified: "Nav norādīts",
+    descriptionTitle: "Apraksts"
+  }
+
+  // PropertyContact tulkojumi
+  const propertyContactKeys = {
+    title: "Sazināties",
+    priceLabel: "Cena",
+    defaultAgentName: "Nekustamā īpašuma aģents",
+    agentRole: "Nekustamā īpašuma aģents",
+    emailSubject: "Interese par īpašumu: {title}",
+    sendEmail: "Sūtīt e-pastu",
+    whatsappMessage: "Sveiki! Interesē īpašums: {title}",
+    propertyId: "Īpašuma ID: {id}"
+  }
+
+  // PropertyPage tulkojumi 
+  const propertyPageKeys = {
+    statusAvailable: "Pieejams",
+    statusReserved: "Rezervēts",
+    statusSold: "Pārdots", 
+    statusRented: "Iznomāts",
+    breadcrumbHome: "Sākums",
+    breadcrumbProperties: "Īpašumi",
+    backToList: "Atpakaļ uz sarakstu",
+    pricePerSquare: "€{price}/m²"
+  }
+
+  // Sinhronizējam PropertyDetails
+  const propertyDetailsCategory = "PropertyDetails"
+  for (const [key, value] of Object.entries(propertyDetailsKeys)) {
+    for (const locale of locales) {
+      await upsertTranslation(
+        `${propertyDetailsCategory}.${key}`,
+        locale,
+        locale === "lv" ? value : "",
+        propertyDetailsCategory
+      )
+    }
+  }
+
+  // Sinhronizējam PropertyContact  
+  const propertyContactCategory = "PropertyContact"
+  for (const [key, value] of Object.entries(propertyContactKeys)) {
+    for (const locale of locales) {
+      await upsertTranslation(
+        `${propertyContactCategory}.${key}`,
+        locale,
+        locale === "lv" ? value : "",
+        propertyContactCategory
+      )
+    }
+  }
+
+  // Sinhronizējam PropertyPage
+  const propertyPageCategory = "PropertyPage"
+  for (const [key, value] of Object.entries(propertyPageKeys)) {
+    for (const locale of locales) {
+      await upsertTranslation(
+        `${propertyPageCategory}.${key}`,
+        locale,
+        locale === "lv" ? value : "",
+        propertyPageCategory
+      )
+    }
+  }
+
+  console.log("✅ Property details tulkojumi sinhronizēti");
+}

@@ -57,6 +57,12 @@ export default function SyncTranslationsPage() {
       description: 'Īpašumu kategoriju tulkojumi',
       endpoint: '/api/admin/sync-categories-translations'
     },
+    {
+    key: 'property-details',
+    name: 'PropertyDetails',
+    description: 'Īpašuma detaļu lapas tulkojumi',
+    endpoint: '/api/admin/sync-property-details-translations'
+    },
   ]
 
   const syncCategory = async (category: typeof syncCategories[0]) => {

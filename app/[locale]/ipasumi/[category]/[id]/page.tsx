@@ -8,9 +8,10 @@ import { ArrowLeft, MapPin, Eye } from "lucide-react"
 import { TrackPropertyView } from '@/app/components/TrackPropertyView'
 import Navbar from "@/app/components/server/NavbarServer"
 import { ViewCounter } from "@/app/components/ViewCounter"
+import { getTranslations } from "next-intl/server"
 
 interface PropertyPageProps {
-  params: Promise<{ category: string; id: string }>
+  params: Promise<{ category: string; id: string; locale: string }>
 }
 
 async function getProperty(id: string) {
@@ -43,6 +44,7 @@ async function getProperty(id: string) {
 
 export default async function PropertyPage({ params }: PropertyPageProps) {
   const { category, id } = await params
+  const t = await getTranslations('PropertyPage')
   
   const property = await getProperty(id)
   
@@ -52,17 +54,17 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
 
   const getStatusLabel = (status: string) => {
     const statusMap = {
-      'AVAILABLE': 'Pieejams',
-      'RESERVED': 'Rezervēts',
-      'SOLD': 'Pārdots',
-      'RENTED': 'Iznomāts'
+      'AVAILABLE': t('statusAvailable'),
+      'RESERVED': t('statusReserved'), 
+      'SOLD': t('statusSold'),
+      'RENTED': t('statusRented')
     }
     return statusMap[status as keyof typeof statusMap] || status
   }
 
   const breadcrumbs = [
-    { label: "Sākums", href: "/" },
-    { label: "Īpašumi", href: "/ipasumi" },
+    { label: t('breadcrumbHome'), href: "/" },
+    { label: t('breadcrumbProperties'), href: "/ipasumi" },
     { label: property.category.name, href: `/ipasumi/${category}` },
     { label: property.title, href: "" }
   ]
@@ -101,7 +103,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
             className="inline-flex items-center text-[#00332D] hover:text-[#77dDB4] transition-colors mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Atpakaļ uz sarakstu
+            {t('backToList')}
           </Link>
 
           {/* Property header */}
@@ -137,7 +139,9 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                 </div>
                 {property.area && (
                   <div className="text-gray-600">
-                    €{Math.round(property.price / 100 / property.area)}/m²
+                    {t('pricePerSquare', { 
+                      price: Math.round(property.price / 100 / property.area) 
+                    })}
                   </div>
                 )}
               </div>

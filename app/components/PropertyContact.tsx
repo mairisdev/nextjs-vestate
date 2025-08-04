@@ -1,6 +1,7 @@
 'use client';
 
 import { Phone, Mail, MessageSquare, User } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 interface Agent {
   id: string;
@@ -23,6 +24,8 @@ export default function PropertyContact({
   propertyTitle, 
   propertyPrice 
 }: PropertyContactProps) {
+  const t = useTranslations('PropertyContact')
+
   const formatPrice = (price: number) => {
     return `€${(price / 100).toLocaleString('lv-LV')}`
   }
@@ -33,14 +36,14 @@ export default function PropertyContact({
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm sticky top-8">
-      <h3 className="text-lg font-semibold mb-4">Sazināties</h3>
+      <h3 className="text-lg font-semibold mb-4">{t('title')}</h3>
       
       <div className="space-y-4">
         <div className="text-center p-4 bg-gray-100 rounded-lg">
           <div className="text-2xl font-bold text-[#00332D] mb-1">
             {formatPrice(propertyPrice)}
           </div>
-          <div className="text-sm text-gray-600">Cena</div>
+          <div className="text-sm text-gray-600">{t('priceLabel')}</div>
         </div>
 
         {agent && (
@@ -50,9 +53,9 @@ export default function PropertyContact({
             </div>
             <div>
               <p className="font-medium text-gray-900">
-                {agentName || 'Nekustamā īpašuma aģents'}
+                {agentName || t('defaultAgentName')}
               </p>
-              <p className="text-sm text-gray-600">Nekustamā īpašuma aģents</p>
+              <p className="text-sm text-gray-600">{t('agentRole')}</p>
             </div>
           </div>
         )}
@@ -67,15 +70,15 @@ export default function PropertyContact({
           </a>
 
           <a
-            href={`mailto:${agentEmail}?subject=Interese par īpašumu: ${propertyTitle}`}
+            href={`mailto:${agentEmail}?subject=${t('emailSubject', { title: propertyTitle })}`}
             className="flex items-center justify-center space-x-2 w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors"
           >
             <Mail className="w-5 h-5" />
-            <span>Sūtīt e-pastu</span>
+            <span>{t('sendEmail')}</span>
           </a>
 
           <a
-            href={`https://wa.me/${phoneNumber.replace(/[^0-9]/g, '')}?text=Sveiki! Interesē īpašums: ${propertyTitle}`}
+            href={`https://wa.me/${phoneNumber.replace(/[^0-9]/g, '')}?text=${t('whatsappMessage', { title: propertyTitle })}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center space-x-2 w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition-colors"
@@ -87,7 +90,7 @@ export default function PropertyContact({
 
         <div className="pt-4 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
-            Īpašuma ID: {propertyId}
+            {t('propertyId', { id: propertyId })}
           </p>
         </div>
       </div>

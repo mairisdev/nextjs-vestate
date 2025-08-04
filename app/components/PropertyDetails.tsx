@@ -1,4 +1,5 @@
 import { Asterisk, Bed, BedDouble, Calendar, ChevronsUpDown, Dock, Home, MapPin, Ruler, TrendingUp } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 interface Property {
   id: string
@@ -28,107 +29,94 @@ interface PropertyDetailsProps {
 }
 
 export default function PropertyDetails({ property }: PropertyDetailsProps) {
+  const t = useTranslations('PropertyDetails')
+
   const details = [
     {
       icon: BedDouble,
-      label: "Istabu skaits",
-      value: property.rooms ? `${property.rooms} istabas` : "Nav norādīts"
+      label: t('roomsLabel'),
+      value: property.rooms ? t('roomsValue', { count: property.rooms }) : t('notSpecified')
     },
     {
       icon: Ruler,
-      label: "Platība",
-      value: property.area ? `${property.area} m²` : "Nav norādīta"
+      label: t('areaLabel'),
+      value: property.area ? t('areaValue', { area: property.area }) : t('notSpecified')
     },
     {
       icon: TrendingUp,
-      label: "Stāvs",
+      label: t('floorLabel'),
       value: property.floor && property.totalFloors 
-        ? `${property.floor}/${property.totalFloors}` 
+        ? t('floorValue', { floor: property.floor, total: property.totalFloors })
         : property.floor 
-        ? `${property.floor}. stāvs`
-        : "Nav norādīts"
+        ? t('floorValueSingle', { floor: property.floor })
+        : t('notSpecified')
     },
     {
       icon: Home,
-      label: "Sērija",
-      value: property.series || "Nav norādīta"
+      label: t('seriesLabel'),
+      value: property.series || t('notSpecified')
     },
     {
       icon: ChevronsUpDown,
-      label: "Lifts",
-      value: property.hasElevator ? "Ir" : "Nav"
+      label: t('elevatorLabel'),
+      value: property.hasElevator ? t('elevatorYes') : t('elevatorNo')
     },
     {
       icon: Asterisk,
-      label: "Ērtības",
+      label: t('amenitiesLabel'),
       value: property.amenities && property.amenities.length > 0 
         ? property.amenities.join(", ") 
-        : "Nav norādītas"
+        : t('notSpecified')
     },    
     {
       icon: MapPin,
-      label: "Atrašanās vieta",
+      label: t('locationLabel'),
       value: `${property.address}, ${property.city}${property.district ? `, ${property.district}` : ''}`
     },
     {
       icon: Calendar,
-      label: "Pievienots",
+      label: t('createdLabel'),
       value: new Date(property.createdAt).toLocaleDateString('lv-LV')
-    }
+    },
+    ...(property.propertyProject ? [{
+      icon: Dock,
+      label: t('projectLabel'),
+      value: property.propertyProject
+    }] : [])
   ]
 
   return (
-    <div className="space-y-8">
-      {/* Īpašuma detaļas */}
-      <div className="bg-white rounded-lg p-6 shadow-sm">
-        <h2 className="text-xl font-semibold mb-6">Īpašuma detaļas</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {details.map((detail, index) => (
-            <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 bg-[#77dDB4]/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <detail.icon className="w-5 h-5 text-[#00332D]" />
+    <div className="bg-white rounded-xl shadow-sm p-6">
+      <h2 className="text-2xl font-bold text-[#00332D] mb-6">
+        {t('title')}
+      </h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        {details.map((detail, index) => {
+          const IconComponent = detail.icon
+          return (
+            <div key={index} className="flex items-center p-4 bg-gray-50 rounded-lg">
+              <div className="w-10 h-10 bg-[#00332D] rounded-lg flex items-center justify-center mr-4">
+                <IconComponent className="w-5 h-5 text-white" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900">{detail.label}</p>
-                <p className="text-sm text-gray-600 break-words">{detail.value}</p>
+              <div>
+                <p className="text-sm text-gray-600">{detail.label}</p>
+                <p className="font-semibold text-gray-900">{detail.value}</p>
               </div>
             </div>
-          ))}
-        </div>
-
-        {property.propertyProject && (
-          <div className="mt-6 p-3 bg-[#77dDB4]/10 rounded-lg">
-            <p className="text-sm font-medium text-[#00332D]">
-              Projekts: {property.propertyProject}
-            </p>
-          </div>
-        )}
+          )
+        })}
       </div>
 
-      {/* Apraksts */}
-      <div className="bg-white rounded-lg p-6 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">Apraksts</h2>
-        <div className="prose max-w-none text-gray-700">
-          {property.description.split('\n').map((paragraph, index) => (
-            <p key={index} className="mb-3">
-              {paragraph}
+      {property.description && (
+        <div>
+          <h3 className="text-lg font-semibold text-[#00332D] mb-4">
+            {t('descriptionTitle')}
+          </h3>
+          <div className="prose prose-gray max-w-none">
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+              {property.description}
             </p>
-          ))}
-        </div>
-      </div>
-
-      {/* Video sekcija */}
-      {property.videoUrl && (
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Video apskats</h2>
-          <div className="aspect-video rounded-lg overflow-hidden">
-            <iframe
-              src={property.videoUrl}
-              className="w-full h-full"
-              allowFullScreen
-              title="Īpašuma video"
-            />
           </div>
         </div>
       )}
