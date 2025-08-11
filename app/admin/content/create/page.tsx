@@ -345,7 +345,6 @@ const handleSave = async (contentIndex: number) => {
       const savedContent = await res.json()
       
       setUploadProgress(100)
-      setUploadStatus("Saturs veiksmīgi publicēts!")
       
       const copy = [...contents]
       copy[contentIndex] = { ...copy[contentIndex], id: savedContent.id }
