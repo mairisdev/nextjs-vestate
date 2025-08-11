@@ -130,9 +130,7 @@ export default async function BlogContentPage({ params }: BlogContentPageProps) 
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <Link href="/" className="hover:text-[#00332D]">Sākums</Link>
             <span>/</span>
-            <Link href="/blog" className="hover:text-[#00332D]">Blog</Link>
-            <span>/</span>
-            <Link href="/blog/raksti" className="hover:text-[#00332D]">Raksti</Link>
+            <Link href="/blog" className="hover:text-[#00332D]">Visi ieraksti</Link>
             <span>/</span>
             <span className="text-gray-900">{content.title}</span>
           </div>
@@ -152,14 +150,6 @@ export default async function BlogContentPage({ params }: BlogContentPageProps) 
               <ArrowLeft className="w-4 h-4 mr-2" />
               Atpakaļ uz rakstiem
             </Link>
-          </div>
-
-          {/* Article Category Badge */}
-          <div className="flex items-center mb-6">
-            <div className="inline-flex items-center px-3 py-1 bg-[#77D4B4]/10 text-[#00332D] rounded-full text-sm font-medium">
-              <FileText className="w-4 h-4 mr-2" />
-              Blog ieraksts
-            </div>
           </div>
 
           {/* Article Title */}

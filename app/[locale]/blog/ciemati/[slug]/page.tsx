@@ -83,7 +83,7 @@ export default async function VillageContentPage({ params }: VillagePageProps) {
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <Link href="/" className="hover:text-[#00332D]">Sākums</Link>
             <span>/</span>
-            <Link href="/blog" className="hover:text-[#00332D]">Blog</Link>
+            <Link href="/blog" className="hover:text-[#00332D]">Visi ieraksti</Link>
             <span>/</span>
             <Link href="/blog/izglitojosais" className="hover:text-[#00332D]">Ciemati</Link>
             <span>/</span>
