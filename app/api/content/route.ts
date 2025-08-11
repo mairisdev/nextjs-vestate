@@ -147,9 +147,9 @@ export async function POST(req: Request) {
       }
     }
 
-    if (totalAdditionalImagesSize > 40 * 1024 * 1024) {
+    if (totalAdditionalImagesSize > 100 * 1024 * 1024) {
       return NextResponse.json({ 
-        error: "Papildu attēli kopā pārāk lieli (max 40MB)" 
+        error: "Papildu attēli kopā pārāk lieli (max 100MB)" 
       }, { status: 413 })
     }
     

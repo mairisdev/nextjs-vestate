@@ -193,8 +193,8 @@ const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: nu
     
     // Aprēķinām kopējo izmēru ar esošajiem failiem
     const existingSize = currentAdditionalImages.reduce((acc, file) => acc + file.size, 0)
-    if (totalSize + existingSize > 40 * 1024 * 1024) {
-      setAlert({ type: "error", message: `Papildu attēli kopā pārāk lieli (${formatFileSize(totalSize + existingSize)}). Maksimums 40MB kopā.` })
+    if (totalSize + existingSize > 100 * 1024 * 1024) {
+      setAlert({ type: "error", message: `Papildu attēli kopā pārāk lieli (${formatFileSize(totalSize + existingSize)}). Maksimums 100MB kopā.` })
       e.target.value = ''
       return
     }
@@ -697,7 +697,7 @@ const handleSave = async (contentIndex: number) => {
 
                  {/* Additional Images */}
                  <div>
-                   <Label>Papildu attēli (max 8 faili, 5MB katrs, 40MB kopā)</Label>
+                   <Label>Papildu attēli (5MB katrs, 100MB kopā)</Label>
                    <input
                      type="file"
                      accept="image/*"
