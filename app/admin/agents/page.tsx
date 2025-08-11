@@ -75,8 +75,30 @@ export default function AgentsAdminPage() {
     ])
   }
 
-  const removeAgent = (index: number) => {
-    setAgents(agents.filter((_, i) => i !== index))
+  const removeAgent = async (index: number) => {
+    const agent = agents[index]
+    if (agent?.id) {
+      try {
+        setLoading(true)
+        const res = await fetch("/api/agents", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: agent.id }),
+        })
+        const data = await res.json()
+        if (!res.ok || !data.success) {
+          alert(data.message || "Neizdevās izdzēst aģentu")
+          return
+        }
+      } catch (err) {
+        console.error("Delete agent error:", err)
+        alert("Radās kļūda dzēšot aģentu")
+        return
+      } finally {
+        setLoading(false)
+      }
+    }
+    setAgents((prev) => prev.filter((_, i) => i !== index))
   }
 
 const handleSave = async () => {

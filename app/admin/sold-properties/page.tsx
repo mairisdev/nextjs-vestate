@@ -9,8 +9,6 @@ import { Trash, Plus } from "lucide-react"
 
 import AlertMessage from "../../components/ui/alert-message"
 
-// Types
-
 type Property = {
   title: string
   price: string
@@ -30,17 +28,18 @@ export default function SoldPropertiesSettings() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError] = useState(false)
 
+  const fetchData = async () => {
+    const res = await fetch("/api/sold-properties")
+    const data = await res.json()
+    const parsed: Property[] = data.map((item: any) => ({
+      ...item,
+      imageFiles: [],
+      imageUrls: item.imageUrls || [],
+    }))
+    setProperties(parsed)
+  }
+
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch("/api/sold-properties")
-      const data = await res.json()
-      const parsed: Property[] = data.map((item: any) => ({
-        ...item,
-        imageFiles: [],
-        imageUrls: item.imageUrls || [],
-      }))
-      setProperties(parsed)
-    }
     fetchData()
   }, [])
 
@@ -52,10 +51,15 @@ export default function SoldPropertiesSettings() {
 
   const handleImageUpload = (index: number, files: FileList | null) => {
     if (!files) return
-    const updated = [...properties]
-    updated[index].imageFiles = Array.from(files)
-    updateProperty(index, "imageUrls", [])
-    setProperties(updated)
+    setProperties((prev) => {
+      const updated = [...prev]
+      updated[index] = {
+        ...updated[index],
+        imageFiles: Array.from(files),
+        imageUrls: [],
+      }
+      return updated
+    })
   }
 
   const addProperty = () => {
@@ -108,9 +112,12 @@ export default function SoldPropertiesSettings() {
     })
 
     if (res.ok) {
+      await fetchData()
       setShowSuccess(true)
+      setStatus("")
     } else {
       setShowError(true)
+      setStatus("")
     }
   }
 
@@ -182,7 +189,7 @@ export default function SoldPropertiesSettings() {
 
               <div className="md:col-span-2">
                 <Label>Attēli</Label>
-                <div className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer bg-gray-50">
+                <div className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer bg-gray-50 relative">
                   <Input
                     type="file"
                     accept="image/*"
