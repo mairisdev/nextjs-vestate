@@ -7,8 +7,11 @@ import ShareButton from "../../../../components/ShareButton"
 import { Calendar, ArrowLeft, User, Clock, FileText } from "lucide-react"
 import { marked } from "marked"
 
+export const dynamic = 'force-static'
+export const revalidate = 3600
+
 interface BlogContentPageProps {
-  params: Promise<{ slug: string }>
+  params: Promise<{ locale?: string; slug: string }>
 }
 
 async function getBlogContent(slug: string) {
@@ -16,7 +19,6 @@ async function getBlogContent(slug: string) {
     const content = await prisma.content.findUnique({
       where: { 
         slug,
-        type: "BLOG",
         published: true
       }
     })
@@ -24,6 +26,25 @@ async function getBlogContent(slug: string) {
   } catch (error) {
     console.error("Error fetching blog content:", error)
     return null
+  }
+}
+
+export async function generateStaticParams() {
+  try {
+    const allContent = await prisma.content.findMany({
+      where: { 
+        published: true,
+        type: { in: ['BLOG', 'EDUCATIONAL', 'VILLAGES'] }
+      },
+      select: { slug: true }
+    })
+    
+    return allContent.map((content) => ({
+      slug: content.slug,
+    }))
+  } catch (error) {
+    console.error("Error generating static params:", error)
+    return []
   }
 }
 
@@ -42,6 +63,28 @@ async function getRelatedBlogContent(currentId: string) {
   } catch (error) {
     console.error("Error fetching related blog content:", error)
     return []
+  }
+}
+
+export async function generateMetadata({ params }: BlogContentPageProps) {
+  const { slug } = await params
+  const content = await getBlogContent(slug)
+
+  if (!content) {
+    return {
+      title: "Blog ieraksts nav atrasts | Vestate",
+      description: "Meklētais blog ieraksts nav atrasts."
+    }
+  }
+
+  return {
+    title: content.metaTitle || `${content.title} | Vestate`,
+    description: content.metaDescription || content.excerpt,
+    openGraph: {
+      title: content.title,
+      description: content.excerpt,
+      images: content.featuredImage ? [content.featuredImage] : [],
+    }
   }
 }
 
@@ -64,7 +107,9 @@ const convertMarkdownToHtml = (markdown: string): string => {
 }
 
 export default async function BlogContentPage({ params }: BlogContentPageProps) {
-  const { slug } = await params
+  const resolvedParams = await params
+  const slug = resolvedParams.slug
+  
   const content = await getBlogContent(slug)
   
   if (!content) {
@@ -336,47 +381,4 @@ export default async function BlogContentPage({ params }: BlogContentPageProps) 
       </section>
     </div>
   )
-}
-
-// Metadata generation
-export async function generateMetadata({ params }: BlogContentPageProps) {
-  const { slug } = await params
-  const content = await getBlogContent(slug)
-
-  if (!content) {
-    return {
-      title: "Blog ieraksts nav atrasts | Vestate",
-      description: "Meklētais blog ieraksts nav atrasts."
-    }
-  }
-
-  return {
-    title: content.metaTitle || `${content.title} | Vestate`,
-    description: content.metaDescription || content.excerpt,
-    openGraph: {
-      title: content.title,
-      description: content.excerpt,
-      images: content.featuredImage ? [content.featuredImage] : [],
-    }
-  }
-}
-
-// Static params generation for build optimization
-export async function generateStaticParams() {
-  try {
-    const blogContent = await prisma.content.findMany({
-      where: { 
-        type: "BLOG",
-        published: true 
-      },
-      select: { slug: true }
-    })
-    
-    return blogContent.map((content) => ({
-      slug: content.slug,
-    }))
-  } catch (error) {
-    console.error("Error generating static params:", error)
-    return []
-  }
 }

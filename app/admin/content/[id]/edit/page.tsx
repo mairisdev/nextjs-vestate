@@ -268,8 +268,8 @@ export default function EditContent({ params }: EditContentProps) {
         formData.append(`additionalImage${index}`, image)
       })
 
-      const res = await fetch("/api/content", {
-        method: "POST",
+      const res = await fetch(`/api/content/${contentId}`, {
+        method: "PUT",
         body: formData
       })
 
@@ -596,36 +596,53 @@ export default function EditContent({ params }: EditContentProps) {
                     </div>
                   </div>
 
-                  <div>
-                    <Label>Papildu attēli</Label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleAdditionalImagesChange}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    {additionalImagePreviews.length > 0 && (
-                      <div className="mt-3 grid grid-cols-4 gap-3">
-                        {additionalImagePreviews.map((preview, index) => (
-                          <div key={index} className="relative">
-                            <img
-                              src={preview}
-                              alt={`Jauns papildu attēls ${index + 1}`}
-                              className="w-20 h-20 object-cover rounded-lg border"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeNewAdditionalImage(index)}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600"
-                            >
-                              <X className="w-3 h-3 mx-auto" />
-                            </button>
+
+                      <div>
+                        <Label>Papildu attēli</Label>
+                        
+                        {/* Esošie papildu attēli */}
+                        {Array.isArray(contents[editingIndex].additionalImages) && 
+                        typeof contents[editingIndex].additionalImages[0] === "string" &&
+                        (contents[editingIndex].additionalImages as string[]).length > 0 && (
+                          <div className="mb-4">
+                            <h5 className="text-sm font-medium text-gray-700 mb-2">Pašreizējie papildu attēli:</h5>
+                            <div className="grid grid-cols-4 gap-3">
+                              {(contents[editingIndex].additionalImages as string[]).map((imageUrl, index) => (
+                                <div key={index} className="relative">
+                                  <img
+                                    src={imageUrl}
+                                    alt={`Papildu attēls ${index + 1}`}
+                                    className="w-20 h-20 object-cover rounded-lg border"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      // Pievienot dzēšanas funkciju
+                                      setImagesToDelete(prev => [...prev, imageUrl])
+                                      const currentImages = contents[editingIndex].additionalImages as string[]
+                                      const updatedImages = currentImages.filter((_, i) => i !== index)
+                                      updateContent(editingIndex, "additionalImages", updatedImages)
+                                    }}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600 flex items-center justify-center"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        ))}
+                        )}
+                        
+                        {/* Pievienot jaunus attēlus */}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleAdditionalImagesChange}
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
                       </div>
-                    )}
-                  </div>
+
                 </div>
 
                 <div className="space-y-4">
