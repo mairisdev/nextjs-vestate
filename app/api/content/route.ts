@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { v2 as cloudinary } from 'cloudinary'
 
-// Cloudinary konfigurācija
 if (process.env.CLOUDINARY_URL) {
   cloudinary.config(process.env.CLOUDINARY_URL)
 } else {
@@ -13,7 +12,6 @@ if (process.env.CLOUDINARY_URL) {
   })
 }
 
-// Cloudinary upload funkcija
 async function uploadToCloudinary(file: File, folder: string): Promise<string> {
   return new Promise(async (resolve, reject) => {
     try {
@@ -45,12 +43,10 @@ async function uploadToCloudinary(file: File, folder: string): Promise<string> {
   })
 }
 
-// Helper funkcija diakritisko zīmju noņemšanai
 function removeDiacritics(str: string): string {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
-// GET - Retrieve content
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -81,7 +77,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST - Create or update content ar paralēlo augšupielādi
 export async function POST(req: Request) {
   try {
     const formData = await req.formData()
@@ -98,28 +93,20 @@ export async function POST(req: Request) {
     const metaTitle = formData.get("metaTitle") as string | null
     const metaDescription = formData.get("metaDescription") as string | null
 
-    console.log('📊 Starting parallel upload process...')
-
-    // Handle tags
     const tags = tagsString ? 
       tagsString.split(",").map(tag => tag.trim()).filter(Boolean) : []
 
-    // Generate slug
     const slug = removeDiacritics(title.toLowerCase().replace(/\s+/g, "-"))
 
-    // Inicializējam URL mainīgos
     let featuredImage = formData.get("existingFeaturedImage") as string || null
     let videoFile = formData.get("existingVideoFile") as string || null
     let additionalImages: string[] = []
 
-    // Paralēla failu augšupielāde
     const uploadPromises: Promise<{type: string, url: string, index?: number}>[] = []
 
-    // Featured image upload
     const featuredImageFile = formData.get("featuredImage") as File | null
     if (featuredImageFile && featuredImageFile.size > 0) {
       
-      // Validējam faila izmēru un tipu
       if (featuredImageFile.size > 5 * 1024 * 1024) {
         return NextResponse.json({ 
           error: "Galvenais attēls pārāk liels (max 5MB)" 
@@ -137,10 +124,8 @@ export async function POST(req: Request) {
       )
     }
 
-    // Video file upload
     const videoFileToUpload = formData.get("videoFile") as File | null
     if (videoFileToUpload && videoFileToUpload.size > 0) {
-      console.log(`🎬 Queuing video upload (${Math.round(videoFileToUpload.size / 1024 / 1024)}MB)`)
       
       if (videoFileToUpload.size > 50 * 1024 * 1024) {
         return NextResponse.json({ 
@@ -153,7 +138,6 @@ export async function POST(req: Request) {
       )
     }
 
-    // Additional images upload
     const additionalImagePromises: Promise<{type: string, url: string, index: number}>[] = []
     for (let i = 0; i < 20; i++) {
       const additionalImageFile = formData.get(`additionalImage${i}`) as File | null
@@ -177,18 +161,14 @@ export async function POST(req: Request) {
       }
     }
 
-    // Izpildām visas augšupielādes paralēli
     const totalUploads = uploadPromises.length + additionalImagePromises.length
     if (totalUploads > 0) {
-      const startTime = Date.now()
 
       try {
         const [mainUploads, additionalUploads] = await Promise.all([
           Promise.all(uploadPromises),
           Promise.all(additionalImagePromises)
         ])
-
-        const uploadTime = Date.now() - startTime
 
         // Apstrādājam galvenos upload rezultātus
         for (const upload of mainUploads) {
@@ -256,7 +236,6 @@ export async function POST(req: Request) {
   }
 }
 
-// DELETE - Remove content
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)

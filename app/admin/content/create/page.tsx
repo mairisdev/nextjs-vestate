@@ -344,37 +344,37 @@ const handleSave = async (contentIndex: number) => {
     if (res.ok) {
       const savedContent = await res.json()
       
-      // Pabeidz progress
       setUploadProgress(100)
       setUploadStatus("Saturs veiksmīgi publicēts!")
       
-      // Update the content with the returned ID
       const copy = [...contents]
       copy[contentIndex] = { ...copy[contentIndex], id: savedContent.id }
       setContents(copy)
       
-      // Paslēpj loading pēc 1.5 sekundēm
       setTimeout(() => {
         setLoading(false)
         setUploadProgress(0)
         setUploadStatus("")
+        setEditingIndex(null)
+        setIsCreating(false)
+        router.push("/admin/content")
       }, 1500)
       
-    } else {
-      const errorData = await res.json()
-      setAlert({ type: "error", message: errorData.error || "Kļūda saglabājot saturu" })
-      setLoading(false)
-      setUploadProgress(0)
-      setUploadStatus("")
-    }
-  } catch (error) {
-    console.error("Upload error:", error)
-    setAlert({ type: "error", message: "Kļūda augšupielādējot saturu" })
-    setLoading(false)
-    setUploadProgress(0)
-    setUploadStatus("")
+      } else {
+        const errorData = await res.json()
+        setAlert({ type: "error", message: errorData.error || "Kļūda saglabājot saturu" })
+        setLoading(false)
+        setUploadProgress(0)
+        setUploadStatus("")
+      }
+      } catch (error) {
+        console.error("Upload error:", error)
+        setAlert({ type: "error", message: "Kļūda augšupielādējot saturu" })
+        setLoading(false)
+        setUploadProgress(0)
+        setUploadStatus("")
+      }
   }
-}
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto py-10">
