@@ -43,12 +43,12 @@ export default async function ServicesZigZag() {
 
         {/* Services Timeline */}
         <div className="relative">
-          {/* Center line - tagad arī mobile */}
+          {/* Center line */}
           <div className="absolute left-6 lg:left-1/2 lg:transform lg:-translate-x-0.5 w-0.5 h-full bg-gradient-to-b from-[#77D4B4] via-[#5BC9A8] to-[#77D4B4]"></div>
                      
           <div className="space-y-8 lg:space-y-12">
             {services.map((service, index) => (
-              <div key={index} className={`flex items-center ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}>
+              <div key={index} className="relative">
                 {/* Mobile Layout */}
                 <div className="flex lg:hidden w-full">
                   {/* Mobile dot */}
@@ -73,29 +73,49 @@ export default async function ServicesZigZag() {
                 </div>
 
                 {/* Desktop Layout */}
-                <div className="hidden lg:flex items-center w-full">
-                  {/* Service Card */}
-                  <div className="flex-1 lg:w-5/12">
-                    <div className={`group bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl hover:shadow-[#77D4B4]/20 transition-all duration-300 transform hover:-translate-y-1 ${index % 2 === 0 ? 'lg:mr-8' : 'lg:ml-8'}`}>
-                      <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#77D4B4] to-[#5BC9A8] rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                          {index + 1}
+                <div className="hidden lg:block">
+                  <div className="flex items-center justify-center">
+                    {/* Center Dot */}
+                    <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-[#77D4B4] rounded-full border-4 border-white shadow-lg z-10"></div>
+                    
+                    {/* Left side service (pāra numuri - 0, 2, 4...) */}
+                    {index % 2 === 0 && (
+                      <div className="w-5/12 pr-8">
+                        <div className="group bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl hover:shadow-[#77D4B4]/20 transition-all duration-300 transform hover:-translate-y-1">
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#77D4B4] to-[#5BC9A8] rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-base leading-relaxed text-[#00332D] font-medium">
+                                {service}
+                              </p>
+                            </div>
+                            <CheckCircle2 className="w-5 h-5 text-[#77D4B4] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-base leading-relaxed text-[#00332D] font-medium">
-                            {service}
-                          </p>
-                        </div>
-                        <CheckCircle2 className="w-5 h-5 text-[#77D4B4] opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
-                    </div>
+                    )}
+                    
+                    {/* Right side service (nepāra numuri - 1, 3, 5...) */}
+                    {index % 2 === 1 && (
+                      <div className="w-5/12 pl-8 ml-auto">
+                        <div className="group bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl hover:shadow-[#77D4B4]/20 transition-all duration-300 transform hover:-translate-y-1">
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#77D4B4] to-[#5BC9A8] rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-base leading-relaxed text-[#00332D] font-medium">
+                                {service}
+                              </p>
+                            </div>
+                            <CheckCircle2 className="w-5 h-5 text-[#77D4B4] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-
-                  {/* Center Dot */}
-                  <div className="flex flex-shrink-0 w-4 h-4 bg-[#77D4B4] rounded-full border-4 border-white shadow-lg z-10"></div>
-
-                  {/* Spacer */}
-                  <div className="flex-1 lg:w-5/12"></div>
                 </div>
               </div>
             ))}

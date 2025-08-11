@@ -12,6 +12,43 @@ if (process.env.CLOUDINARY_URL) {
   })
 }
 
+// Pievienojiet šīs funkcijas faila sākumā, pirms export funkcijām
+function getCloudinaryPublicId(url: string): string | null {
+  try {
+    if (!url.includes('cloudinary.com')) return null
+    
+    const parts = url.split('/')
+    const versionIndex = parts.findIndex(part => part.startsWith('v'))
+    
+    if (versionIndex !== -1 && versionIndex < parts.length - 1) {
+      const fileName = parts[versionIndex + 1]
+      return fileName.split('.')[0] // noņemam faila paplašinājumu
+    }
+    
+    // Fallback - mēģinām iegūt no faila nosaukuma
+    const fileName = parts[parts.length - 1]
+    return fileName.split('.')[0]
+  } catch (error) {
+    console.error('Error extracting public ID from URL:', error)
+    return null
+  }
+}
+
+// Cloudinary delete funkcija
+async function deleteFromCloudinary(publicId: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(publicId, (error, result) => {
+      if (error) {
+        console.error('Cloudinary delete error:', error)
+        reject(error)
+      } else {
+        console.log('Cloudinary delete result:', result)
+        resolve()
+      }
+    })
+  })
+}
+
 async function uploadToCloudinary(file: File, folder: string): Promise<string> {
   return new Promise(async (resolve, reject) => {
     try {
@@ -257,13 +294,69 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "ID nav norādīts" }, { status: 400 })
     }
 
+    // 🔥 PIEVIENOJIET ŠO - iegūstiet content pirms dzēšanas
+    const content = await prisma.content.findUnique({
+      where: { id }
+    })
+
+    if (!content) {
+      return NextResponse.json({ error: "Saturs nav atrasts" }, { status: 404 })
+    }
+
+    // 🔥 PIEVIENOJIET ŠO - dzēsiet failus no Cloudinary
+    const cloudinaryUrls: string[] = []
+    
+    if (content.featuredImage && content.featuredImage.includes('cloudinary.com')) {
+      cloudinaryUrls.push(content.featuredImage)
+    }
+    
+    if (content.videoFile && content.videoFile.includes('cloudinary.com')) {
+      cloudinaryUrls.push(content.videoFile)
+    }
+    
+    if (content.images && content.images.length > 0) {
+      content.images.forEach(imageUrl => {
+        if (imageUrl.includes('cloudinary.com')) {
+          cloudinaryUrls.push(imageUrl)
+        }
+      })
+    }
+
+    console.log('🗑️ Deleting content files from Cloudinary:', {
+      contentId: id,
+      title: content.title,
+      filesToDelete: cloudinaryUrls.length
+    })
+
+    // Dzēsiet failus no Cloudinary
+    for (const cloudinaryUrl of cloudinaryUrls) {
+      try {
+        const publicId = getCloudinaryPublicId(cloudinaryUrl)
+        if (publicId) {
+          await deleteFromCloudinary(publicId)
+          console.log(`✅ Deleted from Cloudinary: ${publicId}`)
+        }
+      } catch (fileError) {
+        console.error(`❌ Error deleting file from Cloudinary: ${cloudinaryUrl}`, fileError)
+        // Turpiniet pat ja faila dzēšana neizdodas
+      }
+    }
+
+    // Dzēsiet ierakstu no datubāzes
     await prisma.content.delete({
       where: { id }
     })
 
-    return NextResponse.json({ success: true })
+    console.log('✅ Content deleted successfully:', id)
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "Saturs dzēsts veiksmīgi",
+      deletedFiles: cloudinaryUrls.length
+    })
   } catch (error) {
     console.error("[CONTENT_DELETE]", error)
-    return NextResponse.json({ error: "Kļūda dzēšot saturu" }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Kļūda dzēšot saturu"
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

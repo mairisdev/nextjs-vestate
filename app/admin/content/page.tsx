@@ -49,24 +49,26 @@ export default function ContentAdmin() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Vai tiešām dzēst šo ierakstu?")) return
+const handleDelete = async (id: string) => {
+  if (!confirm("Vai tiešām vēlaties dzēst šo ierakstu?")) return
 
-    try {
-      const res = await fetch(`/api/content/${id}`, {
-        method: "DELETE"
-      })
+  try {
+    const res = await fetch(`/api/content?id=${id}`, {
+      method: 'DELETE'
+    })
 
-      if (res.ok) {
-        setSuccessMessage("Ieraksts dzēsts!")
-        loadContent()
-      } else {
-        setErrorMessage("Kļūda dzēšot ierakstu")
-      }
-    } catch (error) {
-      setErrorMessage("Kļūda dzēšot ierakstu")
+    if (res.ok) {
+      // Atjauniniet sarakstu
+      loadContent()
+      setAlert({ type: "success", message: "Ieraksts dzēsts veiksmīgi!" })
+    } else {
+      const errorData = await res.json()
+      setAlert({ type: "error", message: errorData.error || "Kļūda dzēšot ierakstu" })
     }
+  } catch (error) {
+    setAlert({ type: "error", message: "Kļūda dzēšot ierakstu" })
   }
+}
 
   const togglePublished = async (id: string, currentStatus: boolean) => {
     try {
@@ -264,4 +266,8 @@ const getTypeLabel = (type: string) => {
       )}
     </div>
   )
+}
+
+function setAlert(arg0: { type: string; message: string }) {
+  throw new Error("Function not implemented.")
 }
