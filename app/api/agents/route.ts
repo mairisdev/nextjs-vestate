@@ -1,10 +1,8 @@
-// app/api/agents/route.ts (AIZVIETO PILNĪBĀ)
 import { NextResponse, NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { v2 as cloudinary } from 'cloudinary'
 import { syncAgentTranslations } from "@/lib/translationSync"
 
-// Cloudinary konfigurācija
 if (process.env.CLOUDINARY_URL) {
   cloudinary.config(process.env.CLOUDINARY_URL)
 } else {
@@ -123,4 +121,24 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ success: true, agents: createdAgents })
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { id } = await req.json();
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: "Agent ID is required" },
+        { status: 400 }
+      );
+    }
+    await prisma.agent.delete({ where: { id } });
+    return NextResponse.json({ success: true, message: "Agent deleted" });
+  } catch (error) {
+    console.error("Failed to delete agent:", error);
+    return NextResponse.json(
+      { success: false, message: "Failed to delete agent" },
+      { status: 500 }
+    );
+  }
 }
