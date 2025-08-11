@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { v2 as cloudinary } from 'cloudinary' 
-import { removeDiacritics } from "@/lib/utils"
+import { v2 as cloudinary } from 'cloudinary'
 
 // Cloudinary konfigurācija
 if (process.env.CLOUDINARY_URL) {
@@ -20,65 +19,69 @@ async function uploadToCloudinary(file: File, folder: string): Promise<string> {
     try {
       const buffer = Buffer.from(await file.arrayBuffer())
       const timestamp = Date.now()
-      const randomId = Math.random().toString(36).substring(2, 8)
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
       
       cloudinary.uploader.upload_stream(
         {
-          public_id: `${timestamp}-${randomId}-${safeFileName}`,
+          public_id: `${timestamp}-${safeFileName}`,
           folder: folder,
           resource_type: 'auto',
-          transformation: [
-            { width: 1200, height: 800, crop: 'limit', quality: '85', format: 'auto' }
-          ]
+          transformation: file.type.startsWith('image/') ? [
+            { quality: 'auto:good', format: 'auto' }
+          ] : undefined
         },
         (error, result) => {
           if (error) {
             console.error('Cloudinary upload error:', error)
             reject(error)
           } else {
-            console.log('✅ File uploaded successfully:', result?.secure_url)
             resolve(result!.secure_url)
           }
         }
       ).end(buffer)
     } catch (error) {
-      console.error('Buffer processing error:', error)
       reject(error)
     }
   })
 }
 
-// GET - Fetch content by type or all
-export async function GET(req: Request) {
+// Helper funkcija diakritisko zīmju noņemšanai
+function removeDiacritics(str: string): string {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+}
+
+// GET - Retrieve content
+export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
+    const id = searchParams.get("id")
     const type = searchParams.get("type")
     const published = searchParams.get("published")
 
-    const where: any = {}
-    
-    if (type) {
-      where.type = type.toUpperCase()
-    }
-    
-    if (published === "true") {
-      where.published = true
+    if (id) {
+      const content = await prisma.content.findUnique({
+        where: { id }
+      })
+      return NextResponse.json(content)
     }
 
-    const content = await prisma.content.findMany({
+    const where: any = {}
+    if (type) where.type = type.toUpperCase()
+    if (published !== null) where.published = published === "true"
+
+    const contents = await prisma.content.findMany({
       where,
-      orderBy: { publishedAt: "desc" },
+      orderBy: { createdAt: "desc" }
     })
 
-    return NextResponse.json(content)
+    return NextResponse.json(contents)
   } catch (error) {
     console.error("[CONTENT_GET]", error)
     return NextResponse.json({ error: "Kļūda ielādējot saturu" }, { status: 500 })
   }
 }
 
-// POST - Create or update content
+// POST - Create or update content ar paralēlo augšupielādi
 export async function POST(req: Request) {
   try {
     const formData = await req.formData()
@@ -95,7 +98,7 @@ export async function POST(req: Request) {
     const metaTitle = formData.get("metaTitle") as string | null
     const metaDescription = formData.get("metaDescription") as string | null
 
-    console.log('📊 Starting content upload process...')
+    console.log('📊 Starting parallel upload process...')
 
     // Handle tags
     const tags = tagsString ? 
@@ -104,125 +107,120 @@ export async function POST(req: Request) {
     // Generate slug
     const slug = removeDiacritics(title.toLowerCase().replace(/\s+/g, "-"))
 
-    // Handle featured image upload to Cloudinary
+    // Inicializējam URL mainīgos
     let featuredImage = formData.get("existingFeaturedImage") as string || null
+    let videoFile = formData.get("existingVideoFile") as string || null
+    let additionalImages: string[] = []
+
+    // Paralēla failu augšupielāde
+    const uploadPromises: Promise<{type: string, url: string, index?: number}>[] = []
+
+    // Featured image upload
     const featuredImageFile = formData.get("featuredImage") as File | null
-    
     if (featuredImageFile && featuredImageFile.size > 0) {
-      console.log(`📁 Uploading featured image (${Math.round(featuredImageFile.size / 1024)}KB) to Cloudinary`)
+      console.log(`📁 Queuing featured image upload (${Math.round(featuredImageFile.size / 1024)}KB)`)
       
-      // Palielināts limits uz 5MB
+      // Validējam faila izmēru un tipu
       if (featuredImageFile.size > 5 * 1024 * 1024) {
         return NextResponse.json({ 
           error: "Galvenais attēls pārāk liels (max 5MB)" 
         }, { status: 413 })
       }
       
-      // Validējam faila tipu
       if (!featuredImageFile.type.startsWith('image/')) {
         return NextResponse.json({ 
           error: "Galvenais attēls nav derīgs attēla fails" 
         }, { status: 400 })
       }
       
-      try {
-        featuredImage = await uploadToCloudinary(featuredImageFile, 'content')
-        console.log('✅ Featured image uploaded:', featuredImage)
-      } catch (uploadError) {
-        console.error('❌ Failed to upload featured image:', uploadError)
-        return NextResponse.json({ 
-          error: "Neizdevās augšupielādēt galveno attēlu" 
-        }, { status: 500 })
-      }
+      uploadPromises.push(
+        uploadToCloudinary(featuredImageFile, 'content').then(url => ({ type: 'featured', url }))
+      )
     }
 
-    // Handle video file upload to Cloudinary
-    let videoFile = formData.get("existingVideoFile") as string || null
-    const videoFileUpload = formData.get("videoFile") as File | null
-    
-    if (videoFileUpload && videoFileUpload.size > 0) {
-      console.log(`📁 Uploading video file (${Math.round(videoFileUpload.size / 1024 / 1024)}MB) to Cloudinary`)
+    // Video file upload
+    const videoFileToUpload = formData.get("videoFile") as File | null
+    if (videoFileToUpload && videoFileToUpload.size > 0) {
+      console.log(`🎬 Queuing video upload (${Math.round(videoFileToUpload.size / 1024 / 1024)}MB)`)
       
-      // Samazināts limits uz 20MB
-      if (videoFileUpload.size > 20 * 1024 * 1024) {
+      if (videoFileToUpload.size > 50 * 1024 * 1024) {
         return NextResponse.json({ 
-          error: "Video fails pārāk liels (max 20MB)" 
+          error: "Video fails pārāk liels (max 50MB)" 
         }, { status: 413 })
       }
       
-      // Validējam faila tipu
-      if (!videoFileUpload.type.startsWith('video/')) {
-        return NextResponse.json({ 
-          error: "Video fails nav derīgs video fails" 
-        }, { status: 400 })
+      uploadPromises.push(
+        uploadToCloudinary(videoFileToUpload, 'content/videos').then(url => ({ type: 'video', url }))
+      )
+    }
+
+    // Additional images upload
+    const additionalImagePromises: Promise<{type: string, url: string, index: number}>[] = []
+    for (let i = 0; i < 20; i++) {
+      const additionalImageFile = formData.get(`additionalImage${i}`) as File | null
+      if (additionalImageFile && additionalImageFile.size > 0) {
+        console.log(`🖼️ Queuing additional image ${i} (${Math.round(additionalImageFile.size / 1024)}KB)`)
+        
+        if (additionalImageFile.size > 5 * 1024 * 1024) {
+          return NextResponse.json({ 
+            error: `Papildu attēls ${i + 1} pārāk liels (max 5MB)` 
+          }, { status: 413 })
+        }
+        
+        if (!additionalImageFile.type.startsWith('image/')) {
+          return NextResponse.json({ 
+            error: `Papildu attēls ${i + 1} nav derīgs attēla fails` 
+          }, { status: 400 })
+        }
+        
+        additionalImagePromises.push(
+          uploadToCloudinary(additionalImageFile, 'content').then(url => ({ type: 'additional', url, index: i }))
+        )
       }
-      
+    }
+
+    // Izpildām visas augšupielādes paralēli
+    const totalUploads = uploadPromises.length + additionalImagePromises.length
+    if (totalUploads > 0) {
+      console.log(`🚀 Starting ${totalUploads} parallel uploads...`)
+      const startTime = Date.now()
+
       try {
-        videoFile = await uploadToCloudinary(videoFileUpload, 'content/videos')
-        console.log('✅ Video file uploaded:', videoFile)
+        const [mainUploads, additionalUploads] = await Promise.all([
+          Promise.all(uploadPromises),
+          Promise.all(additionalImagePromises)
+        ])
+
+        const uploadTime = Date.now() - startTime
+        console.log(`✅ All uploads completed in ${uploadTime}ms`)
+
+        // Apstrādājam galvenos upload rezultātus
+        for (const upload of mainUploads) {
+          if (upload.type === 'featured') {
+            featuredImage = upload.url
+            console.log('✅ Featured image uploaded:', featuredImage)
+          } else if (upload.type === 'video') {
+            videoFile = upload.url
+            console.log('✅ Video uploaded:', videoFile)
+          }
+        }
+
+        // Kārtojam papildu attēlus pareizajā secībā
+        additionalImages = additionalUploads
+          .sort((a, b) => a.index - b.index)
+          .map(upload => upload.url)
+        
+        console.log(`✅ Additional images uploaded: ${additionalImages.length}`)
+        
       } catch (uploadError) {
-        console.error('❌ Failed to upload video file:', uploadError)
+        console.error('❌ Parallel upload failed:', uploadError)
         return NextResponse.json({ 
-          error: "Neizdevās augšupielādēt video failu" 
+          error: "Neizdevās augšupielādēt failus" 
         }, { status: 500 })
       }
     }
 
-    // Handle additional images upload to Cloudinary
-    const additionalImages: string[] = []
-    let imageIndex = 0
-    let totalAdditionalSize = 0
-    
-    // Aprēķinām kopējo izmēru pirms upload
-    while (true) {
-      const imageFile = formData.get(`additionalImage${imageIndex}`) as File | null
-      if (!imageFile || imageFile.size === 0) break
-      totalAdditionalSize += imageFile.size
-      imageIndex++
-    }
-    
-    // Pārbaudām kopējo izmēru - palielināts uz 40MB
-    if (totalAdditionalSize > 40 * 1024 * 1024) {
-      return NextResponse.json({ 
-        error: "Papildu attēli kopā pārāk lieli (max 40MB kopā)" 
-      }, { status: 413 })
-    }
-    
-    // Tagad upload
-    imageIndex = 0
-    while (true) {
-      const imageFile = formData.get(`additionalImage${imageIndex}`) as File | null
-      if (!imageFile || imageFile.size === 0) break
-      
-      console.log(`📁 Uploading additional image ${imageIndex + 1} (${Math.round(imageFile.size / 1024)}KB) to Cloudinary`)
-      
-      // Individuāls limits 5MB
-      if (imageFile.size > 5 * 1024 * 1024) {
-        console.log(`❌ Additional image ${imageIndex + 1} too large, skipping`)
-        imageIndex++
-        continue
-      }
-      
-      // Validējam faila tipu
-      if (!imageFile.type.startsWith('image/')) {
-        console.log(`❌ Additional image ${imageIndex + 1} invalid type, skipping`)
-        imageIndex++
-        continue
-      }
-      
-      try {
-        const imageUrl = await uploadToCloudinary(imageFile, 'content')
-        additionalImages.push(imageUrl)
-        console.log(`✅ Additional image ${imageIndex + 1} uploaded:`, imageUrl)
-      } catch (uploadError) {
-        console.error(`❌ Failed to upload additional image ${imageIndex + 1}:`, uploadError)
-        // Turpinām ar citiem attēliem
-      }
-      
-      imageIndex++
-    }
-
-    console.log(`📊 Upload summary: Featured: ${featuredImage ? '✅' : '❌'}, Video: ${videoFile ? '✅' : '❌'}, Additional: ${additionalImages.length}`)
+    console.log(`📋 Final summary - Featured: ${featuredImage ? '✅' : '❌'}, Video: ${videoFile ? '✅' : '❌'}, Additional: ${additionalImages.length}`)
 
     const data = {
       title,
@@ -267,5 +265,26 @@ export async function POST(req: Request) {
     console.error("[CONTENT_POST]", error)
     const errorMessage = error instanceof Error ? error.message : "Kļūda saglabājot saturu"
     return NextResponse.json({ error: errorMessage }, { status: 500 })
+  }
+}
+
+// DELETE - Remove content
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json({ error: "ID nav norādīts" }, { status: 400 })
+    }
+
+    await prisma.content.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[CONTENT_DELETE]", error)
+    return NextResponse.json({ error: "Kļūda dzēšot saturu" }, { status: 500 })
   }
 }

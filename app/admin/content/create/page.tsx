@@ -257,9 +257,22 @@ const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: nu
 
 // Nomainīt handleSave funkciju:
 const handleSave = async (contentIndex: number) => {
-  setAlert(null) // Clear previous alerts
+  setAlert(null)
   setLoading(true)
   const content = contents[contentIndex]
+
+   const totalFiles = [
+    content.featuredImage,
+    content.videoFile,
+    ...content.additionalImages
+  ].filter(Boolean).length
+
+  if (totalFiles > 0) {
+    setAlert({ 
+      type: "success", 
+      message: `Augšupielādē ${totalFiles} ${totalFiles === 1 ? 'failu' : 'failus'}...` 
+    })
+  }
 
   if (!content.title.trim()) {
     setAlert({ type: "error", message: "Nosaukums ir obligāts" })
@@ -321,12 +334,10 @@ const handleSave = async (contentIndex: number) => {
 
     if (res.ok) {
       const savedContent = await res.json()
-      // Update the content with the returned ID
+      setAlert({ type: "success", message: "Saturs izveidots veiksmīgi!" })
       const copy = [...contents]
       copy[contentIndex] = { ...copy[contentIndex], id: savedContent.id }
       setContents(copy)
-      
-      setAlert({ type: "success", message: "Saturs izveidots veiksmīgi!" })
       
       setTimeout(() => {
         setEditingIndex(null)
@@ -343,12 +354,12 @@ const handleSave = async (contentIndex: number) => {
       
       setAlert({ type: "error", message: errorMessage })
     }
-  } catch (error) {
-    console.error("Submit error:", error)
-    setAlert({ type: "error", message: "Tīkla kļūda - pārbaudiet interneta savienojumu" })
-  } finally {
-    setLoading(false)
-  }
+    } catch (error) {
+      console.error("Upload error:", error)
+      setAlert({ type: "error", message: "Kļūda augšupielādējot saturu" })
+    } finally {
+      setLoading(false)
+    }
 }
 
   return (
