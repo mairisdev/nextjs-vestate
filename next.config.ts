@@ -19,14 +19,6 @@ const nextConfig: NextConfig = {
     ],
     domains: ['res.cloudinary.com']
   },
-  experimental: {
-    serverComponentsExternalPackages: ['cloudinary'],
-  },
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
-  }
 }
 
 const withNextIntl = createNextIntlPlugin();
