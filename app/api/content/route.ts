@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { v2 as cloudinary } from 'cloudinary' 
-import { randomUUID } from "crypto"
 import { removeDiacritics } from "@/lib/utils"
 
 // Cloudinary konfigurācija
@@ -112,10 +111,10 @@ export async function POST(req: Request) {
     if (featuredImageFile && featuredImageFile.size > 0) {
       console.log(`📁 Uploading featured image (${Math.round(featuredImageFile.size / 1024)}KB) to Cloudinary`)
       
-      // Samazināts limits uz 3MB
-      if (featuredImageFile.size > 3 * 1024 * 1024) {
+      // Palielināts limits uz 5MB
+      if (featuredImageFile.size > 5 * 1024 * 1024) {
         return NextResponse.json({ 
-          error: "Galvenais attēls pārāk liels (max 3MB)" 
+          error: "Galvenais attēls pārāk liels (max 5MB)" 
         }, { status: 413 })
       }
       
@@ -144,10 +143,10 @@ export async function POST(req: Request) {
     if (videoFileUpload && videoFileUpload.size > 0) {
       console.log(`📁 Uploading video file (${Math.round(videoFileUpload.size / 1024 / 1024)}MB) to Cloudinary`)
       
-      // Samazināts limits uz 30MB
-      if (videoFileUpload.size > 30 * 1024 * 1024) {
+      // Samazināts limits uz 20MB
+      if (videoFileUpload.size > 20 * 1024 * 1024) {
         return NextResponse.json({ 
-          error: "Video fails pārāk liels (max 30MB)" 
+          error: "Video fails pārāk liels (max 20MB)" 
         }, { status: 413 })
       }
       
@@ -182,10 +181,10 @@ export async function POST(req: Request) {
       imageIndex++
     }
     
-    // Pārbaudām kopējo izmēru
-    if (totalAdditionalSize > 15 * 1024 * 1024) {
+    // Pārbaudām kopējo izmēru - palielināts uz 40MB
+    if (totalAdditionalSize > 40 * 1024 * 1024) {
       return NextResponse.json({ 
-        error: "Papildu attēli kopā pārāk lieli (max 15MB kopā)" 
+        error: "Papildu attēli kopā pārāk lieli (max 40MB kopā)" 
       }, { status: 413 })
     }
     
@@ -197,8 +196,8 @@ export async function POST(req: Request) {
       
       console.log(`📁 Uploading additional image ${imageIndex + 1} (${Math.round(imageFile.size / 1024)}KB) to Cloudinary`)
       
-      // Individuāls limits 3MB
-      if (imageFile.size > 3 * 1024 * 1024) {
+      // Individuāls limits 5MB
+      if (imageFile.size > 5 * 1024 * 1024) {
         console.log(`❌ Additional image ${imageIndex + 1} too large, skipping`)
         imageIndex++
         continue

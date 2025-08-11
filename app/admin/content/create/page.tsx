@@ -133,27 +133,27 @@ export default function CreateContent() {
     }
   }
 
-  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      // Validē izmēru pirms upload (30MB)
-      if (file.size > 30 * 1024 * 1024) {
-        setAlert({ type: "error", message: `Video fails pārāk liels (${formatFileSize(file.size)}). Maksimums 30MB.` })
-        e.target.value = ''
-        return
-      }
-      
-      // Validē faila tipu
-      if (!file.type.startsWith('video/')) {
-        setAlert({ type: "error", message: "Lūdzu, izvēlieties video failu" })
-        e.target.value = ''
-        return
-      }
-      
-      updateContent(index, "videoFile", file)
-      setAlert(null)
+const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const file = e.target.files?.[0]
+  if (file) {
+    // Validē izmēru pirms upload (20MB)
+    if (file.size > 20 * 1024 * 1024) {
+      setAlert({ type: "error", message: `Video fails pārāk liels (${formatFileSize(file.size)}). Maksimums 20MB.` })
+      e.target.value = ''
+      return
     }
+    
+    // Validē faila tipu
+    if (!file.type.startsWith('video/')) {
+      setAlert({ type: "error", message: "Lūdzu, izvēlieties video failu" })
+      e.target.value = ''
+      return
+    }
+    
+    updateContent(index, "videoFile", file)
+    setAlert(null)
   }
+}
 
   const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const files = Array.from(e.target.files || [])
@@ -255,93 +255,101 @@ export default function CreateContent() {
     }
   }
 
-  const handleSave = async (contentIndex: number) => {
-    setAlert(null)
-    setLoading(true)
-    const content = contents[contentIndex]
+// Nomainīt handleSave funkciju:
+const handleSave = async (contentIndex: number) => {
+  setAlert(null) // Clear previous alerts
+  setLoading(true)
+  const content = contents[contentIndex]
 
-    if (!content.title.trim()) {
-      setAlert({ type: "error", message: "Nosaukums ir obligāts" })
-      setLoading(false)
-      return
-    }
+  if (!content.title.trim()) {
+    setAlert({ type: "error", message: "Nosaukums ir obligāts" })
+    setLoading(false)
+    return
+  }
 
-    if (!content.excerpt.trim()) {
-      setAlert({ type: "error", message: "Apraksts ir obligāts" })
-      setLoading(false)
-      return
-    }
+  if (!content.excerpt.trim()) {
+    setAlert({ type: "error", message: "Apraksts ir obligāts" })
+    setLoading(false)
+    return
+  }
 
-    // Aprēķini kopējo failu izmēru
-    let totalSize = 0
-    if (content.featuredImage) totalSize += content.featuredImage.size
-    if (content.videoFile) totalSize += content.videoFile.size
-    content.additionalImages.forEach(img => totalSize += img.size)
+  // Aprēķini kopējo failu izmēru
+  let totalSize = 0
+  if (content.featuredImage) totalSize += content.featuredImage.size
+  if (content.videoFile) totalSize += content.videoFile.size
+  content.additionalImages.forEach(img => totalSize += img.size)
+  
+  console.log(`📊 Total upload size: ${formatFileSize(totalSize)}`)
+
+  try {
+    const formData = new FormData()
     
-    console.log(`📊 Total upload size: ${formatFileSize(totalSize)}`)
+    // Text fields
+    formData.append("title", content.title)
+    formData.append("excerpt", content.excerpt)
+    formData.append("content", content.content)
+    formData.append("type", content.type)
+    formData.append("published", String(content.published))
+    formData.append("videoUrl", content.videoUrl)
+    formData.append("author", content.author)
+    formData.append("tags", content.tags)
+    formData.append("metaTitle", content.metaTitle)
+    formData.append("metaDescription", content.metaDescription)
 
-    try {
-      const formData = new FormData()
+    // Featured image
+    if (content.featuredImage) {
+      formData.append("featuredImage", content.featuredImage)
+    }
+
+    // Video file
+    if (content.videoFile) {
+      formData.append("videoFile", content.videoFile)
+    }
+
+    // Additional images
+    content.additionalImages.forEach((image, index) => {
+      formData.append(`additionalImage${index}`, image)
+    })
+
+    console.log('📤 Uploading content...')
+    setAlert({ type: "success", message: "Augšupielādē saturu..." }) // Progress message
+
+    const res = await fetch("/api/content", {
+      method: "POST",
+      body: formData
+    })
+
+    if (res.ok) {
+      const savedContent = await res.json()
+      // Update the content with the returned ID
+      const copy = [...contents]
+      copy[contentIndex] = { ...copy[contentIndex], id: savedContent.id }
+      setContents(copy)
       
-      // Text fields
-      formData.append("title", content.title)
-      formData.append("excerpt", content.excerpt)
-      formData.append("content", content.content)
-      formData.append("type", content.type)
-      formData.append("published", String(content.published))
-      formData.append("videoUrl", content.videoUrl)
-      formData.append("author", content.author)
-      formData.append("tags", content.tags)
-      formData.append("metaTitle", content.metaTitle)
-      formData.append("metaDescription", content.metaDescription)
-
-      // Featured image
-      if (content.featuredImage) {
-        formData.append("featuredImage", content.featuredImage)
-      }
-
-      // Video file
-      if (content.videoFile) {
-        formData.append("videoFile", content.videoFile)
-      }
-
-      // Additional images
-      content.additionalImages.forEach((image, index) => {
-        formData.append(`additionalImage${index}`, image)
-      })
-
-      console.log('📤 Uploading content...')
-
-      const res = await fetch("/api/content", {
-        method: "POST",
-        body: formData
-      })
-
-      if (res.ok) {
-        const savedContent = await res.json()
-        // Update the content with the returned ID
-        const copy = [...contents]
-        copy[contentIndex] = { ...copy[contentIndex], id: savedContent.id }
-        setContents(copy)
-        
-        setAlert({ type: "success", message: "Saturs izveidots veiksmīgi!" })
+      setAlert({ type: "success", message: "Saturs izveidots veiksmīgi!" })
+      
+      setTimeout(() => {
         setEditingIndex(null)
         setIsCreating(false)
-        
-        setTimeout(() => {
-          router.push("/admin/content")
-        }, 1500)
-      } else {
-        const responseData = await res.json()
-        setAlert({ type: "error", message: responseData.error || "Kļūda izveidojot saturu" })
-      }
-    } catch (error) {
-      console.error("Submit error:", error)
-      setAlert({ type: "error", message: "Kļūda izveidojot saturu" })
-    } finally {
-      setLoading(false)
+        router.push("/admin/content")
+      }, 1500)
+    } else {
+      const responseData = await res.json()
+      console.error('API Error Response:', responseData)
+      
+      // Show specific error message from API
+      const errorMessage = responseData.error || 
+        (res.status === 413 ? "Faili pārāk lieli - samaziniet attēlu izmērus" : "Kļūda izveidojot saturu")
+      
+      setAlert({ type: "error", message: errorMessage })
     }
+  } catch (error) {
+    console.error("Submit error:", error)
+    setAlert({ type: "error", message: "Tīkla kļūda - pārbaudiet interneta savienojumu" })
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto py-10">
@@ -465,6 +473,15 @@ export default function CreateContent() {
                   ✕
                 </Button>
               </div>
+
+              {/* Alert inside modal */}
+              {alert && (
+                <AlertMessage 
+                  type={alert.type} 
+                  message={alert.message} 
+                  onClose={() => setAlert(null)} 
+                />
+              )}
 
               <div className="space-y-6">
                 {/* Pamata informācija */}
