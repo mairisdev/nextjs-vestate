@@ -118,7 +118,6 @@ export async function POST(req: Request) {
     // Featured image upload
     const featuredImageFile = formData.get("featuredImage") as File | null
     if (featuredImageFile && featuredImageFile.size > 0) {
-      console.log(`📁 Queuing featured image upload (${Math.round(featuredImageFile.size / 1024)}KB)`)
       
       // Validējam faila izmēru un tipu
       if (featuredImageFile.size > 5 * 1024 * 1024) {
@@ -159,7 +158,6 @@ export async function POST(req: Request) {
     for (let i = 0; i < 20; i++) {
       const additionalImageFile = formData.get(`additionalImage${i}`) as File | null
       if (additionalImageFile && additionalImageFile.size > 0) {
-        console.log(`🖼️ Queuing additional image ${i} (${Math.round(additionalImageFile.size / 1024)}KB)`)
         
         if (additionalImageFile.size > 5 * 1024 * 1024) {
           return NextResponse.json({ 
@@ -182,7 +180,6 @@ export async function POST(req: Request) {
     // Izpildām visas augšupielādes paralēli
     const totalUploads = uploadPromises.length + additionalImagePromises.length
     if (totalUploads > 0) {
-      console.log(`🚀 Starting ${totalUploads} parallel uploads...`)
       const startTime = Date.now()
 
       try {
@@ -192,16 +189,13 @@ export async function POST(req: Request) {
         ])
 
         const uploadTime = Date.now() - startTime
-        console.log(`✅ All uploads completed in ${uploadTime}ms`)
 
         // Apstrādājam galvenos upload rezultātus
         for (const upload of mainUploads) {
           if (upload.type === 'featured') {
             featuredImage = upload.url
-            console.log('✅ Featured image uploaded:', featuredImage)
           } else if (upload.type === 'video') {
             videoFile = upload.url
-            console.log('✅ Video uploaded:', videoFile)
           }
         }
 
@@ -210,8 +204,6 @@ export async function POST(req: Request) {
           .sort((a, b) => a.index - b.index)
           .map(upload => upload.url)
         
-        console.log(`✅ Additional images uploaded: ${additionalImages.length}`)
-        
       } catch (uploadError) {
         console.error('❌ Parallel upload failed:', uploadError)
         return NextResponse.json({ 
@@ -219,8 +211,6 @@ export async function POST(req: Request) {
         }, { status: 500 })
       }
     }
-
-    console.log(`📋 Final summary - Featured: ${featuredImage ? '✅' : '❌'}, Video: ${videoFile ? '✅' : '❌'}, Additional: ${additionalImages.length}`)
 
     const data = {
       title,
@@ -248,7 +238,6 @@ export async function POST(req: Request) {
         where: { id },
         data
       })
-      console.log('✅ Content updated successfully')
     } else {
       // Create new content
       result = await prisma.content.create({
@@ -257,7 +246,6 @@ export async function POST(req: Request) {
           createdAt: new Date()
         }
       })
-      console.log('✅ Content created successfully')
     }
 
     return NextResponse.json(result)

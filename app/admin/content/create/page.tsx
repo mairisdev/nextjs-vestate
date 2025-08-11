@@ -34,6 +34,8 @@ export default function CreateContent() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const contentRef = useRef<HTMLTextAreaElement>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadStatus, setUploadStatus] = useState<string>("")
 
   const [contents, setContents] = useState<ContentItem[]>([])
 
@@ -255,24 +257,13 @@ const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: nu
     }
   }
 
-// Nomainīt handleSave funkciju:
 const handleSave = async (contentIndex: number) => {
   setAlert(null)
   setLoading(true)
+  setUploadProgress(0)
+  setUploadStatus("Sagatavo augšupielādi...")
+  
   const content = contents[contentIndex]
-
-   const totalFiles = [
-    content.featuredImage,
-    content.videoFile,
-    ...content.additionalImages
-  ].filter(Boolean).length
-
-  if (totalFiles > 0) {
-    setAlert({ 
-      type: "success", 
-      message: `Augšupielādē ${totalFiles} ${totalFiles === 1 ? 'failu' : 'failus'}...` 
-    })
-  }
 
   if (!content.title.trim()) {
     setAlert({ type: "error", message: "Nosaukums ir obligāts" })
@@ -286,13 +277,12 @@ const handleSave = async (contentIndex: number) => {
     return
   }
 
-  // Aprēķini kopējo failu izmēru
-  let totalSize = 0
-  if (content.featuredImage) totalSize += content.featuredImage.size
-  if (content.videoFile) totalSize += content.videoFile.size
-  content.additionalImages.forEach(img => totalSize += img.size)
-  
-  console.log(`📊 Total upload size: ${formatFileSize(totalSize)}`)
+  // Aprēķini failu skaitu
+  const totalFiles = [
+    content.featuredImage,
+    content.videoFile,
+    ...content.additionalImages
+  ].filter(Boolean).length
 
   try {
     const formData = new FormData()
@@ -324,8 +314,27 @@ const handleSave = async (contentIndex: number) => {
       formData.append(`additionalImage${index}`, image)
     })
 
+    // Progress simulation
+    if (totalFiles > 0) {
+      setUploadStatus(`Augšupielādē ${totalFiles} ${totalFiles === 1 ? 'failu' : 'failus'}...`)
+      setUploadProgress(10)
+      
+      // Simulēta progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 85) {
+            clearInterval(progressInterval)
+            return 85
+          }
+          return prev + Math.random() * 15
+        })
+      }, 200)
+    } else {
+      setUploadStatus("Saglabā saturu...")
+      setUploadProgress(30)
+    }
+
     console.log('📤 Uploading content...')
-    setAlert({ type: "success", message: "Augšupielādē saturu..." }) // Progress message
 
     const res = await fetch("/api/content", {
       method: "POST",
@@ -334,32 +343,37 @@ const handleSave = async (contentIndex: number) => {
 
     if (res.ok) {
       const savedContent = await res.json()
-      setAlert({ type: "success", message: "Saturs izveidots veiksmīgi!" })
+      
+      // Pabeidz progress
+      setUploadProgress(100)
+      setUploadStatus("Saturs veiksmīgi publicēts!")
+      
+      // Update the content with the returned ID
       const copy = [...contents]
       copy[contentIndex] = { ...copy[contentIndex], id: savedContent.id }
       setContents(copy)
       
+      // Paslēpj loading pēc 1.5 sekundēm
       setTimeout(() => {
-        setEditingIndex(null)
-        setIsCreating(false)
-        router.push("/admin/content")
+        setLoading(false)
+        setUploadProgress(0)
+        setUploadStatus("")
       }, 1500)
+      
     } else {
-      const responseData = await res.json()
-      console.error('API Error Response:', responseData)
-      
-      // Show specific error message from API
-      const errorMessage = responseData.error || 
-        (res.status === 413 ? "Faili pārāk lieli - samaziniet attēlu izmērus" : "Kļūda izveidojot saturu")
-      
-      setAlert({ type: "error", message: errorMessage })
-    }
-    } catch (error) {
-      console.error("Upload error:", error)
-      setAlert({ type: "error", message: "Kļūda augšupielādējot saturu" })
-    } finally {
+      const errorData = await res.json()
+      setAlert({ type: "error", message: errorData.error || "Kļūda saglabājot saturu" })
       setLoading(false)
+      setUploadProgress(0)
+      setUploadStatus("")
     }
+  } catch (error) {
+    console.error("Upload error:", error)
+    setAlert({ type: "error", message: "Kļūda augšupielādējot saturu" })
+    setLoading(false)
+    setUploadProgress(0)
+    setUploadStatus("")
+  }
 }
 
   return (
@@ -485,13 +499,25 @@ const handleSave = async (contentIndex: number) => {
                 </Button>
               </div>
 
-              {/* Alert inside modal */}
-              {alert && (
-                <AlertMessage 
-                  type={alert.type} 
-                  message={alert.message} 
-                  onClose={() => setAlert(null)} 
-                />
+              {/* Progress Bar */}
+              {loading && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-blue-800">{uploadStatus}</span>
+                    <span className="text-sm text-blue-600">{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-3">
+                    <div 
+                      className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out" 
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  {uploadProgress === 100 && (
+                    <div className="mt-2 text-sm text-green-600 font-medium">
+                      ✅ {uploadStatus}
+                    </div>
+                  )}
+                </div>
               )}
 
               <div className="space-y-6">
