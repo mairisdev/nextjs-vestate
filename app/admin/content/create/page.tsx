@@ -345,6 +345,7 @@ const handleSave = async (contentIndex: number) => {
       const savedContent = await res.json()
       
       setUploadProgress(100)
+      setUploadStatus("Saturs veiksmīgi publicēts!")
       
       const copy = [...contents]
       copy[contentIndex] = { ...copy[contentIndex], id: savedContent.id }
@@ -502,7 +503,9 @@ const handleSave = async (contentIndex: number) => {
               {loading && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-blue-800">{uploadStatus}</span>
+                    <span className={`text-sm font-medium ${uploadProgress === 100 ? 'text-green-600' : 'text-blue-800'}`}>
+                      {uploadProgress === 100 ? '✅ ' : ''}{uploadStatus}
+                    </span>
                     <span className="text-sm text-blue-600">{uploadProgress}%</span>
                   </div>
                   <div className="w-full bg-blue-200 rounded-full h-3">
@@ -511,11 +514,6 @@ const handleSave = async (contentIndex: number) => {
                       style={{ width: `${uploadProgress}%` }}
                     ></div>
                   </div>
-                  {uploadProgress === 100 && (
-                    <div className="mt-2 text-sm text-green-600 font-medium">
-                      ✅ {uploadStatus}
-                    </div>
-                  )}
                 </div>
               )}
 
