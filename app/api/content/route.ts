@@ -81,6 +81,41 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData()
     
+    // Validate file sizes first
+    const featuredImageFile = formData.get("featuredImage") as File | null
+    if (featuredImageFile && featuredImageFile.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ 
+        error: "Galvenais attēls pārāk liels (max 5MB)" 
+      }, { status: 413 })
+    }
+
+    const videoFileToUpload = formData.get("videoFile") as File | null
+    if (videoFileToUpload && videoFileToUpload.size > 50 * 1024 * 1024) {
+      return NextResponse.json({ 
+        error: "Video fails pārāk liels (max 50MB)" 
+      }, { status: 413 })
+    }
+
+    // Check additional images
+    let totalAdditionalImagesSize = 0
+    for (let i = 0; i < 20; i++) {
+      const additionalImageFile = formData.get(`additionalImage${i}`) as File | null
+      if (additionalImageFile && additionalImageFile.size > 0) {
+        if (additionalImageFile.size > 5 * 1024 * 1024) {
+          return NextResponse.json({ 
+            error: `Papildu attēls ${i + 1} pārāk liels (max 5MB)` 
+          }, { status: 413 })
+        }
+        totalAdditionalImagesSize += additionalImageFile.size
+      }
+    }
+
+    if (totalAdditionalImagesSize > 40 * 1024 * 1024) {
+      return NextResponse.json({ 
+        error: "Papildu attēli kopā pārāk lieli (max 40MB)" 
+      }, { status: 413 })
+    }
+    
     const id = formData.get("id") as string | null
     const title = formData.get("title") as string
     const content = formData.get("content") as string
@@ -93,46 +128,36 @@ export async function POST(req: Request) {
     const metaTitle = formData.get("metaTitle") as string | null
     const metaDescription = formData.get("metaDescription") as string | null
 
+    // Handle existing files for updates
+    const existingFeaturedImage = formData.get("existingFeaturedImage") as string || null
+    const existingVideoFile = formData.get("existingVideoFile") as string || null
+    const existingAdditionalImagesString = formData.get("existingAdditionalImages") as string || "[]"
+    let existingAdditionalImages: string[] = []
+    
+    try {
+      existingAdditionalImages = JSON.parse(existingAdditionalImagesString)
+    } catch (e) {
+      existingAdditionalImages = []
+    }
+
     const tags = tagsString ? 
       tagsString.split(",").map(tag => tag.trim()).filter(Boolean) : []
 
     const slug = removeDiacritics(title.toLowerCase().replace(/\s+/g, "-"))
 
-    let featuredImage = formData.get("existingFeaturedImage") as string || null
-    let videoFile = formData.get("existingVideoFile") as string || null
-    let additionalImages: string[] = []
+    let featuredImage = existingFeaturedImage
+    let videoFile = existingVideoFile
+    let additionalImages: string[] = [...existingAdditionalImages]
 
     const uploadPromises: Promise<{type: string, url: string, index?: number}>[] = []
 
-    const featuredImageFile = formData.get("featuredImage") as File | null
     if (featuredImageFile && featuredImageFile.size > 0) {
-      
-      if (featuredImageFile.size > 5 * 1024 * 1024) {
-        return NextResponse.json({ 
-          error: "Galvenais attēls pārāk liels (max 5MB)" 
-        }, { status: 413 })
-      }
-      
-      if (!featuredImageFile.type.startsWith('image/')) {
-        return NextResponse.json({ 
-          error: "Galvenais attēls nav derīgs attēla fails" 
-        }, { status: 400 })
-      }
-      
       uploadPromises.push(
         uploadToCloudinary(featuredImageFile, 'content').then(url => ({ type: 'featured', url }))
       )
     }
 
-    const videoFileToUpload = formData.get("videoFile") as File | null
     if (videoFileToUpload && videoFileToUpload.size > 0) {
-      
-      if (videoFileToUpload.size > 50 * 1024 * 1024) {
-        return NextResponse.json({ 
-          error: "Video fails pārāk liels (max 50MB)" 
-        }, { status: 413 })
-      }
-      
       uploadPromises.push(
         uploadToCloudinary(videoFileToUpload, 'content/videos').then(url => ({ type: 'video', url }))
       )
@@ -142,19 +167,6 @@ export async function POST(req: Request) {
     for (let i = 0; i < 20; i++) {
       const additionalImageFile = formData.get(`additionalImage${i}`) as File | null
       if (additionalImageFile && additionalImageFile.size > 0) {
-        
-        if (additionalImageFile.size > 5 * 1024 * 1024) {
-          return NextResponse.json({ 
-            error: `Papildu attēls ${i + 1} pārāk liels (max 5MB)` 
-          }, { status: 413 })
-        }
-        
-        if (!additionalImageFile.type.startsWith('image/')) {
-          return NextResponse.json({ 
-            error: `Papildu attēls ${i + 1} nav derīgs attēla fails` 
-          }, { status: 400 })
-        }
-        
         additionalImagePromises.push(
           uploadToCloudinary(additionalImageFile, 'content').then(url => ({ type: 'additional', url, index: i }))
         )
@@ -163,14 +175,12 @@ export async function POST(req: Request) {
 
     const totalUploads = uploadPromises.length + additionalImagePromises.length
     if (totalUploads > 0) {
-
       try {
         const [mainUploads, additionalUploads] = await Promise.all([
           Promise.all(uploadPromises),
           Promise.all(additionalImagePromises)
         ])
 
-        // Apstrādājam galvenos upload rezultātus
         for (const upload of mainUploads) {
           if (upload.type === 'featured') {
             featuredImage = upload.url
@@ -179,13 +189,15 @@ export async function POST(req: Request) {
           }
         }
 
-        // Kārtojam papildu attēlus pareizajā secībā
-        additionalImages = additionalUploads
+        // Add new additional images to existing ones
+        const newAdditionalImages = additionalUploads
           .sort((a, b) => a.index - b.index)
           .map(upload => upload.url)
         
+        additionalImages = [...additionalImages, ...newAdditionalImages]
+        
       } catch (uploadError) {
-        console.error('❌ Parallel upload failed:', uploadError)
+        console.error('❌ Upload failed:', uploadError)
         return NextResponse.json({ 
           error: "Neizdevās augšupielādēt failus" 
         }, { status: 500 })
@@ -201,7 +213,7 @@ export async function POST(req: Request) {
       published,
       publishedAt: published ? new Date() : null,
       featuredImage,
-      videoUrl,
+      videoUrl: videoUrl || null,
       videoFile,
       images: additionalImages,
       author,
