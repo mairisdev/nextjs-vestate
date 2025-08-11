@@ -37,8 +37,12 @@ function getTransformationForType(type: string) {
       return [
         { width: 1920, height: 1080, crop: 'fill', quality: 'auto', format: 'auto' }
       ]
-      case 'why-choose-us':
+    case 'why-choose-us':
       // Slider images - can be cropped to fit aspect ratio
+      return [
+        { width: 1200, height: 800, crop: 'limit', quality: 'auto', format: 'auto' }
+      ]
+    case 'sold-properties':
       return [
         { width: 1200, height: 800, crop: 'limit', quality: 'auto', format: 'auto' }
       ]

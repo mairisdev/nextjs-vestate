@@ -1,7 +1,9 @@
 'use client'
 import { useState } from "react"
-import { Phone, Menu, X, ChevronDown, ChevronRight } from "lucide-react"
+import { Phone, Menu, X, ChevronDown, ChevronRight, Globe } from "lucide-react"
 import Image from "next/image"
+import { useRouter, usePathname } from 'next/navigation'
+import { useLocale } from 'next-intl'
 
 interface SubItem {
   link: string
@@ -29,6 +31,12 @@ interface MobileMenuProps {
   securityText: string
 }
 
+const languages = [
+  { code: 'lv', name: 'Latviešu', flag: 'lv' },
+  { code: 'en', name: 'English', flag: 'en' },
+  { code: 'ru', name: 'Русский', flag: 'ру' }
+]
+
 export default function MobileMenu({ 
   phone, 
   menuItems, 
@@ -37,15 +45,24 @@ export default function MobileMenu({
 }: MobileMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([])
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false)
+  
+  const router = useRouter()
+  const pathname = usePathname()
+  const locale = useLocale()
+  
+  const currentLanguage = languages.find(lang => lang.code === locale) || languages[0]
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
     setOpenDropdowns([]) // Reset dropdowns kad aizver menu
+    setIsLanguageOpen(false) // Reset language dropdown
   }
 
   const closeMenu = () => {
     setIsMenuOpen(false)
     setOpenDropdowns([])
+    setIsLanguageOpen(false)
   }
 
   const toggleDropdown = (itemLink: string) => {
@@ -56,16 +73,28 @@ export default function MobileMenu({
     }
   }
 
+  const handleLanguageChange = (langCode: string) => {
+    setIsLanguageOpen(false)
+    setIsMenuOpen(false)
+    
+    // Nomaina URL, saglabājot pašreizējo ceļu
+    const segments = pathname.split('/')
+    segments[1] = langCode // Aizvieto locale daļu
+    const newPath = segments.join('/')
+    
+    router.push(newPath)
+  }
+
   return (
     <>
       {/* Mobile telefons un hamburger */}
-      <div className="flex md:hidden items-center space-x-12">
+      <div className="flex md:hidden items-center">
         <a
           href={`tel:${phone}`}
           className="flex items-center text-[#00332D] font-semibold"
         >
-          <Phone className="w-4 h-4 mr-1.5" />
-          <span className="text-sm">{phone}</span>
+          <Phone className="w-4 h-4 mr-1" />
+          <span className="text-sm mr-3">{phone}</span>
         </a>
         
         <button
@@ -79,8 +108,50 @@ export default function MobileMenu({
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="absolute top-full left-0 right-0 md:hidden bg-white border-t border-gray-200 shadow-lg">
+        <div className="absolute top-full left-0 right-0 md:hidden bg-white border-t border-gray-200 shadow-lg z-50">
           <nav className="px-6 py-4 space-y-2">
+            {/* Valodu pārslēdzējs */}
+            <div className="border-b border-gray-100 pb-3 mb-3">
+              <button
+                onClick={() => setIsLanguageOpen(!isLanguageOpen)}
+                className="flex items-center justify-between w-full text-gray-700 hover:text-black text-lg py-2"
+              >
+                <div className="flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-[#00332D]" />
+                  <span>{currentLanguage.name}</span>
+                </div>
+                {isLanguageOpen ? 
+                  <ChevronDown className="w-5 h-5 transition-transform duration-200" /> : 
+                  <ChevronRight className="w-5 h-5 transition-transform duration-200" />
+                }
+              </button>
+              
+              {/* Language dropdown */}
+              {isLanguageOpen && (
+                <div className="pl-6 space-y-1 py-2 bg-gray-50 rounded-md mt-2">
+                  {languages.map((language) => (
+                    <button
+                      key={language.code}
+                      onClick={() => handleLanguageChange(language.code)}
+                      className={`flex items-center justify-between w-full text-left py-2 px-3 rounded transition-colors ${
+                        language.code === locale
+                          ? 'bg-[#77dDB4]/10 text-[#00332D] font-medium'
+                          : 'text-gray-600 hover:text-black hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>{language.flag}</span>
+                        <span>{language.name}</span>
+                      </div>
+                      {language.code === locale && (
+                        <span className="text-[#77dDB4]">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Parastie menu linki */}
             {menuItems.map((item) => (
               item.isVisible && (
@@ -115,7 +186,7 @@ export default function MobileMenu({
                   {openDropdowns.includes(item.link) && item.subItems && (
                     <div className="pl-6 space-y-1 py-2 bg-gray-50 rounded-md mt-1">
                       {item.subItems.map((subItem) => (
-                        <a
+                        <a 
                           key={subItem.link}
                           href={subItem.link}
                           onClick={closeMenu}

@@ -26,9 +26,19 @@ export default function AgentsSectionClient({ agents, translations }: AgentsSect
   return (
     <section id="musu-komanda" className="py-20 px-4 md:px-12 bg-[#F3F4F6]">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-[#00332D] mb-12">
-          Mūsu aģenti
-        </h2>
+
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-[#77D4B4]/10 rounded-full px-6 py-2 mb-4">
+            <div className="w-2 h-2 bg-[#77D4B4] rounded-full animate-pulse"></div>
+            <p className="text-sm font-semibold uppercase text-[#77D4B4]">
+              Pieredzes un profesionalitātes apvienojums
+            </p>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#00332D] mb-4">
+            MŪSU LABĀKIE SPECIĀLISTI
+          </h2>
+          <div className="w-24 h-1 bg-gradient-to-r from-[#77D4B4] to-[#5BC9A8] mx-auto rounded-full"></div>
+        </div>
 
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 items-start">
           {agents.map((agent, idx) => (

@@ -139,14 +139,21 @@ export default async function BlogSection() {
   return (
     <section id="jaunakie-ieraksti" className="py-20 px-4 md:px-12 bg-white">
       <div className="max-w-7xl mx-auto text-center">
-        <p className="text-md uppercase text-[#77D4B4] font-semibold tracking-wide mb-2">
-          Jaunākie raksti
-        </p>
+
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-[#77D4B4]/10 rounded-full px-6 py-2 mb-4">
+            <div className="w-2 h-2 bg-[#77D4B4] rounded-full animate-pulse"></div>
+            <p className="text-sm font-semibold uppercase text-[#77D4B4]">
+              JAUNĀKIE RAKSTI
+            </p>
+          </div>
         <Link href="/blog">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#00332D] mb-12 hover:text-[#77D4B4] transition-colors cursor-pointer">
-            Bloga un izglītojošie raksti
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#00332D] mb-4">
+            BLOGA UN IZGLĪTOJOŠIE RAKSTI
           </h2>
         </Link>
+          <div className="w-24 h-1 bg-gradient-to-r from-[#77D4B4] to-[#5BC9A8] mx-auto rounded-full"></div>
+        </div>
 
         {blogPosts.length > 0 ? (
           <div className="grid md:grid-cols-3 gap-8">

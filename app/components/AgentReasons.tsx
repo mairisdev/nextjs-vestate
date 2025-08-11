@@ -50,9 +50,19 @@ export default function AgentReasonsClient({ data, translations }: AgentReasonsC
   return (
     <section className="bg-[#F3F4F6] py-8 px-4 sm:py-16 sm:px-12">
       <div className="max-w-[1600px] mx-auto">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-[#00332D] mb-8 sm:mb-12 text-center lg:text-left whitespace-pre-line">
-          {heading}
-        </h2>
+
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-[#77D4B4]/10 rounded-full px-6 py-2 mb-4">
+            <div className="w-2 h-2 bg-[#77D4B4] rounded-full animate-pulse"></div>
+            <p className="text-sm font-semibold uppercase text-[#77D4B4]">
+              Uzticiet sava īpašuma pārdošanu profesionāļiem
+            </p>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#00332D] mb-4">
+            {heading}
+          </h2>
+          <div className="w-24 h-1 bg-gradient-to-r from-[#77D4B4] to-[#5BC9A8] mx-auto rounded-full"></div>
+        </div>
 
         <div className="flex flex-col items-center lg:flex-row gap-12">
           <div className="flex-1">

@@ -45,20 +45,18 @@ export default function PartnersSection({ data, translations }: PartnersSectionP
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-gradient-to-tl from-[#00332D]/5 to-transparent rounded-full blur-3xl translate-x-40 translate-y-40"></div>
       
       <div className="max-w-7xl mx-auto text-center relative z-10">
-        {/* Header sadaļa */}
-        <div className="mb-16">
-          <div className="inline-flex items-center gap-2 bg-[#77dDB4]/10 px-4 py-2 rounded-full mb-6">
-            <div className="w-2 h-2 bg-[#77dDB4] rounded-full animate-pulse"></div>
-            <p className="text-sm uppercase text-[#77dDB4] font-bold tracking-wider">
+
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-[#77D4B4]/10 rounded-full px-6 py-2 mb-4">
+            <div className="w-2 h-2 bg-[#77D4B4] rounded-full animate-pulse"></div>
+            <p className="text-sm font-semibold uppercase text-[#77D4B4]">
               {subtitle}
             </p>
           </div>
-          
-          <h2 className="text-4xl sm:text-5xl font-bold text-[#00332D] mb-4 leading-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#00332D] mb-4">
             {title}
           </h2>
-          
-          <div className="w-24 h-1 bg-gradient-to-r from-[#77dDB4] to-[#00332D] mx-auto rounded-full"></div>
+          <div className="w-24 h-1 bg-gradient-to-r from-[#77D4B4] to-[#5BC9A8] mx-auto rounded-full"></div>
         </div>
 
         {/* Partneru grid vai paziņojums par trūkstošajiem partneriem */}
