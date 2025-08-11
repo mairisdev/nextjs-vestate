@@ -21,15 +21,16 @@ async function uploadToCloudinary(file: File, folder: string): Promise<string> {
     try {
       const buffer = Buffer.from(await file.arrayBuffer())
       const timestamp = Date.now()
+      const randomId = Math.random().toString(36).substring(2, 8)
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
       
       cloudinary.uploader.upload_stream(
         {
-          public_id: `${timestamp}-${safeFileName}`,
+          public_id: `${timestamp}-${randomId}-${safeFileName}`,
           folder: folder,
           resource_type: 'auto',
           transformation: [
-            { width: 1200, height: 800, crop: 'limit', quality: 'auto' }
+            { width: 1200, height: 800, crop: 'limit', quality: '85', format: 'auto' }
           ]
         },
         (error, result) => {
@@ -37,11 +38,13 @@ async function uploadToCloudinary(file: File, folder: string): Promise<string> {
             console.error('Cloudinary upload error:', error)
             reject(error)
           } else {
+            console.log('✅ File uploaded successfully:', result?.secure_url)
             resolve(result!.secure_url)
           }
         }
       ).end(buffer)
     } catch (error) {
+      console.error('Buffer processing error:', error)
       reject(error)
     }
   })
@@ -93,6 +96,8 @@ export async function POST(req: Request) {
     const metaTitle = formData.get("metaTitle") as string | null
     const metaDescription = formData.get("metaDescription") as string | null
 
+    console.log('📊 Starting content upload process...')
+
     // Handle tags
     const tags = tagsString ? 
       tagsString.split(",").map(tag => tag.trim()).filter(Boolean) : []
@@ -105,13 +110,20 @@ export async function POST(req: Request) {
     const featuredImageFile = formData.get("featuredImage") as File | null
     
     if (featuredImageFile && featuredImageFile.size > 0) {
-      console.log('📁 Uploading featured image to Cloudinary')
+      console.log(`📁 Uploading featured image (${Math.round(featuredImageFile.size / 1024)}KB) to Cloudinary`)
       
-      // Validējam faila izmēru (max 10MB)
-      if (featuredImageFile.size > 10 * 1024 * 1024) {
+      // Samazināts limits uz 3MB
+      if (featuredImageFile.size > 3 * 1024 * 1024) {
         return NextResponse.json({ 
-          error: "Galvenais attēls pārāk liels (max 10MB)" 
+          error: "Galvenais attēls pārāk liels (max 3MB)" 
         }, { status: 413 })
+      }
+      
+      // Validējam faila tipu
+      if (!featuredImageFile.type.startsWith('image/')) {
+        return NextResponse.json({ 
+          error: "Galvenais attēls nav derīgs attēla fails" 
+        }, { status: 400 })
       }
       
       try {
@@ -130,13 +142,20 @@ export async function POST(req: Request) {
     const videoFileUpload = formData.get("videoFile") as File | null
     
     if (videoFileUpload && videoFileUpload.size > 0) {
-      console.log('📁 Uploading video file to Cloudinary')
+      console.log(`📁 Uploading video file (${Math.round(videoFileUpload.size / 1024 / 1024)}MB) to Cloudinary`)
       
-      // Validējam faila izmēru (max 100MB video failiem)
-      if (videoFileUpload.size > 100 * 1024 * 1024) {
+      // Samazināts limits uz 30MB
+      if (videoFileUpload.size > 30 * 1024 * 1024) {
         return NextResponse.json({ 
-          error: "Video fails pārāk liels (max 100MB)" 
+          error: "Video fails pārāk liels (max 30MB)" 
         }, { status: 413 })
+      }
+      
+      // Validējam faila tipu
+      if (!videoFileUpload.type.startsWith('video/')) {
+        return NextResponse.json({ 
+          error: "Video fails nav derīgs video fails" 
+        }, { status: 400 })
       }
       
       try {
@@ -153,16 +172,41 @@ export async function POST(req: Request) {
     // Handle additional images upload to Cloudinary
     const additionalImages: string[] = []
     let imageIndex = 0
+    let totalAdditionalSize = 0
     
+    // Aprēķinām kopējo izmēru pirms upload
+    while (true) {
+      const imageFile = formData.get(`additionalImage${imageIndex}`) as File | null
+      if (!imageFile || imageFile.size === 0) break
+      totalAdditionalSize += imageFile.size
+      imageIndex++
+    }
+    
+    // Pārbaudām kopējo izmēru
+    if (totalAdditionalSize > 15 * 1024 * 1024) {
+      return NextResponse.json({ 
+        error: "Papildu attēli kopā pārāk lieli (max 15MB kopā)" 
+      }, { status: 413 })
+    }
+    
+    // Tagad upload
+    imageIndex = 0
     while (true) {
       const imageFile = formData.get(`additionalImage${imageIndex}`) as File | null
       if (!imageFile || imageFile.size === 0) break
       
-      console.log(`📁 Uploading additional image ${imageIndex + 1} to Cloudinary`)
+      console.log(`📁 Uploading additional image ${imageIndex + 1} (${Math.round(imageFile.size / 1024)}KB) to Cloudinary`)
       
-      // Validējam faila izmēru (max 10MB)
-      if (imageFile.size > 10 * 1024 * 1024) {
+      // Individuāls limits 3MB
+      if (imageFile.size > 3 * 1024 * 1024) {
         console.log(`❌ Additional image ${imageIndex + 1} too large, skipping`)
+        imageIndex++
+        continue
+      }
+      
+      // Validējam faila tipu
+      if (!imageFile.type.startsWith('image/')) {
+        console.log(`❌ Additional image ${imageIndex + 1} invalid type, skipping`)
         imageIndex++
         continue
       }
@@ -178,6 +222,8 @@ export async function POST(req: Request) {
       
       imageIndex++
     }
+
+    console.log(`📊 Upload summary: Featured: ${featuredImage ? '✅' : '❌'}, Video: ${videoFile ? '✅' : '❌'}, Additional: ${additionalImages.length}`)
 
     const data = {
       title,
@@ -205,6 +251,7 @@ export async function POST(req: Request) {
         where: { id },
         data
       })
+      console.log('✅ Content updated successfully')
     } else {
       // Create new content
       result = await prisma.content.create({
@@ -213,6 +260,7 @@ export async function POST(req: Request) {
           createdAt: new Date()
         }
       })
+      console.log('✅ Content created successfully')
     }
 
     return NextResponse.json(result)

@@ -96,21 +96,62 @@ export default function CreateContent() {
     setIsCreating(false)
   }
 
+  // Funkcija file size formatēšanai
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
   const handleFeaturedImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Validē izmēru pirms upload (3MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setAlert({ type: "error", message: `Galvenais attēls pārāk liels (${formatFileSize(file.size)}). Maksimums 5MB.` })
+        e.target.value = '' // Clear input
+        return
+      }
+      
+      // Validē faila tipu
+      if (!file.type.startsWith('image/')) {
+        setAlert({ type: "error", message: "Lūdzu, izvēlieties attēla failu" })
+        e.target.value = ''
+        return
+      }
+      
       updateContent(index, "featuredImage", file)
       const previewUrl = URL.createObjectURL(file)
       const newPreviews = [...featuredImagePreviews]
       newPreviews[index] = previewUrl
       setFeaturedImagePreviews(newPreviews)
+      
+      // Clear any previous errors
+      setAlert(null)
     }
   }
 
   const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Validē izmēru pirms upload (30MB)
+      if (file.size > 30 * 1024 * 1024) {
+        setAlert({ type: "error", message: `Video fails pārāk liels (${formatFileSize(file.size)}). Maksimums 30MB.` })
+        e.target.value = ''
+        return
+      }
+      
+      // Validē faila tipu
+      if (!file.type.startsWith('video/')) {
+        setAlert({ type: "error", message: "Lūdzu, izvēlieties video failu" })
+        e.target.value = ''
+        return
+      }
+      
       updateContent(index, "videoFile", file)
+      setAlert(null)
     }
   }
 
@@ -118,18 +159,53 @@ export default function CreateContent() {
     const files = Array.from(e.target.files || [])
     const currentAdditionalImages = contents[index].additionalImages
     
-    if (files.length + currentAdditionalImages.length > 10) {
-      setAlert({ type: "error", message: "Maksimums 10 papildu attēli" })
+    // Validē file count
+    if (files.length + currentAdditionalImages.length > 8) {
+      setAlert({ type: "error", message: "Maksimums 8 papildu attēli" })
+      e.target.value = ''
       return
     }
     
-    updateContent(index, "additionalImages", [...currentAdditionalImages, ...files])
+    // Validē katru failu
+    const validFiles: File[] = []
+    let totalSize = 0
     
-    const newPreviews = files.map(file => URL.createObjectURL(file))
+    for (const file of files) {
+      // Validē faila tipu
+      if (!file.type.startsWith('image/')) {
+        setAlert({ type: "error", message: `Fails "${file.name}" nav attēls` })
+        e.target.value = ''
+        return
+      }
+      
+      // Validē individuālo izmēru (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setAlert({ type: "error", message: `Attēls "${file.name}" pārāk liels (${formatFileSize(file.size)}). Maksimums 5MB katram.` })
+        e.target.value = ''
+        return
+      }
+      
+      validFiles.push(file)
+      totalSize += file.size
+    }
+    
+    // Aprēķinām kopējo izmēru ar esošajiem failiem
+    const existingSize = currentAdditionalImages.reduce((acc, file) => acc + file.size, 0)
+    if (totalSize + existingSize > 40 * 1024 * 1024) {
+      setAlert({ type: "error", message: `Papildu attēli kopā pārāk lieli (${formatFileSize(totalSize + existingSize)}). Maksimums 40MB kopā.` })
+      e.target.value = ''
+      return
+    }
+    
+    updateContent(index, "additionalImages", [...currentAdditionalImages, ...validFiles])
+    
+    const newPreviews = validFiles.map(file => URL.createObjectURL(file))
     const currentPreviews = additionalImagePreviews[index] || []
     const updatedPreviews = [...additionalImagePreviews]
     updatedPreviews[index] = [...currentPreviews, ...newPreviews]
     setAdditionalImagePreviews(updatedPreviews)
+    
+    setAlert(null)
   }
 
   const removeAdditionalImage = (contentIndex: number, imageIndex: number) => {
@@ -196,6 +272,14 @@ export default function CreateContent() {
       return
     }
 
+    // Aprēķini kopējo failu izmēru
+    let totalSize = 0
+    if (content.featuredImage) totalSize += content.featuredImage.size
+    if (content.videoFile) totalSize += content.videoFile.size
+    content.additionalImages.forEach(img => totalSize += img.size)
+    
+    console.log(`📊 Total upload size: ${formatFileSize(totalSize)}`)
+
     try {
       const formData = new FormData()
       
@@ -225,6 +309,8 @@ export default function CreateContent() {
       content.additionalImages.forEach((image, index) => {
         formData.append(`additionalImage${index}`, image)
       })
+
+      console.log('📤 Uploading content...')
 
       const res = await fetch("/api/content", {
         method: "POST",
@@ -275,7 +361,7 @@ export default function CreateContent() {
       </div>
 
       {alert && (
-        <AlertMessage type={alert.type} message={alert.message} />
+        <AlertMessage type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
       )}
 
       {/* Content table */}
@@ -321,7 +407,7 @@ export default function CreateContent() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {content.type === "EDUCATIONAL" ? "Izglītojošais" : "Ciemati"}
+                    {content.type === "EDUCATIONAL" ? "Izglītojošais" : content.type === "VILLAGES" ? "Ciemati" : "Blog"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -399,239 +485,262 @@ export default function CreateContent() {
                     <div>
                       <Label htmlFor="type">Satura tips</Label>
                       <select
-                        id="type"
-                        value={contents[editingIndex]?.type || "EDUCATIONAL"}
-                        onChange={(e) => updateContent(editingIndex!, "type", e.target.value as "EDUCATIONAL" | "VILLAGES" | "BLOG")}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="EDUCATIONAL">Izglītojošais saturs</option>
-                        <option value="VILLAGES">Ciemati</option>
-                        <option value="BLOG">Blog ieraksts</option>
-                      </select>
-                    </div>
+                       id="type"
+                       value={contents[editingIndex]?.type || "EDUCATIONAL"}
+                       onChange={(e) => updateContent(editingIndex!, "type", e.target.value as "EDUCATIONAL" | "VILLAGES" | "BLOG")}
+                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     >
+                       <option value="EDUCATIONAL">Izglītojošais saturs</option>
+                       <option value="VILLAGES">Ciemati</option>
+                       <option value="BLOG">Blog ieraksts</option>
+                     </select>
+                   </div>
 
-                    <div>
-                      <Label>Autors</Label>
-                      <Input
-                        value={contents[editingIndex].author}
-                        onChange={(e) => updateContent(editingIndex, "author", e.target.value)}
-                        placeholder="Autora vārds"
-                      />
-                    </div>
+                   <div>
+                     <Label>Autors</Label>
+                     <Input
+                       value={contents[editingIndex].author}
+                       onChange={(e) => updateContent(editingIndex, "author", e.target.value)}
+                       placeholder="Autora vārds"
+                     />
+                   </div>
 
-                    <div className="md:col-span-2">
-                      <Label>Īss apraksts *</Label>
-                      <Textarea
-                        value={contents[editingIndex].excerpt}
-                        onChange={(e) => updateContent(editingIndex, "excerpt", e.target.value)}
-                        placeholder="Īss apraksts, kas parādīsies sarakstā..."
-                        rows={3}
-                        required
-                      />
-                    </div>
+                   <div className="md:col-span-2">
+                     <Label>Īss apraksts *</Label>
+                     <Textarea
+                       value={contents[editingIndex].excerpt}
+                       onChange={(e) => updateContent(editingIndex, "excerpt", e.target.value)}
+                       placeholder="Īss apraksts, kas parādīsies sarakstā..."
+                       rows={3}
+                       required
+                     />
+                   </div>
 
-                    <div className="md:col-span-2">
-                      <Label>Tagi</Label>
-                      <Input
-                        value={contents[editingIndex].tags}
-                        onChange={(e) => updateContent(editingIndex, "tags", e.target.value)}
-                        placeholder="tags, atdalīti, ar, komatu"
-                      />
-                    </div>
-                  </div>
-                </div>
+                   <div className="md:col-span-2">
+                     <Label>Tagi</Label>
+                     <Input
+                       value={contents[editingIndex].tags}
+                       onChange={(e) => updateContent(editingIndex, "tags", e.target.value)}
+                       placeholder="tags, atdalīti, ar, komatu"
+                     />
+                   </div>
+                 </div>
+               </div>
 
-                {/* Galvenais saturs */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Galvenais saturs</h4>
-                  
-                  {/* Formatting toolbar */}
-                  <div className="flex flex-wrap gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<strong>", "</strong>")}>
-                      B
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<i>", "</i>")}>
-                      I
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<u>", "</u>")}>
-                      U
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h1>", "</h1>")}>
-                      H1
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h2>", "</h2>")}>
-                      H2
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h3>", "</h3>")}>
-                      H3
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h4>", "</h4>")}>
-                      H4
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h5>", "</h5>")}>
-                      H5
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h6>", "</h6>")}>
-                      H6
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<p>", "</p>")}>
-                      P
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertLink()}>
-                      Link
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertImage()}>
-                      Img
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<li>", "</li>")}>
-                      LI
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" onClick={() => insertText("<blockquote>", "</blockquote>")}>
-                      Quote
-                    </Button>
-                  </div>
+               {/* Galvenais saturs */}
+               <div className="space-y-4">
+                 <h4 className="font-medium text-gray-900">Galvenais saturs</h4>
+                 
+                 {/* Formatting toolbar */}
+                 <div className="flex flex-wrap gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<strong>", "</strong>")}>
+                     B
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<i>", "</i>")}>
+                     I
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<u>", "</u>")}>
+                     U
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h1>", "</h1>")}>
+                     H1
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h2>", "</h2>")}>
+                     H2
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h3>", "</h3>")}>
+                     H3
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h4>", "</h4>")}>
+                     H4
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h5>", "</h5>")}>
+                     H5
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<h6>", "</h6>")}>
+                     H6
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<p>", "</p>")}>
+                     P
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertLink()}>
+                     Link
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertImage()}>
+                     Img
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<li>", "</li>")}>
+                     LI
+                   </Button>
+                   <Button type="button" size="sm" variant="outline" onClick={() => insertText("<blockquote>", "</blockquote>")}>
+                     Quote
+                   </Button>
+                 </div>
 
-                  <textarea
-                    ref={contentRef}
-                    value={contents[editingIndex].content}
-                    onChange={(e) => updateContent(editingIndex, "content", e.target.value)}
-                    placeholder="Ieraksta saturs... Vari izmantot HTML tagus vai Markdown."
-                    rows={15}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                  />
-                  <p className="text-sm text-gray-500 mt-2">
-                    Atbalsta HTML un Markdown formatējumu. Izmanto toolbar pogas ātrai formatēšanai.
-                  </p>
-                </div>
+                 <textarea
+                   ref={contentRef}
+                   value={contents[editingIndex].content}
+                   onChange={(e) => updateContent(editingIndex, "content", e.target.value)}
+                   placeholder="Ieraksta saturs... Vari izmantot HTML tagus vai Markdown."
+                   rows={15}
+                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                 />
+                 <p className="text-sm text-gray-500 mt-2">
+                   Atbalsta HTML un Markdown formatējumu. Izmanto toolbar pogas ātrai formatēšanai.
+                 </p>
+               </div>
 
-                {/* Media section */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Mediji</h4>
-                  
-                  {/* Featured Image */}
-                  <div className="mb-6">
-                    <Label>Galvenais attēls</Label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFeaturedImageChange(e, editingIndex)}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    {featuredImagePreviews[editingIndex] && (
-                      <img
-                        src={featuredImagePreviews[editingIndex]!}
-                        alt="Galvenais attēls"
-                        className="w-32 h-32 object-cover rounded-lg border mt-2"
-                      />
-                    )}
-                  </div>
+               {/* Media section ar uzlabotām validācijām */}
+               <div className="space-y-4">
+                 <h4 className="font-medium text-gray-900">Mediji</h4>
+                 
+                 {/* Featured Image */}
+                 <div className="mb-6">
+                   <Label>Galvenais attēls (max 5MB)</Label>
+                   <input
+                     type="file"
+                     accept="image/*"
+                     onChange={(e) => handleFeaturedImageChange(e, editingIndex)}
+                     className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   />
+                   {contents[editingIndex].featuredImage && (
+                     <div className="mt-2 text-sm text-gray-600">
+                       📁 {contents[editingIndex].featuredImage!.name} ({formatFileSize(contents[editingIndex].featuredImage!.size)})
+                     </div>
+                   )}
+                   {featuredImagePreviews[editingIndex] && (
+                     <img
+                       src={featuredImagePreviews[editingIndex]!}
+                       alt="Galvenais attēls"
+                       className="w-32 h-32 object-cover rounded-lg border mt-2"
+                     />
+                   )}
+                 </div>
 
-                  {/* Video */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>YouTube video URL</Label>
-                      <Input
-                        type="url"
-                        value={contents[editingIndex].videoUrl}
-                        onChange={(e) => updateContent(editingIndex, "videoUrl", e.target.value)}
-                        placeholder="https://www.youtube.com/embed/..."
-                      />
-                    </div>
-                    <div>
-                      <Label>Video fails</Label>
-                      <input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => handleVideoFileChange(e, editingIndex)}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
+                 {/* Video */}
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div>
+                     <Label>YouTube video URL</Label>
+                     <Input
+                       type="url"
+                       value={contents[editingIndex].videoUrl}
+                       onChange={(e) => updateContent(editingIndex, "videoUrl", e.target.value)}
+                       placeholder="https://www.youtube.com/embed/..."
+                     />
+                   </div>
+                   <div>
+                     <Label>Video fails (max 30MB)</Label>
+                     <input
+                       type="file"
+                       accept="video/*"
+                       onChange={(e) => handleVideoFileChange(e, editingIndex)}
+                       className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     />
+                     {contents[editingIndex].videoFile && (
+                       <div className="mt-2 text-sm text-gray-600">
+                         🎥 {contents[editingIndex].videoFile!.name} ({formatFileSize(contents[editingIndex].videoFile!.size)})
+                       </div>
+                     )}
+                   </div>
+                 </div>
 
-                  {/* Additional Images */}
-                  <div>
-                    <Label>Papildu attēli (max 10)</Label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => handleAdditionalImagesChange(e, editingIndex)}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    {additionalImagePreviews[editingIndex] && additionalImagePreviews[editingIndex].length > 0 && (
-                      <div className="mt-3 grid grid-cols-4 gap-3">
-                        {additionalImagePreviews[editingIndex].map((preview, imageIndex) => (
-                          <div key={imageIndex} className="relative">
-                            <img
-                              src={preview}
-                              alt={`Papildu attēls ${imageIndex + 1}`}
-                              className="w-20 h-20 object-cover rounded-lg border"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeAdditionalImage(editingIndex, imageIndex)}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600"
-                            >
-                              <X className="w-3 h-3 mx-auto" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                 {/* Additional Images */}
+                 <div>
+                   <Label>Papildu attēli (max 8 faili, 5MB katrs, 40MB kopā)</Label>
+                   <input
+                     type="file"
+                     accept="image/*"
+                     multiple
+                     onChange={(e) => handleAdditionalImagesChange(e, editingIndex)}
+                     className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   />
+                   
+                   {/* File size summary */}
+                   {contents[editingIndex].additionalImages.length > 0 && (
+                     <div className="mt-2 text-sm text-gray-600">
+                       📊 {contents[editingIndex].additionalImages.length} faili, kopā: {formatFileSize(
+                         contents[editingIndex].additionalImages.reduce((acc, file) => acc + file.size, 0)
+                       )}
+                     </div>
+                   )}
+                   
+                   {additionalImagePreviews[editingIndex] && additionalImagePreviews[editingIndex].length > 0 && (
+                     <div className="mt-3 grid grid-cols-4 gap-3">
+                       {additionalImagePreviews[editingIndex].map((preview, imageIndex) => (
+                         <div key={imageIndex} className="relative">
+                           <img
+                             src={preview}
+                             alt={`Papildu attēls ${imageIndex + 1}`}
+                             className="w-20 h-20 object-cover rounded-lg border"
+                           />
+                           <button
+                             type="button"
+                             onClick={() => removeAdditionalImage(editingIndex, imageIndex)}
+                             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600 flex items-center justify-center"
+                           >
+                             <X className="w-3 h-3" />
+                           </button>
+                           <div className="absolute bottom-0 left-0 right-0 bg-black/75 text-white text-xs p-1 rounded-b-lg">
+                             {formatFileSize(contents[editingIndex].additionalImages[imageIndex]?.size || 0)}
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                   )}
+                 </div>
+               </div>
 
-                {/* SEO */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">SEO</h4>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <Label>Meta nosaukums</Label>
-                      <Input
-                        value={contents[editingIndex].metaTitle}
-                        onChange={(e) => updateContent(editingIndex, "metaTitle", e.target.value)}
-                        placeholder="SEO nosaukums (ja tukšs, izmanto galveno nosaukumu)"
-                      />
-                    </div>
-                    <div>
-                      <Label>Meta apraksts</Label>
-                      <Textarea
-                        value={contents[editingIndex].metaDescription}
-                        onChange={(e) => updateContent(editingIndex, "metaDescription", e.target.value)}
-                        placeholder="SEO apraksts meklētājprogrammām"
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                </div>
+               {/* SEO */}
+               <div className="space-y-4">
+                 <h4 className="font-medium text-gray-900">SEO</h4>
+                 <div className="grid grid-cols-1 gap-4">
+                   <div>
+                     <Label>Meta nosaukums</Label>
+                     <Input
+                       value={contents[editingIndex].metaTitle}
+                       onChange={(e) => updateContent(editingIndex, "metaTitle", e.target.value)}
+                       placeholder="SEO nosaukums (ja tukšs, izmanto galveno nosaukumu)"
+                     />
+                   </div>
+                   <div>
+                     <Label>Meta apraksts</Label>
+                     <Textarea
+                       value={contents[editingIndex].metaDescription}
+                       onChange={(e) => updateContent(editingIndex, "metaDescription", e.target.value)}
+                       placeholder="SEO apraksts meklētājprogrammām"
+                       rows={3}
+                     />
+                   </div>
+                 </div>
+               </div>
 
-                {/* Publikācijas opcijas */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Publikācija</h4>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={contents[editingIndex].published}
-                      onChange={(e) => updateContent(editingIndex, "published", e.target.checked)}
-                      id="published"
-                    />
-                    <Label htmlFor="published">Publicēt uzreiz</Label>
-                  </div>
-                </div>
-              </div>
+               {/* Publikācijas opcijas */}
+               <div className="space-y-4">
+                 <h4 className="font-medium text-gray-900">Publikācija</h4>
+                 <div className="flex items-center space-x-2">
+                   <input
+                     type="checkbox"
+                     checked={contents[editingIndex].published}
+                     onChange={(e) => updateContent(editingIndex, "published", e.target.checked)}
+                     id="published"
+                   />
+                   <Label htmlFor="published">Publicēt uzreiz</Label>
+                 </div>
+               </div>
+             </div>
 
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button variant="outline" onClick={() => cancelEdit(editingIndex)}>
-                  Atcelt
-                </Button>
-                <Button onClick={() => handleSave(editingIndex)} disabled={loading}>
-                  {loading ? "Saglabā..." : "Saglabāt"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+             <div className="flex justify-end space-x-3 pt-4 border-t">
+               <Button variant="outline" onClick={() => cancelEdit(editingIndex)}>
+                 Atcelt
+               </Button>
+               <Button onClick={() => handleSave(editingIndex)} disabled={loading}>
+                 {loading ? "Saglabā..." : "Saglabāt"}
+               </Button>
+             </div>
+           </div>
+         </div>
+       </div>
+     )}
+   </div>
+ )
 }
