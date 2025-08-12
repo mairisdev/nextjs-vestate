@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import AlertMessage from "./ui/alert-message"
 
 interface Quiz {
@@ -45,6 +45,8 @@ export default function ContactSection({ data, translations }: ContactSectionPro
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [alert, setAlert] = useState<{ type: "success" | "error"; message: string } | null>(null)
 
+  const alertRef = useRef<HTMLDivElement | null>(null)
+
   const quizOptions: Quiz[] = [
     { question: translations.quiz1 || "Cik ir 2 + 3?", answer: "5" },
     { question: translations.quiz2 || "Cik ir 4 - 1?", answer: "3" },
@@ -57,6 +59,12 @@ export default function ContactSection({ data, translations }: ContactSectionPro
     const random = quizOptions[Math.floor(Math.random() * quizOptions.length)]
     setQuiz(random)
   }, [translations])
+
+  useEffect(() => {
+    if (alert && alertRef.current) {
+      alertRef.current.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }, [alert])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -182,9 +190,42 @@ export default function ContactSection({ data, translations }: ContactSectionPro
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-2xl p-8 hover:shadow-3xl transition-shadow duration-300 border border-gray-100">
+
           {alert && (
-            <div className="mb-6">
-              <AlertMessage type={alert.type} message={alert.message} />
+            <div
+              ref={alertRef}
+              role="status"
+              aria-live="polite"
+              className={`mb-6 rounded-2xl border-2 p-4 sm:p-5 shadow-lg ${
+                alert.type === "success"
+                  ? "bg-green-50 border-green-300 text-green-900"
+                  : "bg-red-50 border-red-300 text-red-900"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5">
+                  {alert.type === "success" ? (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M4.93 4.93l14.14 14.14M12 3a9 9 0 100 18 9 9 0 000-18z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-base sm:text-lg leading-snug">{alert.message}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAlert(null)}
+                  className="ml-2 inline-flex items-center justify-center rounded-md px-2 py-1 text-sm font-medium opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  aria-label="Aizvērt paziņojumu"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           )}
 
@@ -306,6 +347,8 @@ export default function ContactSection({ data, translations }: ContactSectionPro
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#77dDB4]/20 to-[#77dDB4]/10 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
           </button>
+
+
         </form>
       </div>
     </section>
