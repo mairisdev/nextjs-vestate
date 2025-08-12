@@ -41,7 +41,7 @@ interface ContactSectionProps {
 }
 
 export default function ContactSection({ data, translations }: ContactSectionProps) {
-  const [form, setForm] = useState({ name: "", email: "", message: "", answer: "" })
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "", answer: "" })
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [alert, setAlert] = useState<{ type: "success" | "error"; message: string } | null>(null)
 
@@ -79,13 +79,14 @@ export default function ContactSection({ data, translations }: ContactSectionPro
         body: JSON.stringify({
           name: form.name,
           email: form.email,
+          phone: form.phone,
           message: form.message,
         }),
       })
 
       if (res.ok) {
         setAlert({ type: "success", message: translations.successMessage })
-        setForm({ name: "", email: "", message: "", answer: "" })
+        setForm({ name: "", email: "", phone: "", message: "", answer: "" })
         setQuiz(quizOptions[Math.floor(Math.random() * quizOptions.length)])
       } else {
         throw new Error()
@@ -226,6 +227,22 @@ export default function ContactSection({ data, translations }: ContactSectionPro
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-[#77dDB4] transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="relative group">
+              <input
+                type="tel"
+                placeholder={translations.formPhonePlaceholder || "Telefona numurs"}
+                className="w-full p-4 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#77dDB4] focus:ring-4 focus:ring-[#77dDB4]/20 transition-all duration-300 bg-gray-50/50 hover:bg-white group-hover:border-[#77dDB4]/50"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                required
+              />
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-[#77dDB4] transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
               </div>
             </div>

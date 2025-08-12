@@ -43,9 +43,9 @@ export async function POST(req: Request) {
     }
 
     // Ja ir kontaktformas ziņa
-    const { name, email, message } = body
+    const { name, email, phone, message } = body
 
-    if (!name || !email || !message) {
+    if (!name || !email || !phone || !message) {
       return new NextResponse("Nepilnīgi dati", { status: 400 })
     }
 
@@ -66,6 +66,7 @@ export async function POST(req: Request) {
       html: `
         <p><strong>Vārds:</strong> ${name}</p>
         <p><strong>E-pasts:</strong> ${email}</p>
+        <p><strong>Tālrunis:</strong> ${phone}</p>
         <p><strong>Ziņojums:</strong></p>
         <p>${message.replace(/\n/g, "<br>")}</p>
       `,
