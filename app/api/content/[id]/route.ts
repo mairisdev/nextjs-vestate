@@ -1,81 +1,9 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { v2 as cloudinary } from 'cloudinary'
-
-// Cloudinary konfigurācija
-if (process.env.CLOUDINARY_URL) {
-  cloudinary.config(process.env.CLOUDINARY_URL)
-} else {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-}
+import { uploadImage, deleteImage } from '@/lib/s3'
 
 async function uploadToCloudinary(file: File, folder: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const buffer = Buffer.from(await file.arrayBuffer())
-      const timestamp = Date.now()
-      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-      
-      cloudinary.uploader.upload_stream(
-        {
-          public_id: `${timestamp}-${safeFileName}`,
-          folder: folder,
-          resource_type: 'auto',
-          transformation: file.type.startsWith('image/') ? [
-            { quality: 'auto:good', format: 'auto' }
-          ] : undefined
-        },
-        (error, result) => {
-          if (error) {
-            console.error('Cloudinary upload error:', error)
-            reject(error)
-          } else {
-            resolve(result!.secure_url)
-          }
-        }
-      ).end(buffer)
-    } catch (error) {
-      reject(error)
-    }
-  })
-}
-
-function getCloudinaryPublicId(url: string): string | null {
-  try {
-    if (!url.includes('cloudinary.com')) return null
-    
-    const parts = url.split('/')
-    const versionIndex = parts.findIndex(part => part.startsWith('v'))
-    
-    if (versionIndex !== -1 && versionIndex < parts.length - 1) {
-      const fileName = parts[versionIndex + 1]
-      return fileName.split('.')[0]
-    }
-    
-    const fileName = parts[parts.length - 1]
-    return fileName.split('.')[0]
-  } catch (error) {
-    console.error('Error extracting public ID from URL:', error)
-    return null
-  }
-}
-
-async function deleteFromCloudinary(publicId: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.destroy(publicId, (error, result) => {
-      if (error) {
-        console.error('Cloudinary delete error:', error)
-        reject(error)
-      } else {
-        console.log('Cloudinary delete result:', result)
-        resolve()
-      }
-    })
-  })
+  return uploadImage(file, folder)
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -150,16 +78,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     let videoFile = existingVideoFile
     let additionalImages: string[] = [...existingAdditionalImages]
 
-    // Delete marked files from Cloudinary
+    // Delete marked files from S3
     for (const urlToDelete of imagesToDelete) {
       try {
-        const publicId = getCloudinaryPublicId(urlToDelete)
-        if (publicId) {
-          await deleteFromCloudinary(publicId)
-          console.log(`✅ Deleted from Cloudinary: ${publicId}`)
-        }
+        await deleteImage(urlToDelete)
+        console.log(`✅ Deleted from S3: ${urlToDelete}`)
       } catch (deleteError) {
-        console.error(`❌ Error deleting file from Cloudinary: ${urlToDelete}`, deleteError)
+        console.error(`❌ Error deleting file from S3: ${urlToDelete}`, deleteError)
       }
     }
 
@@ -264,32 +189,29 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       return NextResponse.json({ error: "Saturs nav atrasts" }, { status: 404 })
     }
 
-    const cloudinaryUrls: string[] = []
-    
-    if (content.featuredImage && content.featuredImage.includes('cloudinary.com')) {
-      cloudinaryUrls.push(content.featuredImage)
+    const urlsToDelete: string[] = []
+
+    if (content.featuredImage && typeof content.featuredImage === 'string' && content.featuredImage.startsWith('http')) {
+      urlsToDelete.push(content.featuredImage)
     }
-    
-    if (content.videoFile && content.videoFile.includes('cloudinary.com')) {
-      cloudinaryUrls.push(content.videoFile)
+
+    if (content.videoFile && typeof content.videoFile === 'string' && content.videoFile.startsWith('http')) {
+      urlsToDelete.push(content.videoFile)
     }
-    
+
     if (content.images && content.images.length > 0) {
       content.images.forEach(imageUrl => {
-        if (imageUrl.includes('cloudinary.com')) {
-          cloudinaryUrls.push(imageUrl)
+        if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
+          urlsToDelete.push(imageUrl)
         }
       })
     }
 
-    for (const cloudinaryUrl of cloudinaryUrls) {
+    for (const url of urlsToDelete) {
       try {
-        const publicId = getCloudinaryPublicId(cloudinaryUrl)
-        if (publicId) {
-          await deleteFromCloudinary(publicId)
-        }
+        await deleteImage(url)
       } catch (fileError) {
-        console.error(`❌ Error deleting file from Cloudinary: ${cloudinaryUrl}`, fileError)
+        console.error(`❌ Error deleting file from S3: ${url}`, fileError)
       }
     }
 
@@ -300,7 +222,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     return NextResponse.json({ 
       success: true, 
       message: "Saturs dzēsts veiksmīgi",
-      deletedFiles: cloudinaryUrls.length
+      deletedFiles: urlsToDelete.length
     })
   } catch (error) {
     console.error("[CONTENT_DELETE]", error)

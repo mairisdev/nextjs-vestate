@@ -1,19 +1,8 @@
 // app/api/admin/properties/[id]/route.ts
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
-import { v2 as cloudinary } from 'cloudinary'
+import { uploadImage, deleteImage } from '@/lib/s3'
 import { PropertyStatus, PropertyVisibility } from "@prisma/client"
-
-// Cloudinary konfigurācija
-if (process.env.CLOUDINARY_URL) {
-  cloudinary.config(process.env.CLOUDINARY_URL)
-} else {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-}
 
 // Helper funkcija slug izveidošanai
 function createSlug(text: string): string {
@@ -38,71 +27,9 @@ function createSlug(text: string): string {
     .trim()
 }
 
-// Cloudinary upload funkcija
+// Attēla augšupielādes funkcija
 async function uploadToCloudinary(file: File, publicId: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const buffer = Buffer.from(await file.arrayBuffer())
-      
-      cloudinary.uploader.upload_stream(
-        {
-          public_id: publicId,
-          folder: 'properties',
-          resource_type: 'auto',
-          transformation: [
-            { width: 1200, height: 800, crop: 'fill', quality: 'auto' }
-          ]
-        },
-        (error, result) => {
-          if (error) {
-            console.error('Cloudinary upload error:', error)
-            reject(error)
-          } else {
-            resolve(result!.secure_url)
-          }
-        }
-      ).end(buffer)
-    } catch (error) {
-      reject(error)
-    }
-  })
-}
-
-// Cloudinary delete funkcija
-async function deleteFromCloudinary(publicId: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.destroy(publicId, (error, result) => {
-      if (error) {
-        console.error('Cloudinary delete error:', error)
-        reject(error)
-      } else {
-        console.log('Cloudinary delete result:', result)
-        resolve()
-      }
-    })
-  })
-}
-
-// Funkcija public ID iegūšanai no Cloudinary URL
-function getPublicIdFromUrl(url: string): string | null {
-  try {
-    if (!url.includes('cloudinary.com')) return null
-    
-    const parts = url.split('/')
-    const versionIndex = parts.findIndex(part => part.startsWith('v'))
-    
-    if (versionIndex !== -1 && versionIndex < parts.length - 1) {
-      const fileName = parts[versionIndex + 1]
-      return `properties/${fileName.split('.')[0]}`
-    }
-    
-    // Fallback - mēģinām iegūt no faila nosaukuma
-    const fileName = parts[parts.length - 1]
-    return `properties/${fileName.split('.')[0]}`
-  } catch (error) {
-    console.error('Error extracting public ID from URL:', error)
-    return null
-  }
+  return uploadImage(file, 'properties', { publicId })
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -199,16 +126,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Kategorija neeksistē" }, { status: 400 })
     }
 
-    // Delete images from Cloudinary that are marked for deletion
+    // Delete images from S3 that are marked for deletion
     for (const imageUrl of imagesToDelete) {
       try {
-        const publicId = getPublicIdFromUrl(imageUrl)
-        if (publicId) {
-          await deleteFromCloudinary(publicId)
-          console.log('Deleted from Cloudinary:', publicId)
-        }
+        await deleteImage(imageUrl)
+        console.log('Deleted from S3:', imageUrl)
       } catch (error) {
-        console.error('Failed to delete from Cloudinary:', imageUrl, error)
+        console.error('Failed to delete from S3:', imageUrl, error)
         // Continue even if deletion fails
       }
     }
@@ -218,7 +142,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const newMainImageFile = formData.get("mainImage") as File | null
     
     if (newMainImageFile && newMainImageFile.size > 0) {
-      console.log('Uploading new main image to Cloudinary')
+      console.log('Uploading new main image to S3')
       
       // Check file size
       if (newMainImageFile.size > 10 * 1024 * 1024) {
@@ -237,14 +161,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         
         // Delete old main image if it exists and is different
         if (currentMainImage && currentMainImage !== finalMainImage) {
-          const oldPublicId = getPublicIdFromUrl(currentMainImage)
-          if (oldPublicId) {
-            try {
-              await deleteFromCloudinary(oldPublicId)
-              console.log('Old main image deleted from Cloudinary')
-            } catch (error) {
-              console.error('Failed to delete old main image:', error)
-            }
+          try {
+            await deleteImage(currentMainImage)
+            console.log('Old main image deleted from S3')
+          } catch (error) {
+            console.error('Failed to delete old main image:', error)
           }
         }
       } catch (uploadError) {
@@ -263,7 +184,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       const additionalImageFile = formData.get(`additionalImage${imageIndex}`) as File | null
       if (!additionalImageFile || additionalImageFile.size === 0) break
 
-      console.log(`Uploading additional image ${imageIndex + 1} to Cloudinary`)
+      console.log(`Uploading additional image ${imageIndex + 1} to S3`)
       
       // Check file size
       if (additionalImageFile.size > 10 * 1024 * 1024) {
@@ -349,20 +270,17 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       return NextResponse.json({ error: "Īpašums nav atrasts" }, { status: 404 })
     }
 
-    // Delete images from Cloudinary
+    // Delete images from S3
     const imagesToDelete = []
     if (property.mainImage) imagesToDelete.push(property.mainImage)
     if (property.images) imagesToDelete.push(...property.images)
 
     for (const imageUrl of imagesToDelete) {
       try {
-        const publicId = getPublicIdFromUrl(imageUrl)
-        if (publicId) {
-          await deleteFromCloudinary(publicId)
-          console.log('Deleted from Cloudinary:', publicId)
-        }
+        await deleteImage(imageUrl)
+        console.log('Deleted from S3:', imageUrl)
       } catch (error) {
-        console.error('Failed to delete from Cloudinary:', imageUrl, error)
+        console.error('Failed to delete from S3:', imageUrl, error)
         // Continue even if deletion fails
       }
     }

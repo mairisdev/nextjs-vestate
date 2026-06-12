@@ -82,7 +82,6 @@ export default function PropertyImageGallery({ images, title, videoUrl, mainImag
     console.log('🖼️ Image processing:', {
       input: imagePath,
       output: url,
-      isCloudinary: imagePath?.includes('cloudinary.com')
     })
     return url || '/placeholder-property.jpg'
   }

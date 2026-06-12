@@ -72,13 +72,13 @@ export async function generateMetadata({ params }: BlogContentPageProps) {
 
   if (!content) {
     return {
-      title: "Blog ieraksts nav atrasts | Vestate",
+      title: "Blog ieraksts nav atrasts | Vivaestate",
       description: "Meklētais blog ieraksts nav atrasts."
     }
   }
 
   return {
-    title: content.metaTitle || `${content.title} | Vestate`,
+    title: content.metaTitle || `${content.title} | Vivaestate`,
     description: content.metaDescription || content.excerpt,
     openGraph: {
       title: content.title,
@@ -161,7 +161,7 @@ export default async function BlogContentPage({ params }: BlogContentPageProps) 
           <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 mb-8">
             <div className="flex items-center">
               <User className="w-4 h-4 mr-2" />
-              {content.author || "Vestate"}
+              {content.author || "Vivaestate"}
             </div>
             {content.publishedAt && (
               <div className="flex items-center">
@@ -314,7 +314,7 @@ export default async function BlogContentPage({ params }: BlogContentPageProps) 
                   <div className="p-6">
                     <div className="flex items-center text-sm text-gray-500 mb-3">
                       <User className="w-4 h-4 mr-2" />
-                      {article.author || "Vestate"}
+                      {article.author || "Vivaestate"}
                       {article.publishedAt && (
                         <>
                           <span className="mx-2">•</span>

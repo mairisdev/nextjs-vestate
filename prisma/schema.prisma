@@ -3,8 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Supabase: pooled savienojums (PgBouncer, ports 6543) izpildlaikam
+  url       = env("DATABASE_URL")
+  // Supabase: tiešais savienojums (ports 5432) migrācijām
+  directUrl = env("DIRECT_URL")
 }
 
 model AccessRequest {

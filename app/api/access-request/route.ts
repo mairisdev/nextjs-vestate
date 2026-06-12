@@ -25,7 +25,7 @@ async function sendVerificationEmail(to: string, code: string) {
     subject: "Apstiprini piekļuvi – Privātie sludinājumi",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #00332D; text-align: center;">Vestate - Privāto sludinājumu piekļuve</h2>
+        <h2 style="color: #00332D; text-align: center;">Vivaestate - Privāto sludinājumu piekļuve</h2>
         <p>Sveiki!</p>
         <p>Jūs pieprasījāt piekļuvi privātajiem īpašumu sludinājumiem. Lūdzu, ievadiet šo kodu, lai apstiprinātu piekļuvi:</p>
         <div style="text-align: center; margin: 30px 0;">
@@ -36,8 +36,8 @@ async function sendVerificationEmail(to: string, code: string) {
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
         <p style="color: #666; font-size: 12px;">
           Ar cieņu,<br />
-          <strong>Vestate komanda</strong><br />
-          <a href="mailto:info@vestate.lv">info@vestate.lv</a>
+          <strong>Vivaestate komanda</strong><br />
+          <a href="mailto:info@vivaestate.lv">info@vivaestate.lv</a>
         </p>
       </div>
     `,

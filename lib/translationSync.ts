@@ -624,7 +624,7 @@ export async function syncFooterSectionTranslations(footerData: any) {
 
   // Statiskās atslēgas footer
   const staticKeys = {
-    defaultCompanyName: footerData.companyName || "Vestate",
+    defaultCompanyName: footerData.companyName || "Vivaestate",
     defaultDescription: footerData.description || "Nekustamo īpašumu pārdošana un konsultācijas",
     sitemapTitle: "Lapas karte",
     servicesTitle: "Pakalpojumi",
@@ -637,7 +637,7 @@ export async function syncFooterSectionTranslations(footerData: any) {
     rentalService: "Noma un izīrēšana",
     consultationService: "Konsultācijas",
     evaluationService: "Vērtējumi",
-    copyrightText: footerData.copyrightText || "© 2024 Vestate. Visas tiesības aizsargātas.",
+    copyrightText: footerData.copyrightText || "© 2026 Vivaestate. Visas tiesības aizsargātas.",
     developmentText: " Izstrāde: ",
     defaultDeveloperName: footerData.developerName || "Izstrādātājs",
   }
@@ -689,7 +689,7 @@ export async function syncPropertyCategoriesTranslations(categories: any[]) {
   const staticKeys = {
     pageTitle: "Īpašumu Kategorijas",
     pageSubtitle: "Atrodiet savu ideālo īpašumu pie mums!",
-    pageDescription: "VESTATE ĪPAŠUMU KATEGORIJAS",
+    pageDescription: "VIVAESTATE ĪPAŠUMU KATEGORIJAS",
     propertiesCountText: "īpašumi",
     noPropertiesText: "Nav īpašumu",
     viewCategoryButton: "Skatīt kategoriju",

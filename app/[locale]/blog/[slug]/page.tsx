@@ -79,7 +79,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 mb-8">
             <div className="flex items-center">
               <User className="w-4 h-4 mr-2" />
-              {"Vestate"}
+              {"Vivaestate"}
             </div>
             {post.date && (
               <div className="flex items-center">

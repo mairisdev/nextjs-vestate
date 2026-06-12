@@ -119,7 +119,7 @@ export default async function VillageContentPage({ params }: VillagePageProps) {
           <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 mb-8">
             <div className="flex items-center">
               <User className="w-4 h-4 mr-2" />
-              {content.author || "Vestate"}
+              {content.author || "Vivaestate"}
             </div>
             {content.publishedAt && (
               <div className="flex items-center">
@@ -263,13 +263,13 @@ export async function generateMetadata({ params }: VillagePageProps) {
 
   if (!content) {
     return {
-      title: "Ciemats nav atrasts | Vestate",
+      title: "Ciemats nav atrasts | Vivaestate",
       description: "Meklētais ciemats nav atrasts."
     }
   }
 
   return {
-    title: content.metaTitle || `${content.title} | Vestate`,
+    title: content.metaTitle || `${content.title} | Vivaestate`,
     description: content.metaDescription || content.excerpt,
     openGraph: {
       title: content.title,

@@ -16,8 +16,21 @@ import HeroSlider from '../components/server/HeroSliderServer'
 import { ContactSectionServer, FooterSectionServer } from '../components/server/ContactFooterServer'
 import NavbarServer from '../components/server/NavbarServer'
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { setRequestLocale } from 'next-intl/server'
 
-export default function Home() {
+// ISR: lapas saturs mainās tikai caur admin paneli, tāpēc to ģenerējam statiski
+// un atjaunojam ik pēc 5 minūtēm. Tas novērš ~30 DB pieprasījumus katrā apmeklējumā
+// (admin izmaiņas parādās ≤5 min laikā).
+export const revalidate = 300
+
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  // Ieslēdz statisko renderēšanu next-intl serverkomponentiem
+  setRequestLocale(locale)
   return (
     <>
       <SpeedInsights/>

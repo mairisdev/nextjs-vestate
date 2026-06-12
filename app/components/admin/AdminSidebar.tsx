@@ -54,7 +54,7 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-gray-100">
       <aside className="w-80 bg-white border-r border-gray-200 p-6 overflow-y-auto shadow-sm">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-[#00332D]">Vestate CMS</h1>
+          <h1 className="text-2xl font-bold text-[#00332D]">Vivaestate CMS</h1>
         </div>
         
         <nav className="space-y-1 mb-8">

@@ -10,8 +10,8 @@ const montserrat = Montserrat({
 })
 
 export const metadata = {
-  title: "Pieslēgšanās - Vestate",
-  description: "Pieslēgšanās Vestate admin panelim",
+  title: "Pieslēgšanās - Vivaestate",
+  description: "Pieslēgšanās Vivaestate admin panelim",
 }
 
 export default function SignInLayout({

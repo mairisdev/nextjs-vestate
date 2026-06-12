@@ -31,8 +31,8 @@ export default function PropertyContact({
   }
 
   const phoneNumber = agent?.phone || "+37128446677"
-  const agentEmail = agent?.email || "info@vestate.lv"
-  const agentName = agent ? `${agent.firstName || ''} ${agent.lastName || ''}`.trim() : 'Vestate'
+  const agentEmail = agent?.email || "info@vivaestate.lv"
+  const agentName = agent ? `${agent.firstName || ''} ${agent.lastName || ''}`.trim() : 'Vivaestate'
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm sticky top-8">

@@ -1,48 +1,11 @@
 import { NextResponse, NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { v2 as cloudinary } from 'cloudinary'
+import { uploadImage } from '@/lib/s3'
 import { syncAgentTranslations } from "@/lib/translationSync"
 
-if (process.env.CLOUDINARY_URL) {
-  cloudinary.config(process.env.CLOUDINARY_URL)
-} else {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-}
-
-// Cloudinary upload funkcija
 async function uploadToCloudinary(file: File, folder: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const buffer = Buffer.from(await file.arrayBuffer())
-      const timestamp = Date.now()
-      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-      
-      cloudinary.uploader.upload_stream(
-        {
-          public_id: `${timestamp}-${safeFileName}`,
-          folder: folder,
-          resource_type: 'auto',
-          transformation: [
-            { width: 400, height: 400, crop: 'fill', quality: 'auto' }
-          ]
-        },
-        (error, result) => {
-          if (error) {
-            console.error('Cloudinary upload error:', error)
-            reject(error)
-          } else {
-            resolve(result!.secure_url)
-          }
-        }
-      ).end(buffer)
-    } catch (error) {
-      reject(error)
-    }
-  })
+  // Augšupielāde uz S3 (konvertē uz webp)
+  return uploadImage(file, folder)
 }
 
 export async function GET() {
@@ -102,7 +65,7 @@ export async function POST(req: NextRequest) {
           name: agent.name,
           title: agent.title,
           phone: agent.phone,
-          email: agent.email || `${agent.name.toLowerCase().replace(/\s+/g, '.')}@vestate.lv`,
+          email: agent.email || `${agent.name.toLowerCase().replace(/\s+/g, '.')}@vivaestate.lv`,
           image: imageUrl,
         },
         include: {

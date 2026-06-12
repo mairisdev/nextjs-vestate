@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     }
 
     const transporter = nodemailer.createTransport({
-      host: "mail.vestate.lv",
+      host: "mail.vivaestate.lv",
       port: 465,
       secure: true,
       auth: {
@@ -60,8 +60,8 @@ export async function POST(req: Request) {
     })
 
     await transporter.sendMail({
-      from: `"Vestate.lv" <${process.env.SMTP_FROM}>`,
-      to: "info@vestate.lv",
+      from: `"Vivaestate.lv" <${process.env.SMTP_FROM}>`,
+      to: "info@vivaestate.lv",
       subject: `Jauna ziņa no ${name}`,
       html: `
         <p><strong>Vārds:</strong> ${name}</p>

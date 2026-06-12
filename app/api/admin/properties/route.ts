@@ -1,19 +1,8 @@
 // app/api/admin/properties/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
-import { v2 as cloudinary } from 'cloudinary'
+import { uploadImage } from '@/lib/s3'
 import { PropertyStatus, PropertyVisibility } from "@prisma/client"
-
-// Cloudinary konfigurācija
-if (process.env.CLOUDINARY_URL) {
-  cloudinary.config(process.env.CLOUDINARY_URL)
-} else {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-}
 
 // Helper funkcija slug izveidošanai
 function createSlug(text: string): string {
@@ -46,30 +35,9 @@ function logError(stage: string, error: any, context?: any) {
   }
 }
 
-// Cloudinary upload funkcija
+// Augšupielāde uz S3 (konvertē uz webp)
 async function uploadToCloudinary(file: File, publicId: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    const buffer = Buffer.from(await file.arrayBuffer())
-    
-    cloudinary.uploader.upload_stream(
-      {
-        public_id: publicId,
-        folder: 'properties',
-        resource_type: 'auto',
-        transformation: [
-          { width: 1200, height: 800, crop: 'fill', quality: 'auto' }
-        ]
-      },
-      (error, result) => {
-        if (error) {
-          console.error('Cloudinary upload error:', error)
-          reject(error)
-        } else {
-          resolve(result!.secure_url)
-        }
-      }
-    ).end(buffer)
-  })
+  return uploadImage(file, 'properties', { publicId })
 }
 
 export async function GET() {

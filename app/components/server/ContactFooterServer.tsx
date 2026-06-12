@@ -212,7 +212,7 @@ export async function FooterSectionServer() {
       try {
         return t('defaultCompanyName');
       } catch {
-        return "Vestate";
+        return "Vivaestate";
       }
     })(),
     defaultDescription: (() => {
@@ -303,7 +303,7 @@ export async function FooterSectionServer() {
       try {
         return t('copyrightText');
       } catch {
-        return footerData?.copyrightText || "© 2024 Vestate. Visas tiesības aizsargātas.";
+        return footerData?.copyrightText || "© 2026 Vivaestate. Visas tiesības aizsargātas.";
       }
     })(),
     developmentText: (() => {

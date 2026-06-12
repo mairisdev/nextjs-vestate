@@ -27,10 +27,12 @@ export default async function PropertyCategoriesPage() {
   // Ielādējam tulkojumus
   const t = await getTranslations("PropertyCategories")
 
-  // Drošā tulkojumu funkcija
+  // Drošā tulkojumu funkcija — ja tulkojuma atslēga neeksistē, next-intl
+  // atgriež pašu atslēgu (nevis met kļūdu), tāpēc izmantojam t.has(), lai
+  // vienmēr parādītu fallback tekstu, nevis "pageTitle" u.tml. atslēgas.
   const safeTranslation = (key: string, fallback: string): string => {
     try {
-      return t(key)
+      return t.has(key) ? t(key) : fallback
     } catch {
       return fallback
     }
@@ -73,7 +75,7 @@ export default async function PropertyCategoriesPage() {
         <div className="text-center mb-16">
           <div className="inline-block px-4 py-2 bg-[#77D4B4]/10 rounded-full mb-6">
             <span className="text-[#00332D] font-medium text-sm">
-              {safeTranslation('pageDescription', 'VESTATE ĪPAŠUMU KATEGORIJAS')}
+              {safeTranslation('pageDescription', 'VIVAESTATE ĪPAŠUMU KATEGORIJAS')}
             </span>
           </div>
           

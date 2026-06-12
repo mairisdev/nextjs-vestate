@@ -38,7 +38,7 @@ export default function NavbarClient({ data, translations }: NavbarClientProps) 
           {data.logoUrl ? (
             <img
               src={`/uploads/navigation/${data.logoUrl}`}
-              alt={data.logoAlt || "Vestate logo"}
+              alt={data.logoAlt || "Vivaestate logo"}
               className="w-auto h-16 md:h-16 lg:h-20 object-contain"
             />
           ) : (

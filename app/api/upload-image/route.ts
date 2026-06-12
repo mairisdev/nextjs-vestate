@@ -1,92 +1,10 @@
 // app/api/upload-image/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { v2 as cloudinary } from 'cloudinary'
+import { uploadImage } from '@/lib/s3'
 
-// Cloudinary konfigurācija
-if (process.env.CLOUDINARY_URL) {
-  cloudinary.config(process.env.CLOUDINARY_URL)
-} else {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-}
-
-// Improved transformations based on usage context
-function getTransformationForType(type: string) {
-  switch (type) {
-    case 'second-section':
-      // Second section - preserve aspect ratio, don't crop content
-      return [
-        { width: 800, height: 600, crop: 'limit', quality: 'auto', format: 'auto' }
-      ]
-    case 'first-section':
-      // First section background - can be cropped to fit
-      return [
-        { width: 1920, height: 1080, crop: 'fill', quality: 'auto', format: 'auto' }
-      ]
-    case 'sixth-section':
-    case 'seven-section':
-      // Full-screen background sections - maintain high quality
-      return [
-        { width: 1920, height: 1080, crop: 'limit', quality: '90', format: 'auto' }
-      ]
-    case 'slider':
-      // Slider images - can be cropped to fit aspect ratio
-      return [
-        { width: 1920, height: 1080, crop: 'fill', quality: 'auto', format: 'auto' }
-      ]
-    case 'why-choose-us':
-      // Slider images - can be cropped to fit aspect ratio
-      return [
-        { width: 1200, height: 800, crop: 'limit', quality: 'auto', format: 'auto' }
-      ]
-    case 'sold-properties':
-      return [
-        { width: 1200, height: 800, crop: 'limit', quality: 'auto', format: 'auto' }
-      ]
-    default:
-      // Default - preserve aspect ratio
-      return [
-        { width: 1200, height: 800, crop: 'limit', quality: 'auto', format: 'auto' }
-      ]
-  }
-}
-
-// Cloudinary upload funkcija ar uzlabotām transformācijām
 async function uploadToCloudinary(file: File, folder: string, publicId: string, type: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const buffer = Buffer.from(await file.arrayBuffer())
-      
-      // Get appropriate transformation based on type
-      const transformation = getTransformationForType(type)
-      
-      console.log(`📸 Uploading ${type} with transformation:`, transformation)
-      
-      cloudinary.uploader.upload_stream(
-        {
-          public_id: publicId,
-          folder: folder,
-          resource_type: 'auto',
-          transformation: transformation
-        },
-        (error, result) => {
-          if (error) {
-            console.error('Cloudinary upload error:', error)
-            reject(error)
-          } else {
-            console.log('Cloudinary upload success:', result?.secure_url)
-            resolve(result!.secure_url)
-          }
-        }
-      ).end(buffer)
-    } catch (error) {
-      console.error('Buffer processing error:', error)
-      reject(error)
-    }
-  })
+  // Augšupielāde uz S3 (konvertē uz webp)
+  return uploadImage(file, folder, { publicId })
 }
 
 export async function POST(req: NextRequest) {
@@ -126,42 +44,41 @@ export async function POST(req: NextRequest) {
     const timestamp = Date.now()
     const publicId = `${safeTitle}-${timestamp}`
 
-    // Noteikt Cloudinary mapi atkarībā no veida
-    let cloudinaryFolder: string
+    // Noteikt mapi atkarībā no veida
+    let folder: string
     switch (type) {
       case 'first-section':
-        cloudinaryFolder = 'website/first-section'
+        folder = 'website/first-section'
         break
       case 'second-section':
-        cloudinaryFolder = 'website/second-section'
+        folder = 'website/second-section'
         break
       case 'sixth-section':
-        cloudinaryFolder = 'website/sixth-section'  
+        folder = 'website/sixth-section'
         break
       case 'seven-section':
-        cloudinaryFolder = 'website/seven-section'
+        folder = 'website/seven-section'
         break
       case 'slider':
-        cloudinaryFolder = 'website/slider'
+        folder = 'website/slider'
         break
       case 'why-choose-us':
-        cloudinaryFolder = 'website/why-choose-us'
+        folder = 'website/why-choose-us'
         break
       default:
-        cloudinaryFolder = 'website/general'
+        folder = 'website/general'
     }
 
-    console.log('📤 Uploading to Cloudinary:', {
+    console.log('📤 Uploading:', {
       file: file.name,
       size: file.size,
       type: file.type,
-      folder: cloudinaryFolder,
+      folder: folder,
       publicId: publicId,
       sectionType: type
     })
 
-    // Upload uz Cloudinary ar pareizajām transformācijām
-    const imageUrl = await uploadToCloudinary(file, cloudinaryFolder, publicId, type)
+    const imageUrl = await uploadToCloudinary(file, folder, publicId, type)
 
     console.log('✅ Upload successful:', imageUrl)
 

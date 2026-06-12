@@ -1,63 +1,11 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { v2 as cloudinary } from 'cloudinary'
+import { uploadImage } from '@/lib/s3'
 import { syncRecentSalesTranslations } from "@/lib/translationSync"
 
-// Cloudinary konfigurācija
-if (process.env.CLOUDINARY_URL) {
-  cloudinary.config(process.env.CLOUDINARY_URL)
-} else {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-}
-
-// Uzlabota Cloudinary upload funkcija
+// Augšupielāde uz S3 (konvertē uz webp)
 async function uploadToCloudinary(file: File, folder: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const buffer = Buffer.from(await file.arrayBuffer())
-      const timestamp = Date.now()
-      const randomId = Math.random().toString(36).substring(2, 8)
-      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-      
-      cloudinary.uploader.upload_stream(
-        {
-          public_id: `${timestamp}-${randomId}-${safeFileName}`,
-          folder: folder,
-          resource_type: 'auto',
-          // Uzlabota transformācija galerijas attēliem
-          transformation: [
-            { 
-              width: 1200, 
-              height: 800, 
-              crop: 'limit',     // Nesapgrieķ, tikai samazina ja vajag
-              quality: 'auto',     // Augsta kvalitāte
-              format: 'auto',    // Automātiski izvēlas labāko formātu
-              fetch_format: 'auto'
-            }
-          ],
-          // Papildu opcijas labākai kvalitātei
-          flags: 'progressive',
-          secure: true
-        },
-        (error, result) => {
-          if (error) {
-            console.error('Cloudinary upload error:', error)
-            reject(error)
-          } else {
-            console.log('✅ Image uploaded successfully:', result?.secure_url)
-            resolve(result!.secure_url)
-          }
-        }
-      ).end(buffer)
-    } catch (error) {
-      console.error('Buffer processing error:', error)
-      reject(error)
-    }
-  })
+  return uploadImage(file, folder)
 }
 
 export async function GET() {

@@ -98,7 +98,7 @@ export default async function VillagesContentPage() {
                     <div className="p-6">
                       <div className="flex items-center text-sm text-gray-500 mb-3">
                           <User className="w-4 h-4 mr-2" />
-                          {content.author || "Vestate"}
+                          {content.author || "Vivaestate"}
                           {content.publishedAt && (
                             <>
                               <span className="mx-2">•</span>
@@ -187,6 +187,6 @@ export default async function VillagesContentPage() {
 }
 
 export const metadata = {
-  title: "Ciemati | Vestate",
+  title: "Ciemati | Vivaestate",
   description: "Iepazīstiet Latvijas skaistākās vietas un to nekustamo īpašumu iespējas. Atklājiet ciematus, kuros vēlaties dzīvot.",
 }

@@ -299,6 +299,6 @@ export default async function BlogPostsPage() {
 }
 
 export const metadata = {
-  title: "Bloga raksti | Vestate",
+  title: "Bloga raksti | Vivaestate",
   description: "Jaunākās ziņas un aktualitātes nekustamo īpašumu pasaulē. Ekspertu padomi un tirgus analīze.",
 }

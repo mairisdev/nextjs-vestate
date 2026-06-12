@@ -25,8 +25,11 @@ export default clerkMiddleware(async (auth, req) => {
     const { userId } = await auth();
     
     if (!userId) {
-      // Novirza uz sign-in lapu tā vietā, lai novirzītu uz /
-      return NextResponse.redirect(new URL('/sign-in', req.url));
+      // Novirza uz sign-in, saglabājot sākotnējo galamērķi (lai pēc
+      // pieslēgšanās atgrieztos tieši /admin lapā, nevis sākumlapā)
+      const signInUrl = new URL('/sign-in', req.url);
+      signInUrl.searchParams.set('redirect_url', pathname);
+      return NextResponse.redirect(signInUrl);
     }
     
     return NextResponse.next();
@@ -39,6 +42,29 @@ export default clerkMiddleware(async (auth, req) => {
   
   // API routes bez i18n
   if (pathname.startsWith('/api')) {
+    // Publiskie POST galapunkti (apmeklētāju formas) — bez autentifikācijas
+    const PUBLIC_API_POST = [
+      '/api/contact',
+      '/api/access-request',
+      '/api/verify-code',
+      '/api/increment-view',
+    ];
+
+    const isMutation = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+    const isAdminApi = pathname.startsWith('/api/admin');
+    const isPublicPost = PUBLIC_API_POST.some(
+      (p) => pathname === p || pathname.startsWith(p + '/')
+    );
+
+    // Pieprasām autentifikāciju visiem /api/admin/* un visām datu izmaiņām
+    // (POST/PUT/PATCH/DELETE), izņemot publiskās formas augstāk.
+    if ((isAdminApi || isMutation) && !isPublicPost) {
+      const { userId } = await auth();
+      if (!userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
     return NextResponse.next();
   }
   

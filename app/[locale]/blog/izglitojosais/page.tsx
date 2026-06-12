@@ -98,7 +98,7 @@ export default async function EducationalContentPage() {
                     <div className="p-6">
                       <div className="flex items-center text-sm text-gray-500 mb-3">
                         <User className="w-4 h-4 mr-2" />
-                        {content.author || "Vestate"}
+                        {content.author || "Vivaestate"}
                         {content.publishedAt && (
                           <>
                             <span className="mx-2">•</span>
@@ -187,6 +187,6 @@ export default async function EducationalContentPage() {
 }
 
 export const metadata = {
-  title: "Izglītojošais saturs | Vestate",
+  title: "Izglītojošais saturs | Vivaestate",
   description: "Padomi, pamācības un ekspertu zināšanas nekustamo īpašumu jomā. Uzziniet vairāk par īpašumu pirkšanu, pārdošanu un investīcijām.",
 }

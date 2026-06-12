@@ -1,0 +1,269 @@
+==========================================================================
+ VIVAESTATE.LV — RECOVERED WEBSITE CONTENT
+ Source: https://www.vivaestate.lv/en   (homepage)
+ Recovered: 2026-06-12
+ Note: Site UI is "EN" but the stored content is in Latvian (as in the DB).
+ Images saved in: ./images/
+==========================================================================
+
+
+--------------------------------------------------------------------------
+NAVIGATION / HEADER
+--------------------------------------------------------------------------
+Logo: Vestate
+Menu items:
+  - Pakalpojumi
+  - Jaunākie raksti
+  - Contacts
+  - Sludinājumi
+Language switch: ENGLISH
+Phone: +371 28 446 677
+Logo image: images/logo_2cfb43e6-076f-4a27-8dcf-8e97cbc0c8c5.svg
+
+
+--------------------------------------------------------------------------
+SECTION 1 — HERO / SLIDER (first-section)
+--------------------------------------------------------------------------
+Eyebrow: Mūsu profesionālā komanda
+Heading: PALĪDZĒS DROŠI UN IZDEVĪGI PĀRDOT JŪSU ĪPAŠUMU
+
+Feature list:
+  - Profesionāla pieredze
+  - Individuāla pieeja
+  - Tirgus analīze
+  - Juridiskā palīdzība
+  - Komunikācija un atbalsts
+  - Mārketinga stratēģijas
+
+Coverage line: RĪGA, RĪGAS RAJONS, JŪRMALA, JELGAVA
+
+CTA block:
+  Text: UZZINIET, CIK MAKSĀ JŪSU ĪPAŠUMS UN CIK ĀTRĀ LAIKĀ TO VAR PĀRDOT
+  Button: SAŅEMT MŪSU SPECIĀLISTA BEZMAKSAS KONSULTĀCIJU
+
+Images:
+  - images/palidzes-drosi-un-izdevigi-pardot-jusu-ipasumu.webp   (slider bg)
+  - images/uzziniet-cik-maksa-jusu-ipasums-un-cik-atra-laika-to-var-pardot-1754294239143.jpg
+    (alt: "PALĪDZĒS DROŠI UN IZDEVĪGI PĀRDOT JŪSU ĪPAŠUMU")
+
+
+--------------------------------------------------------------------------
+SECTION 2 — WHY TRUST A SPECIALIST (second-section)
+--------------------------------------------------------------------------
+Eyebrow: Uzticiet sava īpašuma pārdošanu profesionāļiem
+Heading: GALVENIE IEMESLI KĀPĒC CILVĒKI IZVĒLAS UZTICĒT ĪPAŠUMA PĀRDOŠANU SPECIĀLISTAM
+
+Reasons (numbered list):
+  1. Cilvēkiem pašiem nav laika vai vēlēšanās iedziļināties procesā un nodarboties ar pārdošanu;
+  2. Cilvēkiem nav pieredzes īpašuma pārdošanā, viņi nepārzin nozares tirgu, nevar noteikt optimālo
+     pārdošanas cenu, nepārzin noformēšanas procesa gaitu;
+  3. Cilvēki baidās, ka viņus apkrāps vai trāpīsies negodprātīgi pircēji, baidās pielaist būtiskas
+     kļūdas noformēšanas procesā;
+  4. Cilvēki saprot, ka aģents ir profesionālis, ka tam ir vairāk klientu piesaistes iespējas un, ka
+     aģents pārdos īpašumu dārgāk nekā pats klients;
+  5. Cilvēkiem nav vajadzīgo zināšanu nekustamā īpašuma pārdošanas nodokļu jautājumos,
+  6. Cilvēkiem pašu spēkiem ilgstoši neizdodas pārdot īpašumu;
+  7. Cilvēki neprot vai nevēlas paši komunicēt ar daudziem svešiem cilvēkiem, bieži vien ir valodas šķērslis;
+  8. Cilvēkam pašam ir grūti pateikt "Nē" uzmācīgiem pircējiem, kuri kaulējas un prasa ievērīgu atlaidi;
+  9. Cilvēkiem ir svarīgs atbalsts, konsultācijas un drošības sajūta, ko sniedz sadarbība ar speciālistu.
+ 10. Cilvēki saprot, ka tāda sarežģīta un nopietna lieta, kā īpašuma pārdošana jāuztic profesionāļiem;
+
+Image:
+  - images/galvenie-iemesli-kapec-cilveki-izvelas-uzticet-ipasuma-pardosanu-specialistam-1754292578358.jpg
+
+
+--------------------------------------------------------------------------
+SECTION 3 — TAX CONSULTATION CTA
+--------------------------------------------------------------------------
+Text: UZZINIET, VAI PĀRDODOT NEKUSTAMO ĪPAŠUMU NEBŪS JĀMAKSĀ KAPITĀLA PIEAUGUMA NODOKLIS
+Button: SAŅEMT MŪSU JURISTA BEZMAKSAS KONSULTĀCIJU
+Image alt: "Jurista konsultācija"
+
+
+--------------------------------------------------------------------------
+SECTION 4 — SERVICES PROVIDED BY OUR TEAM
+--------------------------------------------------------------------------
+Eyebrow: Pieredzējuši nekustamo īpašumu speciālisti
+Heading: PAKALPOJUMI, KO SNIEDZ MŪSU KOMANDA
+
+Services (numbered list):
+  1. Pārstāv jūsu intereses visa pārdošanas procesa gaitā, konsultē jūs, koordinē un organizē visu
+     pārdošanas procesu, līdz atslēgu nodošanai kā arī sagatavo visus darījumam nepieciešamos dokumentus.
+  2. Konsultē jūs par situāciju nekustamā īpašuma tirgū, iepazīstina ar īpašuma vērtību veidojošajiem
+     faktoriem un pārdošanas nosacījumiem
+  3. Konsultē jūs par nodokļiem, kas var rasties pēc īpašuma pārdošanas un izskaidro vai jūsu gadījumā
+     var piemērot likuma pantus, kuri atbrīvo no nodokļa samaksas
+  4. Palīdz pasūtīt darījumam nepieciešamos dokumentus dažādās iestādēs, saskaņot nesaskaņotas pārbūves u.c
+  5. Veic marketinga pakalpojumus (profesionāli foto un video, izvieto reklāmas dažādos portālos,
+     sociālajos tīklos, mājaslapās, Latvijas un citu valstu mākleru apvienībās u.c.), piedāvā jūsu
+     īpašumu savam un kolēģu klientu lokam
+  6. Laipni atbild uz klientu telefona zvaniem (divās vai trijās valodās), vienojas par apskates laikiem,
+     izrāda īpašumu un sniedz visu nepieciešamo informāciju par īpašumu potenciālajiem pircējiem
+  7. Kad atrodas pircējs - konsultē potenciālo pircēju par darījuma gaitu, izmaksām, palīdz nokārtot
+     kredītu bankās, organizē vērtējumu, sagatavo rokasnaudas līgumu, pirkuma līgumu vai maiņas līgumu,
+     dažādas pilnvaras, tajā skaitā, ja īpašnieks ir ārzemēs; sagatavo pieņemšanas nodošanas aktus un
+     citus darījumam nepieciešamos dokumentus
+  8. Saskaņo ar Īpašnieku un pircēju darījuma noteikumus un norēķinu kārtību, koordinē darījuma gaitu,
+     organizē vizīti pie notāra, un seko darījuma likumīgai noslēgšanai
+  9. Izdara gandrīz visu jūsu vietā, lai jums pēc iespējas mazāk vajadzētu iedziļināties pārdošanas
+     procesā un dokumentos
+ 10. Palīdz jums ar jauna īpašuma piemeklēšanu vecā īpašuma vietā, procesus veicot paralēli. Pārbauda
+     jauno īpašumu un sagatavo dokumentus.
+
+
+--------------------------------------------------------------------------
+SECTION 5 — OUR BEST SPECIALISTS / AGENTS
+--------------------------------------------------------------------------
+Eyebrow: Pieredzes un profesionalitātes apvienojums
+Heading: MŪSU LABĀKIE SPECIĀLISTI
+Phone shown: +371 28 446 677
+
+Agents / cards:
+  - Testa atsauksme Vinetai
+    Tests Testeris
+    Rating: ★★★★★
+  - AgentaVārds / AģentaAmats / 29820890
+  - Aģenta Vārds / Aģenta Amats / +37126767254
+  - Aģenta Vārds / Aģenta Amats
+
+(NOTE: these are placeholder/test entries that were in the DB.)
+Agent image: images/1d0c12bc-e88d-41f7-b034-bb0f75f99193.webp
+
+
+--------------------------------------------------------------------------
+SECTION 6 — TESTIMONIAL / REVIEW (sixth-section)
+--------------------------------------------------------------------------
+Quote: PALDIES PAR LIELISKO SADARBĪBU, BEZ JUMS ES NEBŪTU TIK VIENKĀRŠI ATRISINĀJIS SAVU SAREŽĢĪTO
+       SITUĀCIJU AR MANTOTO ĪPAŠUMU.
+Author: Andris Jermacāns
+
+CTA:
+  Text: UZZINIET CIK ĀTRI UN PAR KĀDU CENU VAR PĀRDOT JŪSU NEKUSTMO ĪPAŠUMU.
+  Button: SAŅEMT BEZMAKSAS KONSULTĀCIJU
+
+Image: images/1754293530826-pexels-davidmcbee-1546168.jpg.jpg
+
+
+--------------------------------------------------------------------------
+SECTION 7 — SOLD / LISTED PROPERTIES (seven-section + sold-properties)
+--------------------------------------------------------------------------
+Eyebrow: Apskatieties mūsu veiksmīgi pārdotos īpašumus
+Heading: Mūsu darbi
+
+Listing card:
+  Status: Pārdošanā
+  Title: Investīciju objekts
+  Cena: 67000 €
+  Platība: 21 m2
+  Tips: Hrušcova
+  Stāvs: 6/6
+  Button: Skatīt vairāk
+
+Images:
+  - images/1754293479775-real-estate-miniature-house-model-zcovmnik4h0l5s7k.jpg.jpg  (section bg)
+  - images/1754894978280-uxq5hf-Salaspils1.webp.jpg
+  - images/1754894981194-gm5bf9-Salaspils2.webp.jpg
+  - images/1754894982708-wgx33m-Salaspils3.webp.jpg
+
+
+--------------------------------------------------------------------------
+SECTION 8 — WHY CHOOSE US (why-choose-us)
+--------------------------------------------------------------------------
+Heading: KĀPĒC IZVĒLĒTIES MŪS?
+
+Points:
+  - Komanda ar daudzu gadu pieredzi
+  - Liela potenciālo klientu datu bāze
+  - Sadarbība ar citām aģentūrām
+  - Personīga un profesionāla pieeja.
+  - Godīga attieksme
+  - Nenormēts darba laiks 24/7
+  - Bezmaksas juridiskās konsultācijas t.sk par nodokļiem
+  - Ātrs rezultāts
+
+Button: Saņemt piedāvājumu
+Image: images/1754294145442-realtor_networking_groups.webp.webp  (alt: "Kāpēc izvēlēties mūs?")
+
+
+--------------------------------------------------------------------------
+SECTION 9 — OUR SALES PRACTICE / STATS
+--------------------------------------------------------------------------
+Eyebrow: Pieredzes bagāti nekustamo īpašumu speciālisti
+Heading: Mūsu pārdošanas prakse
+Stat: 12%
+Stat caption: gadījumu pārdodam īpašumu par augstāku cenu
+
+
+--------------------------------------------------------------------------
+SECTION 10 — PARTNERS / BANKS
+--------------------------------------------------------------------------
+Eyebrow: Sadarbojamies ar vadošajām Latvijas bankām
+Heading: MŪSU GALVENIE SADARBĪBAS PARTNERI
+
+Partner logos:
+  - Luminor   -> images/637543ab-2aa6-49d0-bc1e-4ffb66f9b3d5-9e8a920c-d3bf-437f-9852-6a6d0bab0415-Luminor.svg
+  - Swedbank  -> images/1754288078349-6201a2ef-d032-45bc-afcf-51aec2735723-Swedbank.svg
+  - Bigbank   -> images/1754857120716-bigbank_logo.B2EPeBxU.png.png
+  - Seb banka -> images/1754857179272-seb-logo.svg
+  - Citadela banka -> images/1755033915728-Unknown.png.png
+
+
+--------------------------------------------------------------------------
+SECTION 11 — LATEST ARTICLES / BLOG
+--------------------------------------------------------------------------
+Eyebrow: JAUNĀKIE RAKSTI
+Heading: BLOGA UN IZGLĪTOJOŠIE RAKSTI
+Empty state: Vēl nav publicēts saturs
+Empty state subtext: Bloga raksti un izglītojošais saturs tiks publicēts drīzumā!
+
+
+--------------------------------------------------------------------------
+SECTION 12 — CONTACT FORM
+--------------------------------------------------------------------------
+Heading: Sadarbībai vai bezmaksas konsultācijai - zvaniet 28446677
+Subtext: vai aizpildiet formu, lai nosūtītu mums ziņu.
+
+Contact details:
+  Adrese:     Dominas biroji, Ieriķu iela 3, Rīga, LV-1084
+  Telefons:   +371 28 44 66 77
+  E-pasts:    info@vestate.lv
+  Darba laiks: Nenormēts: 24/7
+
+Form:
+  Button: Nosūtīt ziņu
+  Note: Mēs atbildēsim 24 stundu laikā
+  Captcha label: Drošības jautājums
+  Captcha help: Atbildiet uz šo vienkāršo jautājumu, lai pierādītu, ka neesat robots.
+  Captcha image: images/drosiba.webp  (alt: "Drošības attēls")
+  Submit button: Nosūtīt ziņu
+
+
+--------------------------------------------------------------------------
+FOOTER
+--------------------------------------------------------------------------
+Company: SIA "VESTATE"
+Tagline: Droša nekustamo īpašumu pārdošana
+
+Lapas karte (Sitemap):
+  - Sākums
+  - Par mums
+  - Īpašumi
+  - Kontakti
+
+Pakalpojumi (Services):
+  - Īpašumu pārdošana
+  - Noma un izīrēšana
+  - Konsultācijas
+  - Vērtējumi
+
+Kontaktinformācija:
+  +371 28 44 66 77
+  info@vestate.lv
+  Dominas biroji, Ieriķu iela 3, Rīga, LV-1084
+
+Copyright: © 2024 Vestate. Visas tiesības aizsargātas. Izstrāde: MairisDigital
+
+
+==========================================================================
+ END OF CONTENT
+==========================================================================

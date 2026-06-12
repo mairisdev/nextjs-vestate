@@ -1,53 +1,11 @@
 // app/api/sixth-section/route.ts
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { v2 as cloudinary } from 'cloudinary'
+import { uploadImage } from '@/lib/s3'
 
-// Cloudinary konfigurācija
-if (process.env.CLOUDINARY_URL) {
-  cloudinary.config(process.env.CLOUDINARY_URL)
-} else {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-}
-
-// Cloudinary upload funkcija ar high-quality iestatījumiem full-screen sadaļām
+// Augšupielāde uz S3 (konvertē uz webp)
 async function uploadToCloudinary(file: File, folder: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const buffer = Buffer.from(await file.arrayBuffer())
-      const timestamp = Date.now()
-      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-      
-      console.log(`📸 Uploading ${folder} with high-quality transformation`)
-      
-      cloudinary.uploader.upload_stream(
-        {
-          public_id: `${timestamp}-${safeFileName}`,
-          folder: folder,
-          resource_type: 'auto',
-          transformation: [
-            // High-quality full-screen background
-            { width: 1920, height: 1080, crop: 'limit', quality: '90', format: 'auto' }
-          ]
-        },
-        (error, result) => {
-          if (error) {
-            console.error('Cloudinary upload error:', error)
-            reject(error)
-          } else {
-            console.log('✅ High-quality upload successful:', result?.secure_url)
-            resolve(result!.secure_url)
-          }
-        }
-      ).end(buffer)
-    } catch (error) {
-      reject(error)
-    }
-  })
+  return uploadImage(file, folder)
 }
 
 export async function GET() {

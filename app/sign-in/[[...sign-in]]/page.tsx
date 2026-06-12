@@ -10,10 +10,11 @@ export default function Page() {
             Pieslēgties admin panelim
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Vestate CMS pieslēgšanās
+            Vivaestate CMS pieslēgšanās
           </p>
         </div>
-        <SignIn 
+        <SignIn
+          fallbackRedirectUrl="/admin"
           appearance={{
             elements: {
               formButtonPrimary: 'bg-[#00332D] hover:bg-[#00332D]/90',
