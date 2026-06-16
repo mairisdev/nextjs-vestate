@@ -10,6 +10,12 @@ const s3Host = process.env.S3_PUBLIC_URL
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['sharp'],
+  compiler: {
+    // Production būvē noņem visus console.* izsaukumus (saglabā error/warn)
+    removeConsole: process.env.NODE_ENV === 'production'
+      ? { exclude: ['error', 'warn'] }
+      : false,
+  },
   images: {
     remotePatterns: [
       ...(s3Host

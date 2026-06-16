@@ -193,7 +193,11 @@ export default function NavigationSettings() {
           <Label>Esošais logo</Label>
             {logoUrl ? (
               <img
-                src={`/uploads/navigation/${logoUrl}`}
+                src={
+                  /^https?:\/\//.test(logoUrl)
+                    ? logoUrl
+                    : `/uploads/navigation/${logoUrl}`
+                }
                 alt="Logo"
                 className="w-auto h-20"
               />

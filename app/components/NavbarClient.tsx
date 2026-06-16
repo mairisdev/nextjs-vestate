@@ -37,7 +37,11 @@ export default function NavbarClient({ data, translations }: NavbarClientProps) 
         <Link href="/" className="block">
           {data.logoUrl ? (
             <img
-              src={`/uploads/navigation/${data.logoUrl}`}
+              src={
+                /^https?:\/\//.test(data.logoUrl)
+                  ? data.logoUrl
+                  : `/uploads/navigation/${data.logoUrl}`
+              }
               alt={data.logoAlt || "Vivaestate logo"}
               className="w-auto h-16 md:h-16 lg:h-20 object-contain"
             />
