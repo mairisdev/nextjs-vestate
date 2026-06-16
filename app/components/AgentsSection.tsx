@@ -6,6 +6,8 @@ import Image from "next/image"
 import ImageModal from "./ImageModal"
 
 type Translations = {
+  sectionBadge: string
+  sectionHeading: string
   reviewsButton: string
   noReviewsText: string
   imageClickHint: string
@@ -31,11 +33,11 @@ export default function AgentsSectionClient({ agents, translations }: AgentsSect
           <div className="inline-flex items-center gap-2 bg-[#77D4B4]/10 rounded-full px-6 py-2 mb-4">
             <div className="w-2 h-2 bg-[#77D4B4] rounded-full animate-pulse"></div>
             <p className="text-sm font-semibold uppercase text-[#77D4B4]">
-              Pieredzes un profesionalitātes apvienojums
+              {translations.sectionBadge}
             </p>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#00332D] mb-4">
-            MŪSU LABĀKIE SPECIĀLISTI
+            {translations.sectionHeading}
           </h2>
           <div className="w-24 h-1 bg-gradient-to-r from-[#77D4B4] to-[#5BC9A8] mx-auto rounded-full"></div>
         </div>

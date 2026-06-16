@@ -21,7 +21,6 @@ type Translations = {
   reason8: string
   reason9: string
   reason10: string
-  reason11: string
 }
 
 interface AgentReasonsClientProps {

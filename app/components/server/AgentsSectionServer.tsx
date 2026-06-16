@@ -17,17 +17,25 @@ export default async function AgentsSectionServer() {
   
   // Sakārtojam tulkojumus ar pareizajiem tipiem
   const translations = {
+    sectionBadge: safe("sectionBadge", "Pieredzes un profesionalitātes apvienojums"),
+    sectionHeading: safe("sectionHeading", "MŪSU LABĀKIE SPECIĀLISTI"),
     reviewsButton: safe("reviewsButton", "Skatīt atsauksmes"),
     noReviewsText: safe("noReviewsText", "Nav atsauksmju"),
     imageClickHint: safe("imageClickHint", "Klikšķiniet, lai redzētu atsauksmes"),
     agentImageAlt: safe("agentImageAlt", "Aģenta foto")
   };
-  
+
+  // Vārdu un amatu ņemam tieši no aģenta DB ieraksta, lai vārds, amats, foto un
+  // tālrunis vienmēr nāk no viena un tā paša ieraksta (citādi tulkojumu atslēgas
+  // sajaucās ar foto). Amatu var pārtulkot ar agentTitleN atslēgu, ja tā aizpildīta.
   const localizedAgents = agentsRaw.map((agent, index) => {
+    const titleKey = `agentTitle${index + 1}`;
+    const tTitle = safe(titleKey, "");
+    const title = tTitle && tTitle !== titleKey ? tTitle : (agent.title || "Nekustamo īpašumu speciālists");
     return {
       ...agent,
-      name: safe(`agentName${index + 1}`, agent.name || `Aģents ${index + 1}`),
-      title: safe(`agentTitle${index + 1}`, agent.title || "Nekustamo īpašumu aģents"),
+      name: agent.name || `Aģents ${index + 1}`,
+      title,
     };
   });
 

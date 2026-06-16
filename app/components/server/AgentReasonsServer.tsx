@@ -29,8 +29,7 @@ export default async function AgentReasonsServer() {
     reason7: safe('reason7', 'Sarunu vadīšana'),
     reason8: safe('reason8', 'Dokumentu kārtošana'),
     reason9: safe('reason9', 'Finansiāla konsultēšana'),
-    reason10: safe('reason10', 'Pēcpārdošanas atbalsts'),
-    reason11: safe('reason11', 'Ilgtermiņa sadarbība')
+    reason10: safe('reason10', 'Pēcpārdošanas atbalsts')
   };
 
   return (

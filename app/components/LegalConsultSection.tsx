@@ -1,11 +1,21 @@
 import Image from "next/image"
 import Link from "next/link"
 import { getSixthSection } from "@/lib/queries/sixthSection"
+import { getSafeTranslations } from "@/lib/safeTranslations"
 
 export default async function LegalConsultSection() {
   const data = await getSixthSection()
 
   if (!data) return null
+
+  // Tulkojumi ar DB saturu kā fallback
+  const { safe } = await getSafeTranslations("LegalConsultSection")
+  const safeText = (key: string, fallback: string) => {
+    const v = safe(key, "")
+    return v && v !== key ? v : fallback
+  }
+  const title = safeText("title", data.title)
+  const buttonText = safeText("buttonText", data.buttonText)
 
   return (
     <section className="relative w-full min-h-[600px] flex items-center justify-end px-6 md:px-12">
@@ -21,14 +31,14 @@ export default async function LegalConsultSection() {
 
           <div className="relative z-10 bg-white/95 backdrop-blur-md text-[#00332D] p-8 md:p-12 w-full md:w-[600px] rounded-2xl shadow-2xl border border-gray-200 flex flex-col items-center justify-center text-center">
             <h2 className="text-xl md:text-2xl font-bold mb-6 whitespace-pre-line leading-tight">
-              {data.title}
+              {title}
             </h2>
             
             <Link
               href={data.buttonLink || "#"}
               className="inline-block bg-[#00332D] text-white font-semibold text-sm px-8 py-4 rounded-xl border-2 border-[#00332D] hover:bg-[#77dDB4] hover:border-[#77dDB4] hover:text-white transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg"
             >
-              {data.buttonText}
+              {buttonText}
             </Link>
           </div>
 

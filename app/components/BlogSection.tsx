@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { getSafeTranslations } from "@/lib/safeTranslations"
 import { Calendar, User, BookOpen, GraduationCap, Home, FileText } from "lucide-react"
 
 interface CombinedBlogPost {
@@ -16,36 +17,37 @@ interface CombinedBlogPost {
   tags?: string[]
   shortDescription?: string | null
   type: 'BLOG' | 'EDUCATIONAL' | 'VILLAGES' | 'LEGACY'
-  categoryLabel: string
+  categoryLabelKey: 'categoryBlog' | 'categoryEducational' | 'categoryVillages' | 'categoryDefault'
   categoryIcon: React.ReactNode
 }
 
-// Helper function to get category info
-const getCategoryInfo = (type: string) => {
+// Helper function to get category info. The label is resolved via translations
+// in the component; here we only pick the translation key and the icon.
+const getCategoryInfo = (type: string): { labelKey: CombinedBlogPost['categoryLabelKey']; icon: React.ReactNode } => {
   switch (type) {
     case 'BLOG':
       return {
-        label: 'Bloga raksts',
+        labelKey: 'categoryBlog',
         icon: <FileText className="w-4 h-4" />
       }
     case 'EDUCATIONAL':
       return {
-        label: 'Izglītojošais saturs',
+        labelKey: 'categoryEducational',
         icon: <GraduationCap className="w-4 h-4" />
       }
     case 'VILLAGES':
       return {
-        label: 'Ciemats',
+        labelKey: 'categoryVillages',
         icon: <Home className="w-4 h-4" />
       }
     case 'LEGACY':
       return {
-        label: 'Bloga raksts',
+        labelKey: 'categoryBlog',
         icon: <BookOpen className="w-4 h-4" />
       }
     default:
       return {
-        label: 'Raksts',
+        labelKey: 'categoryDefault',
         icon: <FileText className="w-4 h-4" />
       }
   }
@@ -87,7 +89,7 @@ async function getAllBlogContent() {
           author: null,
           tags: [],
           type: 'LEGACY' as const,
-          categoryLabel: categoryInfo.label,
+          categoryLabelKey: categoryInfo.labelKey,
           categoryIcon: categoryInfo.icon
         }
       }),
@@ -112,7 +114,7 @@ async function getAllBlogContent() {
           author: content.author,
           tags: content.tags || [],
           type: content.type as 'BLOG' | 'EDUCATIONAL' | 'VILLAGES',
-          categoryLabel: categoryInfo.label,
+          categoryLabelKey: categoryInfo.labelKey,
           categoryIcon: categoryInfo.icon
         }
       })
@@ -135,6 +137,20 @@ async function getAllBlogContent() {
 
 export default async function BlogSection() {
   const blogPosts = await getAllBlogContent()
+  const { safe } = await getSafeTranslations('BlogSection')
+
+  const t = {
+    badge: safe('badge', 'JAUNĀKIE RAKSTI'),
+    heading: safe('heading', 'BLOGA UN IZGLĪTOJOŠIE RAKSTI'),
+    emptyTitle: safe('emptyTitle', 'Vēl nav publicēts saturs'),
+    emptyText: safe('emptyText', 'Bloga raksti un izglītojošais saturs tiks publicēts drīzumā!'),
+    readMore: safe('readMore', 'Lasīt vairāk'),
+    viewAll: safe('viewAll', 'Apskatīt visus rakstus'),
+    categoryBlog: safe('categoryBlog', 'Bloga raksts'),
+    categoryEducational: safe('categoryEducational', 'Izglītojošais saturs'),
+    categoryVillages: safe('categoryVillages', 'Ciemats'),
+    categoryDefault: safe('categoryDefault', 'Raksts'),
+  }
 
   return (
     <section id="jaunakie-ieraksti" className="py-20 px-4 md:px-12 bg-white">
@@ -144,12 +160,12 @@ export default async function BlogSection() {
           <div className="inline-flex items-center gap-2 bg-[#77D4B4]/10 rounded-full px-6 py-2 mb-4">
             <div className="w-2 h-2 bg-[#77D4B4] rounded-full animate-pulse"></div>
             <p className="text-sm font-semibold uppercase text-[#77D4B4]">
-              JAUNĀKIE RAKSTI
+              {t.badge}
             </p>
           </div>
         <Link href="/blog">
           <h2 className="text-3xl sm:text-4xl font-bold text-[#00332D] mb-4">
-            BLOGA UN IZGLĪTOJOŠIE RAKSTI
+            {t.heading}
           </h2>
         </Link>
           <div className="w-24 h-1 bg-gradient-to-r from-[#77D4B4] to-[#5BC9A8] mx-auto rounded-full"></div>
@@ -167,7 +183,7 @@ export default async function BlogSection() {
                 <div className="absolute top-4 left-4 z-10">
                   <div className="inline-flex items-center px-3 py-1 bg-white/90 backdrop-blur-sm text-[#00332D] rounded-full text-sm font-medium shadow-sm">
                     {post.categoryIcon}
-                    <span className="ml-2">{post.categoryLabel}</span>
+                    <span className="ml-2">{t[post.categoryLabelKey]}</span>
                   </div>
                 </div>
 
@@ -234,7 +250,7 @@ export default async function BlogSection() {
 
                   {/* Read more */}
                   <span className="text-[#77D4B4] text-sm font-medium group-hover:underline inline-flex items-center">
-                    Lasīt vairāk
+                    {t.readMore}
                     <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -249,8 +265,8 @@ export default async function BlogSection() {
             <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
               <BookOpen className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Vēl nav publicēts saturs</h3>
-            <p className="text-gray-600">Bloga raksti un izglītojošais saturs tiks publicēts drīzumā!</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.emptyTitle}</h3>
+            <p className="text-gray-600">{t.emptyText}</p>
           </div>
         )}
 
@@ -261,7 +277,7 @@ export default async function BlogSection() {
               href="/blog"
               className="inline-flex items-center px-6 py-3 bg-[#00332D] text-white rounded-lg hover:bg-[#004940] transition-colors font-medium"
             >
-              Apskatīt visus rakstus
+              {t.viewAll}
               <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
