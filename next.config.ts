@@ -9,6 +9,7 @@ const s3Host = process.env.S3_PUBLIC_URL
     : undefined;
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['sharp'],
   images: {
     remotePatterns: [
       ...(s3Host
